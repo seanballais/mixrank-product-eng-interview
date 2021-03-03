@@ -18,17 +18,16 @@ This matrix was generated using matplotlib. We'd like to add a similar matrix in
 
 # Objectives
 
-This repository contains a SQLite file with some sample data. Please build an API in Python that serves requests against this data.
-
-The client should render a competitive matrix similar in spirit to the example above.
-
-Feel free to complete as much or as little of the project as you'd like. Spare your time from implementing features that would be time consuming or uninteresting, and focus instead on parts that would make for better discussion when reviewing together. Make notes of ideas, bugs, and deficiencies to discuss together.
-
-Some ideas you can consider for extra credit:
-* Shade the cells according to magnitude.
+* Please build an API in Python that serves requests using the data in the SQlite file in this repository.
+* The client should render a competitive matrix similar in spirit to the example above.
+* Consider shading the cells according to magnitude.
 * Allow the user to select a set of SDKs to include in the matrix, and re-render as they change their selection.
 * Allow the user to view example apps for a cell of the matrix they select.
 * Compute a normalized matrix (by row) to better visualize retention and attrition rates. Ex: ![Normalized Payments Matrix](payments-norm-matrix.png "Normalized Payments Matrix")
-* We use [Nix](https://nixos.org/nix/) for package management. If you add your dependencies to `default.nix`, then it's easy for us to run your code. Install nix and launch the environment with `nix-shell` (works on Linux, macOS, and most unixes). Or install dependencies however you're comfortable and give us instructions.
+* Be prepared to discuss the bottlenecks as you scale up to a larger dataset (1e5 `sdk`s, 1e7 `app`'s, and 1e9 `app_sdk`'s).  Will your implementation still perform well? What would you have to change to improve performance? You don't need to implement all the optimizations, but be able to talk about the next steps to scale it for production.
+* Consider how the app might support updating the view as the data in the database updates, without requiring a page refresh. You don't have to implement this, but keep it in mind for discussion.
+* We use [Nix](https://nixos.org/nix/) for package management. If you add your dependencies to `default.nix`, then it's easy for us to run your code. Install nix and launch the environment with `nix-shell` (works on Linux, macOS, and most unixes).
+
+Feel free to complete as much or as little of the project as you'd like. Spare your time from implementing features that would be time consuming or uninteresting, and focus instead on parts that would make for better discussion when reviewing together. Make notes of ideas, bugs, and deficiencies to discuss together.
 
 There's no time limit. Spend as much or as little time on it as you'd like. Clone this git repository (don't fork), and push to a new repository when you're ready to share. We'll schedule a follow-up call to review.
