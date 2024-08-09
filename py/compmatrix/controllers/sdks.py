@@ -1,2 +1,7 @@
+from compmatrix import models
+
+
 def index():
-    return 'What is the universe even trying to do to me?'
+    sdks = models.SDK.query.all()
+    for sdk in sdks:
+        models.encoders.jsonify_model_object(sdk)
