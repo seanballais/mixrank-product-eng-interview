@@ -1,5 +1,8 @@
-from compmatrix.app_modules import AppModule
+from flask import Blueprint
+
+from compmatrix import blueprints
 
 from compmatrix.api.routes import routes
 
-api_module: AppModule = AppModule('api', __name__, '/api', routes)
+api_blueprint: Blueprint = blueprints.create_blueprint('api', __name__, '/api',
+                                                       routes)

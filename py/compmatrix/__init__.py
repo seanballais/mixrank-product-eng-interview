@@ -17,9 +17,8 @@ def create_app(db_path: Path) -> Flask:
 
     with app.app_context():
         # This part can still be improved.
-        from compmatrix.api.module import api_module
+        from compmatrix.api.module import api_blueprint
 
-        app.register_blueprint(api_module.blueprint,
-                               url_prefix=api_module.url_prefix)
+        app.register_blueprint(api_blueprint)
 
     return app
