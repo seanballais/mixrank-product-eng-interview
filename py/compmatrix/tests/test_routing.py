@@ -1,9 +1,9 @@
 from http import HTTPStatus
 
-from flask import Flask
+from flask import Blueprint, Flask
 import pytest
 
-from compmatrix import blueprints, routing
+from compmatrix import routing
 
 
 @pytest.fixture
@@ -27,12 +27,21 @@ def setup_data():
     }
 
 
-def test_create_blueprint(setup_data):
-    name = 'blueprints'
-    import_name = 'blueprints_import_name'
+def test_create_route_obj():
+    route_path = '/'
+    expected_route_output = 'you have been rick rolled'
+    route = routing.Route(route_path, lambda: expected_route_output)
+    assert route.path == route_path
+    assert route.view_func() == expected_route_output
 
-    bp = blueprints.create_blueprint(name, import_name, '/',
-                                     setup_data['routes'])
+
+def test_add_routes_to_blueprint(setup_data):
+    name = 'blueprint'
+    import_name = 'blueprint_import_name'
+
+    bp = Blueprint(name, import_name)
+    routing.add_routes_to_blueprint(bp, setup_data['routes'])
+
     tmp_app = Flask(__name__)
     tmp_app.register_blueprint(bp)
 
