@@ -1,11 +1,10 @@
-# Some ideas taken from: https://github.com/miguelgrinberg/microblog/blob/main/app/__init__.py
+# Basing from https://hackersandslackers.com/flask-blueprints/
 from pathlib import Path
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-
-db: SQLAlchemy = SQLAlchemy()
+db = SQLAlchemy()
 
 
 def create_app(db_path: Path) -> Flask:
@@ -15,5 +14,12 @@ def create_app(db_path: Path) -> Flask:
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 
     db.init_app(app)
+
+    with app.app_context():
+        # This part can still be improved.
+        from compmatrix.api.module import api_module
+
+        app.register_blueprint(api_module.blueprint,
+                               url_prefix=api_module.url_prefix)
 
     return app

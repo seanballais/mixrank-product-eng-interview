@@ -1,11 +1,10 @@
 import argparse
 
-from py.compmatrix import create_app, routes
+from compmatrix import create_app
 
 import config
 
 app = create_app(config.DB_PATH)
-routes.add_routes_to_app(app)
 
 
 def main():
