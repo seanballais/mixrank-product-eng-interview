@@ -4,7 +4,7 @@ from flask import Blueprint, Flask
 
 from compmatrix import routing
 
-from compmatrix.tests.fixtures import test_data_routes
+from compmatrix.tests.fixtures import data_routes
 
 
 def test_create_route_obj():
@@ -15,17 +15,17 @@ def test_create_route_obj():
     assert route.view_func() == expected_route_output
 
 
-def test_add_routes_to_blueprint(test_data_routes):
+def test_add_routes_to_blueprint(data_routes):
     name = 'blueprint'
     import_name = 'blueprint_import_name'
 
     bp = Blueprint(name, import_name)
-    routing.add_routes_to_blueprint(bp, test_data_routes)
+    routing.add_routes_to_blueprint(bp, data_routes)
 
     tmp_app = Flask(__name__)
     tmp_app.register_blueprint(bp)
 
     with tmp_app.test_client() as c:
-        for route in test_data_routes:
+        for route in data_routes:
             resp = c.get(route.path)
             assert resp.status_code == HTTPStatus.OK

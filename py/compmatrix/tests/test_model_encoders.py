@@ -1,7 +1,7 @@
 from compmatrix import model_encoders
 
 
-def test_clean_model_object_dict():
+def test_encode_model_as_dict():
     test_model_id_value = 0
     test_model_description_value = 'This is a test model.'
 
@@ -18,5 +18,5 @@ def test_clean_model_object_dict():
         'id': test_model_id_value,
         'description': test_model_description_value
     }
-    cleaned_model_dict = model_encoders.clean_model_object_dict(test_model)
+    cleaned_model_dict = model_encoders.encode_model_as_dict(test_model)
     assert cleaned_model_dict == expected_model_dict
