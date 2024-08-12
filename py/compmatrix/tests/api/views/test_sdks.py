@@ -15,7 +15,7 @@ def test_sdks_endpoint(client, test_sdks):
     # unsorted version in a different test.
     sorted_sdk_records = sorted(test_sdks, key=lambda s: s.name)
     for resp_sdk, test_sdk in zip(resp.json['sdks'], sorted_sdk_records):
-        assert test_sdk.name == resp_sdk['name']
-        assert test_sdk.slug == resp_sdk['slug']
-        assert test_sdk.url == resp_sdk['url']
-        assert test_sdk.description == resp_sdk['description']
+        assert resp_sdk['name'] == test_sdk.name
+        assert resp_sdk['slug'] == test_sdk.slug
+        assert resp_sdk['url'] == test_sdk.url
+        assert resp_sdk['description'] == test_sdk.description

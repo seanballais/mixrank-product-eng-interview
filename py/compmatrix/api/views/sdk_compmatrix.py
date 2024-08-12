@@ -14,7 +14,14 @@ def numbers():
     # PayPal   |   33
     # Stripe   |  875
     # Braintree| 2081
-    pass
+    # TODO: This is not final. Lol. Need to implement this properly.
+    return {
+        'numbers': [
+            [4, 3, 3],
+            [2, 5, 3],
+            [3, 3, 4]
+        ]
+    }
 
 
 def apps():

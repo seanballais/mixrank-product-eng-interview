@@ -161,7 +161,82 @@ def test_apps(app):
                        four_star_ratings=243216,
                        three_star_ratings=95109,
                        two_star_ratings=53757,
-                       one_star_ratings=94018)
+                       one_star_ratings=94018),
+            models.App(name='Bike Race: Free Style Games',
+                       company_url='https://www.topfreegames.com/games/'
+                                   'bikerace',
+                       release_date=None,
+                       genre_id=6014,
+                       artwork_large_url='https://is1-ssl.mzstatic.com/image/'
+                                         'thumb/Purple113/v4/89/db/41/'
+                                         '89db41ff-34f2-de25-131e-'
+                                         '96abc6057fc4/source/100x100bb.jpg',
+                       seller_name='Top Free Games',
+                       five_star_ratings=1663004,
+                       four_star_ratings=125180,
+                       three_star_ratings=54040,
+                       two_star_ratings=26050,
+                       one_star_ratings=38794),
+            models.App(name='Pandora: Music & Podcasts',
+                       company_url='http://www.pandora.com/',
+                       release_date=_timestamp_to_datetime(
+                           '2008-07-11 00:00:00'),
+                       genre_id=6011,
+                       artwork_large_url='https://is3-ssl.mzstatic.com/image/'
+                                         'thumb/Purple113/v4/a5/e8/63/'
+                                         'a5e86344-adfe-28c9-2e60-'
+                                         '56a18300ad86/source/100x100bb.jpg',
+                       seller_name='Pandora Media, Inc.',
+                       five_star_ratings=5933106,
+                       four_star_ratings=762539,
+                       three_star_ratings=261281,
+                       two_star_ratings=97646,
+                       one_star_ratings=231957),
+            models.App(name='Trivia Crack',
+                       company_url='http://www.etermax.com',
+                       release_date=_timestamp_to_datetime(
+                           '2013-10-16 23:50:26'),
+                       genre_id=6014,
+                       artwork_large_url='https://is5-ssl.mzstatic.com/image/'
+                                         'thumb/Purple123/v4/a9/34/1c/'
+                                         'a9341cdf-3771-7df7-e0b4-'
+                                         '8f2f38794a86/source/100x100bb.jpg',
+                       seller_name='Etermax',
+                       five_star_ratings=961220,
+                       four_star_ratings=271151,
+                       three_star_ratings=91572,
+                       two_star_ratings=27868,
+                       one_star_ratings=58754),
+            models.App(name='Solitaire',
+                       company_url='https://www.mobilityware.com',
+                       release_date=_timestamp_to_datetime(
+                           '2010-03-18 00:00:00'),
+                       genre_id=6014,
+                       artwork_large_url='https://is4-ssl.mzstatic.com/image/'
+                                         'thumb/Purple113/v4/7d/a6/fa/'
+                                         '7da6faed-435c-9917-0396-'
+                                         'ea0813267f2c/source/100x100bb.jpg',
+                       seller_name='Mobilityware',
+                       five_star_ratings=1953492,
+                       four_star_ratings=523566,
+                       three_star_ratings=202937,
+                       two_star_ratings=76844,
+                       one_star_ratings=93069),
+            models.App(name='Pinterest',
+                       company_url='http://www.pinterest.com',
+                       release_date=_timestamp_to_datetime(
+                           '2011-04-28 00:00:00'),
+                       genre_id=6012,
+                       artwork_large_url='https://is5-ssl.mzstatic.com/image/'
+                                         'thumb/Purple123/v4/dd/1c/02/'
+                                         'dd1c026d-dfba-c796-c511-'
+                                         'f9bb917a7f0f/source/100x100bb.jpg',
+                       seller_name='Pinterest, Inc.',
+                       five_star_ratings=9931250,
+                       four_star_ratings=1414778,
+                       three_star_ratings=363227,
+                       two_star_ratings=95981,
+                       one_star_ratings=145133)
         ]
 
         _add_model_objects_to_db(apps)
@@ -195,6 +270,92 @@ def test_sdks(app):
         yield sdks
 
         _delete_model_objects_from_db(sdks)
+
+
+@pytest.fixture
+def test_app_sdks(app, test_apps, test_sdks):
+    with app.app_context():
+        # Expected Competitive Matrix Values
+        #
+        #            | PayPal | card.io | Chartboost |
+        # -----------+--------+---------+------------|
+        # PayPal     |      4 |       3 |          3 |
+        # card.io    |      2 |       5 |          3 |
+        # Chartboost |      3 |       3 |          4 |
+        #
+        #            | PayPal | (none) |
+        # -----------+--------+--------|
+        # PayPal     |      4 |      6 |
+        # card.io    |      2 |      8 |
+        # Chartboost |      3 |      7 |
+        #
+        #            | PayPal | (none) |
+        # -----------+--------+--------|
+        # card.io    |      2 |      8 |
+        # (none)     |      4 |      8 |
+        #
+        # Interpretations:
+        #   App 0  - from SDK 1 and 2 to SDK 0
+        #   App 1  - from SDK 0 and 2 to SDK 1
+        #   App 2  - from SDK 0 and 1 to SDK 2
+        #   App 3  - from SDK 1 and 2 to SDK 0
+        #   App 4  - from SDK 0 and 2 to SDK 1
+        #   App 5  - from SDK 0 and 1 to SDK 2
+        #   App 6  - from SDK 0 to SDK 1
+        #   App 7  - from SDK 0 to SDK 2
+        #   App 8  - from SDK 1 to SDK 2
+        #   App 9  - using SDK 1
+        #   App 10 - used to use SDK 1, but we no longer have further SDK info
+        #   App 11 - used to use SDK 1, but we no longer have further SDK info
+        #   App 12 - from SDK 2 to SDK 0 and 1
+        #   App 13 - using SDK 1
+        #   App 14 - no info on SDKs used
+        app_sdks = [
+            models.AppSDK(app=test_apps[0], sdk=test_sdks[0], installed=True),
+            models.AppSDK(app=test_apps[0], sdk=test_sdks[1], installed=False),
+            models.AppSDK(app=test_apps[0], sdk=test_sdks[2], installed=False),
+            models.AppSDK(app=test_apps[1], sdk=test_sdks[0], installed=False),
+            models.AppSDK(app=test_apps[1], sdk=test_sdks[1], installed=True),
+            models.AppSDK(app=test_apps[1], sdk=test_sdks[2], installed=False),
+            models.AppSDK(app=test_apps[2], sdk=test_sdks[0], installed=False),
+            models.AppSDK(app=test_apps[2], sdk=test_sdks[1], installed=False),
+            models.AppSDK(app=test_apps[2], sdk=test_sdks[2], installed=True),
+            models.AppSDK(app=test_apps[3], sdk=test_sdks[0], installed=True),
+            models.AppSDK(app=test_apps[3], sdk=test_sdks[1], installed=False),
+            models.AppSDK(app=test_apps[3], sdk=test_sdks[2], installed=False),
+            models.AppSDK(app=test_apps[4], sdk=test_sdks[0], installed=False),
+            models.AppSDK(app=test_apps[4], sdk=test_sdks[1], installed=True),
+            models.AppSDK(app=test_apps[4], sdk=test_sdks[2], installed=False),
+            models.AppSDK(app=test_apps[5], sdk=test_sdks[0], installed=False),
+            models.AppSDK(app=test_apps[5], sdk=test_sdks[1], installed=False),
+            models.AppSDK(app=test_apps[5], sdk=test_sdks[2], installed=True),
+            models.AppSDK(app=test_apps[6], sdk=test_sdks[0], installed=False),
+            models.AppSDK(app=test_apps[6], sdk=test_sdks[1], installed=True),
+            models.AppSDK(app=test_apps[7], sdk=test_sdks[0], installed=False),
+            models.AppSDK(app=test_apps[7], sdk=test_sdks[2], installed=True),
+            models.AppSDK(app=test_apps[8], sdk=test_sdks[1], installed=False),
+            models.AppSDK(app=test_apps[8], sdk=test_sdks[2], installed=True),
+            models.AppSDK(app=test_apps[9], sdk=test_sdks[0], installed=True),
+            models.AppSDK(app=test_apps[10], sdk=test_sdks[1],
+                          installed=False),
+            models.AppSDK(app=test_apps[11], sdk=test_sdks[1],
+                          installed=False),
+            models.AppSDK(app=test_apps[12], sdk=test_sdks[0],
+                          installed=True),
+            models.AppSDK(app=test_apps[12], sdk=test_sdks[1],
+                          installed=True),
+            models.AppSDK(app=test_apps[12], sdk=test_sdks[2],
+                          installed=False),
+            models.AppSDK(app=test_apps[13], sdk=test_sdks[1],
+                          installed=True)
+        ]
+
+        _add_model_objects_to_db(app_sdks)
+
+        yield app_sdks
+
+        _delete_model_objects_from_db(app_sdks)
+        _delete_model_objects_from_db(app_sdks)
 
 
 def _add_model_objects_to_db(objects):

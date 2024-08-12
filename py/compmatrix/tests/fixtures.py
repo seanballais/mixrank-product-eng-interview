@@ -17,7 +17,8 @@ def app():
     yield app
 
     # Clean up.
-    os.remove(test_db_path)
+    if test_db_path.exists():
+        os.remove(test_db_path)
 
 
 @pytest.fixture(scope='session')
