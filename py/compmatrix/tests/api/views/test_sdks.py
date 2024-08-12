@@ -1,11 +1,11 @@
-from compmatrix.tests.api.fixtures import sdk_records
+from compmatrix.tests.api.fixtures import test_sdks
 
 from compmatrix.tests.fixtures import app, client
 
 SDKS_ENDPOINT = '/api/v1/sdks'
 
 
-def test_sdks_endpoint(client, sdk_records):
+def test_sdks_endpoint(client, test_sdks):
     resp = client.get(SDKS_ENDPOINT)
 
     # We're expecting the endpoint to respond with a sorted list of SDKs. It's
@@ -13,7 +13,7 @@ def test_sdks_endpoint(client, sdk_records):
     # place, so that we can properly communicate that we're expecting a sorted
     # response. Additionally, `sdk_records` might be used in its original
     # unsorted version in a different test.
-    sorted_sdk_records = sorted(sdk_records, key=lambda s: s.name)
+    sorted_sdk_records = sorted(test_sdks, key=lambda s: s.name)
     for resp_sdk, test_sdk in zip(resp.json['sdks'], sorted_sdk_records):
         assert test_sdk.name == resp_sdk['name']
         assert test_sdk.slug == resp_sdk['slug']

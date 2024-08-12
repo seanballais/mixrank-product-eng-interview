@@ -6,33 +6,50 @@ from compmatrix.tests.fixtures import app
 
 
 @pytest.fixture
-def sdk_records(app):
+def test_apps(app):
+    with app.app_context():
+        pass
+
+
+@pytest.fixture
+def test_sdks(app):
     with app.app_context():
         # Test data taken from the provided data.db file.
-        sdk1 = models.SDK(name='PayPal', slug='paypal',
-                          url='https://developer.paypal.com/webapps/developer'
-                              '/docs/integration/mobile/mobile-sdk-overview/',
-                          description='Accept credit cards and PayPal in your '
-                                      'iOS app.')
-        sdk2 = models.SDK(name='card.io', slug='card-io',
-                          url='https://www.card.io/',
-                          description='Credit card scanning for mobile apps.')
-        sdk3 = models.SDK(name='Chartboost', slug='chartboost',
-                          url='https://chartboost.com/',
-                          description='ChartboostSDK for showing ads and '
-                                      'more.')
+        sdks = [
+            models.SDK(name='PayPal', slug='paypal',
+                       url='https://developer.paypal.com/webapps/developer'
+                           '/docs/integration/mobile/mobile-sdk-overview/',
+                       description='Accept credit cards and PayPal in your '
+                                   'iOS app.'),
+            models.SDK(name='card.io', slug='card-io',
+                       url='https://www.card.io/',
+                       description='Credit card scanning for mobile apps.'),
+            models.SDK(name='Chartboost', slug='chartboost',
+                       url='https://chartboost.com/',
+                       description='ChartboostSDK for showing ads and '
+                                   'more.')
+        ]
 
-        db.session.add(sdk1)
-        db.session.add(sdk2)
-        db.session.add(sdk3)
+        _add_model_objects_to_db(sdks)
 
-        # We're just flushing since we'd like to keep the model object data in
-        # the database without expiring any objects.
-        db.session.flush()
+        yield sdks
 
-        yield [sdk1, sdk2, sdk3]
+        _delete_model_objects_from_db(sdks)
 
-        db.session.delete(sdk1)
-        db.session.delete(sdk2)
-        db.session.delete(sdk3)
-        db.session.flush()
+
+def _add_model_objects_to_db(objects):
+    for obj in objects:
+        db.session.add(obj)
+
+    # We're just flushing since we'd like to keep the model object data in
+    # the database without expiring any objects.
+    db.session.flush()
+
+
+def _delete_model_objects_from_db(objects):
+    for obj in objects:
+        db.session.delete(obj)
+
+    # We're just flushing since we'd like to keep the model object data in
+    # the database without expiring any objects.
+    db.session.flush()
