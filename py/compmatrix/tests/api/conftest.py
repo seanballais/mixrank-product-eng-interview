@@ -255,41 +255,6 @@ def test_db_data(app):
                                    'more.')
         ]
 
-        # Expected Competitive Matrix Values
-        #
-        #            | PayPal | card.io | Chartboost |
-        # -----------+--------+---------+------------|
-        # PayPal     |      4 |       3 |          3 |
-        # card.io    |      2 |       5 |          3 |
-        # Chartboost |      3 |       3 |          4 |
-        #
-        #            | PayPal | (none) |
-        # -----------+--------+--------|
-        # PayPal     |      4 |      6 |
-        # card.io    |      2 |      8 |
-        # Chartboost |      3 |      7 |
-        #
-        #            | PayPal | (none) |
-        # -----------+--------+--------|
-        # card.io    |      2 |      8 |
-        # (none)     |      4 |      8 |
-        #
-        # Interpretations:
-        #   App 0  - from SDK 1 and 2 to SDK 0
-        #   App 1  - from SDK 0 and 2 to SDK 1
-        #   App 2  - from SDK 0 and 1 to SDK 2
-        #   App 3  - from SDK 1 and 2 to SDK 0
-        #   App 4  - from SDK 0 and 2 to SDK 1
-        #   App 5  - from SDK 0 and 1 to SDK 2
-        #   App 6  - from SDK 0 to SDK 1
-        #   App 7  - from SDK 0 to SDK 2
-        #   App 8  - from SDK 1 to SDK 2
-        #   App 9  - using SDK 1
-        #   App 10 - used to use SDK 1, but we no longer have further SDK info
-        #   App 11 - used to use SDK 1, but we no longer have further SDK info
-        #   App 12 - from SDK 2 to SDK 0 and 1
-        #   App 13 - using SDK 1
-        #   App 14 - no info on SDKs used
         app_sdks = [
             models.AppSDK(app=apps[0], sdk=sdks[0], installed=True),
             models.AppSDK(app=apps[0], sdk=sdks[1], installed=False),
