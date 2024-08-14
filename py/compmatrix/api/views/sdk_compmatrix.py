@@ -2,26 +2,12 @@ from http import HTTPStatus
 
 from flask import request
 
+from compmatrix import db
+from compmatrix.api import models
 from compmatrix.api.views.codes import AnomalyCode
 
 
 def numbers():
-    # SQ: Query to base things off of.
-    # SELECT app_id
-    # FROM app_sdk
-    # WHERE
-    #   (sdk_id = 33 AND installed = false) OR
-    #   (sdk_id = 875 AND installed = true)
-    # GROUP BY app_id
-    # HAVING COUNT(sdk_id) = 2
-    # ORDER BY app_id
-    #
-    #             ID
-    # ---------------
-    # PayPal   |   33
-    # Stripe   |  875
-    # Braintree| 2081
-    #
     # We're sending back an HTTP 422 when responding to requests with
     # incomplete parameters, since everything is alright, but we're missing
     # some required content, which makes us unable to process stuff. Besides,
@@ -61,6 +47,61 @@ def numbers():
 
     from_sdks_param: list = request.args.getlist('from_sdks')
     to_sdks_param: list = request.args.getlist('to_sdks')
+
+    # SQ: Query to base things off of.
+    # SELECT app_id
+    # FROM app_sdk
+    # WHERE
+    #   (sdk_id = 33 AND installed = false) OR
+    #   (sdk_id = 875 AND installed = true)
+    # GROUP BY app_id
+    # HAVING COUNT(sdk_id) = 2
+    # ORDER BY app_id
+    #
+    #             ID
+    # ---------------
+    # PayPal   |   33
+    # Stripe   |  875
+    # Braintree| 2081
+    # expected_resp = {
+    #         'data': {
+    #             'numbers': [
+    #                 [4, 3, 3],
+    #                 [2, 5, 3],
+    #                 [3, 3, 4]
+    #             ]
+    #         }
+    #     }
+    numbers: list = []
+    print(db.session.query(models.AppSDK).count())
+    for from_sdk in from_sdks_param:
+        from_sdk_id: int = int(from_sdk)
+        row_numbers: list = []
+        for to_sdk in to_sdks_param:
+            to_sdk_id: int = int(to_sdk)
+            query = (
+                db
+                .select(models.AppSDK)
+                .where(
+                    db.or_(
+                        db.and_(
+                            models.AppSDK.sdk_id == from_sdk_id,
+                            models.AppSDK.installed == False
+                        ),
+                        db.and_(
+                            models.AppSDK.sdk_id == to_sdk_id,
+                            models.AppSDK.installed == True
+                        ),
+                    )
+                )
+                .group_by(models.AppSDK.app_id)
+                .having(db.func.count(models.AppSDK.sdk_id) > 1)
+            )
+            query = db.select(db.func.count('*')).select_from(query.subquery())
+            count: int = db.session.execute(query).scalar_one()
+            row_numbers.append(count)
+
+        print(row_numbers)
 
     resp: dict[str, object] = {
         'data': {

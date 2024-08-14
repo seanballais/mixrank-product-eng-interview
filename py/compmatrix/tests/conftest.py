@@ -11,7 +11,6 @@ def app():
     test_db_path = Path(__file__).parent.resolve() / 'test.db'
     app = create_app(test_db_path)
     with app.app_context():
-        db.drop_all()  # Ensures we have a relatively clean database file.
         db.create_all()
 
     yield app
@@ -26,7 +25,7 @@ def client(app):
     return app.test_client()
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def data_routes():
     def test_view_index():
         return ''

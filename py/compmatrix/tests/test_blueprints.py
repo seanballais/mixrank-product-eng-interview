@@ -4,8 +4,6 @@ from flask import Flask
 
 from compmatrix import blueprints
 
-from compmatrix.tests.fixtures import data_routes
-
 
 def test_create_blueprint(data_routes):
     name = 'blueprints'

@@ -12,6 +12,7 @@ def create_app(db_path: Path) -> Flask:
 
     app: Flask = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+    #    app.config['SQLALCHEMY_ECHO'] = True
 
     db.init_app(app)
 

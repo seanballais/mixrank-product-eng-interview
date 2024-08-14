@@ -4,8 +4,6 @@ from flask import Blueprint, Flask
 
 from compmatrix import routing
 
-from compmatrix.tests.fixtures import data_routes
-
 
 def test_create_route_obj():
     route_path = '/'

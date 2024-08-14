@@ -1,16 +1,15 @@
 from http import HTTPStatus
 
 from compmatrix.api.views.codes import AnomalyCode
-from compmatrix.tests.api.fixtures import test_sdks
 
-from compmatrix.tests.fixtures import app, client
+from compmatrix.tests.conftest import app, client
 
 BASE_SDK_COMPMATRIX_ENDPOINT = '/api/v1/sdk-compmatrix'
 SDK_COMPMATRIX_NUMBERS_ENDPOINT = f'{BASE_SDK_COMPMATRIX_ENDPOINT}/numbers'
 
 
-def test_numbers_endpoint_all_row_cols(client, test_sdks):
-    sdk_ids = [sdk.id for sdk in test_sdks]
+def test_numbers_endpoint_all_row_cols(client, test_db_data):
+    sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': sdk_ids
@@ -32,9 +31,8 @@ def test_numbers_endpoint_all_row_cols(client, test_sdks):
     assert resp.status_code == HTTPStatus.OK
 
 
-def test_numbers_endpoint_warn_unknown_params(client, test_sdks):
-    print('1')
-    sdk_ids = [sdk.id for sdk in test_sdks]
+def test_numbers_endpoint_warn_unknown_params(client, test_db_data):
+    sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': sdk_ids,
@@ -78,7 +76,7 @@ def test_numbers_endpoint_warn_unknown_params(client, test_sdks):
     assert resp.status_code == HTTPStatus.OK
 
 
-def test_numbers_endpoint_no_params(client, test_sdks):
+def test_numbers_endpoint_no_params(client, test_db_data):
     resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT)
 
     expected_resp = {
@@ -97,8 +95,8 @@ def test_numbers_endpoint_no_params(client, test_sdks):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_numbers_endpoint_no_from_sdks(client, test_sdks):
-    sdk_ids = [sdk.id for sdk in test_sdks]
+def test_numbers_endpoint_no_from_sdks(client, test_db_data):
+    sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
         'to_sdks': sdk_ids
     }
@@ -117,8 +115,8 @@ def test_numbers_endpoint_no_from_sdks(client, test_sdks):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_numbers_endpoint_typo_from_sdks(client, test_sdks):
-    sdk_ids = [sdk.id for sdk in test_sdks]
+def test_numbers_endpoint_typo_from_sdks(client, test_db_data):
+    sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
         'frm': sdk_ids,
         'to_sdks': sdk_ids
@@ -140,8 +138,8 @@ def test_numbers_endpoint_typo_from_sdks(client, test_sdks):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_numbers_endpoint_no_to_sdks(client, test_sdks):
-    sdk_ids = [sdk.id for sdk in test_sdks]
+def test_numbers_endpoint_no_to_sdks(client, test_db_data):
+    sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
         'from_sdks': sdk_ids
     }
@@ -160,8 +158,8 @@ def test_numbers_endpoint_no_to_sdks(client, test_sdks):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_numbers_endpoint_typo_to_sdks(client, test_sdks):
-    sdk_ids = [sdk.id for sdk in test_sdks]
+def test_numbers_endpoint_typo_to_sdks(client, test_db_data):
+    sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
         'from_sdks': sdk_ids,
         'to': sdk_ids

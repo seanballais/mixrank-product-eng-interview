@@ -4,11 +4,12 @@ import pytest
 
 from compmatrix import db
 from compmatrix.api import models
-from compmatrix.tests.fixtures import app
 
 
-@pytest.fixture
-def test_apps(app):
+@pytest.fixture(scope='session')
+def test_db_data(app):
+    # We have to put the test database data in one fixture, since the database
+    # would get locked if we don't.
     with app.app_context():
         apps = [
             models.App(name='Clash of Clans',
@@ -238,17 +239,6 @@ def test_apps(app):
                        two_star_ratings=95981,
                        one_star_ratings=145133)
         ]
-
-        _add_model_objects_to_db(apps)
-
-        yield apps
-
-        _delete_model_objects_from_db(apps)
-
-
-@pytest.fixture
-def test_sdks(app):
-    with app.app_context():
         # Test data taken from the provided data.db file.
         sdks = [
             models.SDK(name='PayPal', slug='paypal',
@@ -265,16 +255,6 @@ def test_sdks(app):
                                    'more.')
         ]
 
-        _add_model_objects_to_db(sdks)
-
-        yield sdks
-
-        _delete_model_objects_from_db(sdks)
-
-
-@pytest.fixture
-def test_app_sdks(app, test_apps, test_sdks):
-    with app.app_context():
         # Expected Competitive Matrix Values
         #
         #            | PayPal | card.io | Chartboost |
@@ -311,51 +291,52 @@ def test_app_sdks(app, test_apps, test_sdks):
         #   App 13 - using SDK 1
         #   App 14 - no info on SDKs used
         app_sdks = [
-            models.AppSDK(app=test_apps[0], sdk=test_sdks[0], installed=True),
-            models.AppSDK(app=test_apps[0], sdk=test_sdks[1], installed=False),
-            models.AppSDK(app=test_apps[0], sdk=test_sdks[2], installed=False),
-            models.AppSDK(app=test_apps[1], sdk=test_sdks[0], installed=False),
-            models.AppSDK(app=test_apps[1], sdk=test_sdks[1], installed=True),
-            models.AppSDK(app=test_apps[1], sdk=test_sdks[2], installed=False),
-            models.AppSDK(app=test_apps[2], sdk=test_sdks[0], installed=False),
-            models.AppSDK(app=test_apps[2], sdk=test_sdks[1], installed=False),
-            models.AppSDK(app=test_apps[2], sdk=test_sdks[2], installed=True),
-            models.AppSDK(app=test_apps[3], sdk=test_sdks[0], installed=True),
-            models.AppSDK(app=test_apps[3], sdk=test_sdks[1], installed=False),
-            models.AppSDK(app=test_apps[3], sdk=test_sdks[2], installed=False),
-            models.AppSDK(app=test_apps[4], sdk=test_sdks[0], installed=False),
-            models.AppSDK(app=test_apps[4], sdk=test_sdks[1], installed=True),
-            models.AppSDK(app=test_apps[4], sdk=test_sdks[2], installed=False),
-            models.AppSDK(app=test_apps[5], sdk=test_sdks[0], installed=False),
-            models.AppSDK(app=test_apps[5], sdk=test_sdks[1], installed=False),
-            models.AppSDK(app=test_apps[5], sdk=test_sdks[2], installed=True),
-            models.AppSDK(app=test_apps[6], sdk=test_sdks[0], installed=False),
-            models.AppSDK(app=test_apps[6], sdk=test_sdks[1], installed=True),
-            models.AppSDK(app=test_apps[7], sdk=test_sdks[0], installed=False),
-            models.AppSDK(app=test_apps[7], sdk=test_sdks[2], installed=True),
-            models.AppSDK(app=test_apps[8], sdk=test_sdks[1], installed=False),
-            models.AppSDK(app=test_apps[8], sdk=test_sdks[2], installed=True),
-            models.AppSDK(app=test_apps[9], sdk=test_sdks[0], installed=True),
-            models.AppSDK(app=test_apps[10], sdk=test_sdks[1],
-                          installed=False),
-            models.AppSDK(app=test_apps[11], sdk=test_sdks[1],
-                          installed=False),
-            models.AppSDK(app=test_apps[12], sdk=test_sdks[0],
-                          installed=True),
-            models.AppSDK(app=test_apps[12], sdk=test_sdks[1],
-                          installed=True),
-            models.AppSDK(app=test_apps[12], sdk=test_sdks[2],
-                          installed=False),
-            models.AppSDK(app=test_apps[13], sdk=test_sdks[1],
-                          installed=True)
+            models.AppSDK(app=apps[0], sdk=sdks[0], installed=True),
+            models.AppSDK(app=apps[0], sdk=sdks[1], installed=False),
+            models.AppSDK(app=apps[0], sdk=sdks[2], installed=False),
+            models.AppSDK(app=apps[1], sdk=sdks[0], installed=False),
+            models.AppSDK(app=apps[1], sdk=sdks[1], installed=True),
+            models.AppSDK(app=apps[1], sdk=sdks[2], installed=False),
+            models.AppSDK(app=apps[2], sdk=sdks[0], installed=False),
+            models.AppSDK(app=apps[2], sdk=sdks[1], installed=False),
+            models.AppSDK(app=apps[2], sdk=sdks[2], installed=True),
+            models.AppSDK(app=apps[3], sdk=sdks[0], installed=True),
+            models.AppSDK(app=apps[3], sdk=sdks[1], installed=False),
+            models.AppSDK(app=apps[3], sdk=sdks[2], installed=False),
+            models.AppSDK(app=apps[4], sdk=sdks[0], installed=False),
+            models.AppSDK(app=apps[4], sdk=sdks[1], installed=True),
+            models.AppSDK(app=apps[4], sdk=sdks[2], installed=False),
+            models.AppSDK(app=apps[5], sdk=sdks[0], installed=False),
+            models.AppSDK(app=apps[5], sdk=sdks[1], installed=False),
+            models.AppSDK(app=apps[5], sdk=sdks[2], installed=True),
+            models.AppSDK(app=apps[6], sdk=sdks[0], installed=False),
+            models.AppSDK(app=apps[6], sdk=sdks[1], installed=True),
+            models.AppSDK(app=apps[7], sdk=sdks[0], installed=False),
+            models.AppSDK(app=apps[7], sdk=sdks[2], installed=True),
+            models.AppSDK(app=apps[8], sdk=sdks[1], installed=False),
+            models.AppSDK(app=apps[8], sdk=sdks[2], installed=True),
+            models.AppSDK(app=apps[9], sdk=sdks[0], installed=True),
+            models.AppSDK(app=apps[10], sdk=sdks[1], installed=False),
+            models.AppSDK(app=apps[11], sdk=sdks[1], installed=False),
+            models.AppSDK(app=apps[12], sdk=sdks[0], installed=True),
+            models.AppSDK(app=apps[12], sdk=sdks[1], installed=True),
+            models.AppSDK(app=apps[12], sdk=sdks[2], installed=False),
+            models.AppSDK(app=apps[13], sdk=sdks[1], installed=True)
         ]
 
+        _add_model_objects_to_db(apps)
+        _add_model_objects_to_db(sdks)
         _add_model_objects_to_db(app_sdks)
 
-        yield app_sdks
+        yield {
+            'apps': apps,
+            'sdks': sdks,
+            'app_sdks': app_sdks
+        }
 
         _delete_model_objects_from_db(app_sdks)
-        _delete_model_objects_from_db(app_sdks)
+        _delete_model_objects_from_db(sdks)
+        _delete_model_objects_from_db(apps)
 
 
 def _add_model_objects_to_db(objects):
