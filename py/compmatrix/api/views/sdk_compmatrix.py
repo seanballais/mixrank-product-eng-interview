@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from flask import request
+from sqlalchemy.sql.selectable import Select
 
 from compmatrix import db
 from compmatrix.api import models
@@ -48,56 +49,48 @@ def numbers():
     from_sdks_param: list = request.args.getlist('from_sdks')
     to_sdks_param: list = request.args.getlist('to_sdks')
 
-    # SQ: Query to base things off of.
-    # SELECT app_id
-    # FROM app_sdk
-    # WHERE
-    #   (sdk_id = 33 AND installed = false) OR
-    #   (sdk_id = 875 AND installed = true)
-    # GROUP BY app_id
-    # HAVING COUNT(sdk_id) = 2
-    # ORDER BY app_id
-    #
-    #             ID
-    # ---------------
-    # PayPal   |   33
-    # Stripe   |  875
-    # Braintree| 2081
-    # expected_resp = {
-    #         'data': {
-    #             'numbers': [
-    #                 [4, 3, 3],
-    #                 [2, 5, 3],
-    #                 [3, 3, 4]
-    #             ]
-    #         }
-    #     }
     numbers: list = []
-    print(db.session.query(models.AppSDK).count())
     for from_sdk in from_sdks_param:
         from_sdk_id: int = int(from_sdk)
         row_numbers: list = []
         for to_sdk in to_sdks_param:
             to_sdk_id: int = int(to_sdk)
-            query = (
-                db
-                .select(models.AppSDK)
-                .where(
-                    db.or_(
+            if from_sdk_id == to_sdk_id:
+                sdk_id: int = from_sdk_id  # Can be `to_sdk` too if you prefer.
+                query: Select = (
+                    db
+                    .select(models.AppSDK)
+                    .where(
                         db.and_(
-                            models.AppSDK.sdk_id == from_sdk_id,
-                            models.AppSDK.installed == False
-                        ),
-                        db.and_(
-                            models.AppSDK.sdk_id == to_sdk_id,
+                            models.AppSDK.sdk_id == sdk_id,
                             models.AppSDK.installed == True
-                        ),
+                        )
                     )
+                    .group_by(models.AppSDK.app_id)
                 )
-                .group_by(models.AppSDK.app_id)
-                .having(db.func.count(models.AppSDK.sdk_id) > 1)
-            )
-            query = db.select(db.func.count('*')).select_from(query.subquery())
+                query: Select = db.select(db.func.count('*')).select_from(
+                    query.subquery())
+            else:
+                query: Select = (
+                    db
+                    .select(models.AppSDK)
+                    .where(
+                        db.or_(
+                            db.and_(
+                                models.AppSDK.sdk_id == from_sdk_id,
+                                models.AppSDK.installed == False
+                            ),
+                            db.and_(
+                                models.AppSDK.sdk_id == to_sdk_id,
+                                models.AppSDK.installed == True
+                            ),
+                        )
+                    )
+                    .group_by(models.AppSDK.app_id)
+                    .having(db.func.count(models.AppSDK.sdk_id) > 1)
+                )
+                query: Select = db.select(db.func.count('*')).select_from(
+                    query.subquery())
             count: int = db.session.execute(query).scalar_one()
             row_numbers.append(count)
 
