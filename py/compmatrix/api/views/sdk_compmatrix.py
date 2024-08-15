@@ -100,7 +100,7 @@ def numbers():
 
         if len(to_sdks_param) < num_sdks:
             # We're gonna have to add a column for "(none)".
-            query: Select | CompoundSelect = (
+            query: Select = (
                 db
                 .select(models.AppSDK)
                 .where(
@@ -134,7 +134,7 @@ def numbers():
                         )
                     )
                 )
-                query = query.union(subquery)
+                query: CompoundSelect = query.union(subquery)
 
             query: Select = db.select(db.func.count('*')).select_from(
                 query.subquery())
