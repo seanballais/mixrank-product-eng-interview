@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
 from flask import request
-from sqlalchemy.sql.selectable import Select
+from sqlalchemy.sql.selectable import Select, CompoundSelect
 
 from compmatrix import db
 from compmatrix.api import models
@@ -46,15 +46,19 @@ def numbers():
             }
         }, HTTPStatus.UNPROCESSABLE_ENTITY
 
-    from_sdks_param: list = request.args.getlist('from_sdks')
-    to_sdks_param: list = request.args.getlist('to_sdks')
+    from_sdks_param: list[int] = [int(s) for s in
+                                  request.args.getlist('from_sdks')]
+    to_sdks_param: list[int] = [int(s) for s in
+                                request.args.getlist('to_sdks')]
+
+    num_sdks: int = db.session.query(models.SDK).count()
 
     numbers: list = []
     for from_sdk in from_sdks_param:
-        from_sdk_id: int = int(from_sdk)
+        from_sdk_id: int = from_sdk
         row_numbers: list = []
         for to_sdk in to_sdks_param:
-            to_sdk_id: int = int(to_sdk)
+            to_sdk_id: int = to_sdk
             if from_sdk_id == to_sdk_id:
                 sdk_id: int = from_sdk_id  # Can be `to_sdk` too if you prefer.
                 query: Select = (
@@ -94,15 +98,54 @@ def numbers():
             count: int = db.session.execute(query).scalar_one()
             row_numbers.append(count)
 
-        print(row_numbers)
+        if len(to_sdks_param) < num_sdks:
+            # We're gonna have to add a column for "(none)".
+            query: Select | CompoundSelect = (
+                db
+                .select(models.AppSDK)
+                .where(
+                    db.or_(
+                        db.and_(
+                            models.AppSDK.sdk_id == from_sdk_id,
+                            models.AppSDK.installed == False
+                        ),
+                        db.and_(
+                            models.AppSDK.sdk_id.not_in(to_sdks_param),
+                            models.AppSDK.installed == True
+                        ),
+                    )
+                )
+                .group_by(models.AppSDK.app_id)
+                .having(db.func.count(models.AppSDK.sdk_id) > 1)
+            )
+            if from_sdk_id not in to_sdks_param:
+                # The current SDK was not specified in the to_sdks parameter.
+                # So, it's part of the "(none)" column. We need this separate
+                # query since the prior query does not include apps that have
+                # the current SDK installed but is not part of the to_sdks
+                # parameters.
+                subquery: Select = (
+                    db
+                    .select(models.AppSDK)
+                    .where(
+                        db.and_(
+                            models.AppSDK.sdk_id == from_sdk_id,
+                            models.AppSDK.installed == True
+                        )
+                    )
+                )
+                query = query.union(subquery)
+
+            query: Select = db.select(db.func.count('*')).select_from(
+                query.subquery())
+            count: int = db.session.execute(query).scalar_one()
+            row_numbers.append(count)
+
+        numbers.append(row_numbers)
 
     resp: dict[str, object] = {
         'data': {
-            'numbers': [
-                [4, 3, 3],
-                [2, 5, 3],
-                [3, 3, 4]
-            ]
+            'numbers': numbers
         }
     }
 

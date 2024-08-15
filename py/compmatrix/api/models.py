@@ -34,6 +34,9 @@ class SDK(db.Model):
 
 class AppSDK(db.Model):
     __tablename__ = 'app_sdk'
+    __table_args__ = (
+        db.PrimaryKeyConstraint('app_id', 'sdk_id'),
+    )
 
     app_id = db.Column(db.Integer, db.ForeignKey('app.id'), primary_key=True)
     sdk_id = db.Column(db.Integer, db.ForeignKey('sdk.id'), primary_key=True)

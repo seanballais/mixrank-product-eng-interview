@@ -50,7 +50,7 @@ def test_numbers_endpoint_all_row_one_cols(client, test_db_data):
     sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
         'from_sdks': sdk_ids,
-        'to_sdks': sdk_ids
+        'to_sdks': [sdk_ids[0]]
     }
     resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
                       query_string=query_string)
@@ -79,8 +79,8 @@ def test_numbers_endpoint_one_row_one_cols(client, test_db_data):
     # (none)     |      4 |      8 |
     sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
-        'from_sdks': sdk_ids,
-        'to_sdks': sdk_ids
+        'from_sdks': [sdk_ids[1]],
+        'to_sdks': [sdk_ids[0]]
     }
     resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
                       query_string=query_string)
@@ -107,7 +107,7 @@ def test_numbers_endpoint_one_row_all_cols(client, test_db_data):
     # (none)  |      5 |       3 |          4 |
     sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
-        'from_sdks': sdk_ids,
+        'from_sdks': [sdk_ids[1]],
         'to_sdks': sdk_ids
     }
     resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
@@ -272,3 +272,5 @@ def test_numbers_endpoint_typo_to_sdks(client, test_db_data):
 
     assert resp.json == expected_resp
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+# TODO: Add test cases where unknown IDs were used.
