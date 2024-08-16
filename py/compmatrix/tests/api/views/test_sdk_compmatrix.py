@@ -104,7 +104,7 @@ def test_numbers_endpoint_one_row_all_cols(client, test_db_data):
     #         | PayPal | card.io | Chartboost |
     # --------+--------+---------+------------|
     # card.io |      2 |       5 |          3 |
-    # (none)  |      5 |       3 |          4 |
+    # (none)  |      4 |       4 |          4 |
     sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
         'from_sdks': [sdk_ids[1]],
@@ -116,8 +116,8 @@ def test_numbers_endpoint_one_row_all_cols(client, test_db_data):
     expected_resp = {
         'data': {
             'numbers': [
-                [2, 8],
-                [4, 8]
+                [2, 5, 3],
+                [4, 4, 4]
             ]
         }
     }
@@ -274,3 +274,4 @@ def test_numbers_endpoint_typo_to_sdks(client, test_db_data):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 # TODO: Add test cases where unknown IDs were used.
+# TODO: Add test cases where the order of IDs are different.
