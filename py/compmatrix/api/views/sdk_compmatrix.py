@@ -178,7 +178,7 @@ def numbers():
                 # "(none)" column, and we should include it in our count even
                 # though it only has one row (which, as mentioned previously,
                 # happens when an app only has one SDK that is also currently
-                # installed)
+                # installed).
                 having_count_query = db.func.count('*') >= 1
 
             query: Select = (
@@ -212,8 +212,120 @@ def numbers():
                 )
             )
 
-            query: Select = db.select(db.func.count('*')).select_from(
-                query.subquery())
+            query: Select = db.select(
+                db.func.count('*')
+            ).select_from(
+                query.subquery()
+            )
+            count: int = db.session.execute(query).scalar_one()
+            row_numbers.append(count)
+
+        if len(to_sdks_param) < num_sdks:
+            # Expected Rough Equivalent SQL Query:
+            #
+            # SELECT COUNT(*)
+            # FROM (
+            # 	SELECT *
+            # 	FROM (
+            # 		SELECT *
+            # 		FROM (
+            # 			SELECT *
+            # 			FROM app_sdk
+            # 			WHERE
+            # 				sdk_id NOT IN (from_sdks_param)
+            # 	    			AND installed = false
+            # 	      		OR
+            # 				sdk_id NOT IN (to_sdks_param) AND installed = true
+            # 			GROUP BY app_id
+            # 			HAVING COUNT(*) > 1
+            # 	   		    AND SUM(CASE WHEN installed THEN 1 ELSE 0 END) > 0
+            # 		)
+            # 		UNION
+            # 		SELECT *
+            # 		FROM app_sdk
+            # 		WHERE
+            # 			sdk_id NOT IN (from_sdks_param + to_sdks_param)
+            # 	   		    AND installed = true
+            # 	)
+            # 	GROUP BY app_id -- [^.^]
+            # )
+            #
+            # First, get all the apps that had previous SDKs that are not part
+            # of the `from_sdks_param` but are now using SDKs that are not part
+            # of the `to_sdks_param`. This query will not ignore apps that only
+            # have one SDK installed. The way our query is formed initially
+            # includes apps with only one SDK installed with that SDK having
+            # its own row in the competitive matrix. These only use one row.
+            # So, later in the query, they are removed. But this also removes
+            # apps that also have one SDK installed currently and throughout
+            # its lifetime but does not have its own row in the matrix. The
+            # next query lets us get these "lost" rows again.
+            query1: Select = (
+                db
+                .select(models.AppSDK)
+                .where(
+                    db.or_(
+                        db.and_(
+                            models.AppSDK.sdk_id.not_in(from_sdks_param),
+                            models.AppSDK.installed == False
+                        ),
+                        db.and_(
+                            models.AppSDK.sdk_id.not_in(to_sdks_param),
+                            models.AppSDK.installed == True
+                        )
+                    )
+                )
+                .group_by(models.AppSDK.app_id)
+                .having(
+                    db.and_(
+                        db.func.count('*') > 1,
+                        db.func.sum(
+                            db.case(
+                                (models.AppSDK.installed, 1),
+                                else_=0
+                            )
+                        ) > 0
+                    )
+                )
+            )
+            query1: CompoundSelect = db.select(query1.subquery())
+
+            all_sdks_specified: list[int] = list(
+                set(from_sdks_param + to_sdks_param)
+            )
+            # This query will get all apps that have SDKs that are not
+            # specified in either `from_sdk_params` or `to_sdk_params`. This
+            # will also capture apps that we already have in the previous
+            # query. We'll remove duplicates later after a union.
+            query2: Select = (
+                db
+                .select(models.AppSDK)
+                .where(
+                    db.and_(
+                        models.AppSDK.sdk_id.not_in(all_sdks_specified),
+                        models.AppSDK.installed == True
+                    )
+                )
+            )
+
+            # Union the two queries so we get the apps with SDKs that are not
+            # specified in the competitive matrix.
+            query: CompoundSelect = query1.union(query2)
+
+            # Merge the rows that share the same app ID with a `GROUP BY`.
+            # We're using 'app_id' for the GROUP BY statement instead of
+            # `models.AppSDK.app_id` because the latter will cause SQLAlchemy
+            # to generate `GROUP BY app_sdk.app_id`. This will cause the entire
+            # query to fail since we didn't reference `app_sdk` in this level
+            # of the query. (See the SQL query above for reference. This GROUP
+            # BY statement is marked by a "[^.^]" label in a comment. Kawaiii).
+            # Fortunately, the query at this will have an `app_id` column,
+            # resulting from the effects of the innermost subqueries. So, we'll
+            # just reference the column directly with 'app_id'.
+            query: Select = db.select(query.subquery()).group_by('app_id')
+
+            # Now, get the count.
+            query = db.select(db.func.count('*')).select_from(query.subquery())
             count: int = db.session.execute(query).scalar_one()
             row_numbers.append(count)
 
