@@ -126,6 +126,101 @@ def test_numbers_endpoint_one_row_all_cols(client, test_db_data):
     assert resp.status_code == HTTPStatus.OK
 
 
+# TODO: Add test cases where the order of IDs are different.
+def test_numbers_endpoint_all_row_cols_shuffled1(client, test_db_data):
+    #      Expected Competitive Matrix Values
+    #
+    #            | Chartboost | card.io | PayPal |
+    # -----------+------------|---------+--------+
+    # Chartboost |          4 |       3 |      3 |
+    # card.io    |          3 |       5 |      2 |
+    # PayPal     |          3 |       3 |      4 |
+    sdks = [sdk.id for sdk in test_db_data['sdks']]
+    sdk_ids = [sdks[2], sdks[1], sdks[0]]
+    query_string = {
+        'from_sdks': sdk_ids,
+        'to_sdks': sdk_ids
+    }
+    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
+                      query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'numbers': [
+                [4, 3, 3],
+                [3, 5, 2],
+                [3, 3, 4]
+            ]
+        }
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.OK
+
+
+def test_numbers_endpoint_all_row_shuffled1_one_cols(client, test_db_data):
+    #      Expected Competitive
+    #         Matrix Values
+    #
+    #            | PayPal | (none) |
+    # -----------+--------+--------|
+    # card.io    |      2 |      8 |
+    # Chartboost |      3 |      7 |
+    # PayPal     |      4 |      6 |
+    sdks = [sdk.id for sdk in test_db_data['sdks']]
+    query_string = {
+        'from_sdks': [sdks[1], sdks[2], sdks[0]],
+        'to_sdks': [sdks[0]]
+    }
+    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
+                      query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'numbers': [
+                [2, 8],
+                [3, 7],
+                [4, 6]
+            ]
+        }
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.OK
+
+
+def test_numbers_endpoint_one_row_all_cols_shuffled1(client, test_db_data):
+    #    Expected Competitive Matrix Values
+    #
+    #         | card.io | Chartboost | PayPal |
+    # --------+---------+------------|--------+
+    # card.io |       5 |          3 |      2 |
+    # (none)  |       4 |          4 |      4 |
+    sdks = [sdk.id for sdk in test_db_data['sdks']]
+    query_string = {
+        'from_sdks': [sdks[1]],
+        'to_sdks': [sdks[1], sdks[2], sdks[0]]
+    }
+    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
+                      query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'numbers': [
+                [5, 3, 2],
+                [4, 4, 4]
+            ]
+        }
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.OK
+
+
+# TODO: Add test cases where there are two rows with specific SDKs and one row
+#       as the "(none)" row.
+
+
 def test_numbers_endpoint_warn_unknown_params(client, test_db_data):
     sdk_ids = [sdk.id for sdk in test_db_data['sdks']]
     query_string = {
@@ -274,6 +369,3 @@ def test_numbers_endpoint_typo_to_sdks(client, test_db_data):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 # TODO: Add test cases where unknown IDs were used.
-# TODO: Add test cases where the order of IDs are different.
-# TODO: Add test cases where there are two rows with specific SDKs and one row
-#       as the "(none)" row.
