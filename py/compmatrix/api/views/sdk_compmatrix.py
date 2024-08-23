@@ -182,6 +182,11 @@ def _check_for_unknown_ids_in_params(resp: dict[str, object | list],
 
 
 def _check_for_unknown_ids_in_param(ids: list[int]) -> list[int]:
+    # As of August 2024, SQLAlchemy 2.0 does not have proper support for CTEs
+    # for VALUES() rows. You would still need to use a SELECT FROM VALUES()
+    # query inside the CTE just to make things work with SQLAlchemy. I'm also
+    # having difficulty with such a query form in SQLite, where I am getting
+    # syntax errors. So, we're just gonna use a raw SQL query for this one.
     query = db.text(
         'WITH id_list(id) AS :ids '
         'SELECT id '
