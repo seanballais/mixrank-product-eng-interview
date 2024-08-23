@@ -6,9 +6,13 @@ from compmatrix import routing
 
 
 def test_create_route_obj():
+    route_name = 'route_name'
     route_path = '/'
     expected_route_output = 'you have been rick rolled'
-    route = routing.Route(route_path, lambda: expected_route_output)
+    route = routing.Route(route_name,
+                          route_path,
+                          lambda: expected_route_output)
+    assert route.name == route_name
     assert route.path == route_path
     assert route.view_func() == expected_route_output
 

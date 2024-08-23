@@ -37,8 +37,8 @@ def data_routes():
         return 'ab'
 
     routes = [
-        routing.Route('/', test_view_index),
-        routing.Route('/a', test_view_a),
-        routing.Route('/a/b', test_view_ab),
+        routing.Route('index', '/', test_view_index),
+        routing.Route('a', '/a', test_view_a),
+        routing.Route('ab', '/a/b', test_view_ab),
     ]
     yield routes
