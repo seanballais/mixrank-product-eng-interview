@@ -11,7 +11,7 @@ from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.utils import writing
 
 
-def numbers():
+def view():
     """
     Returns the number of apps that previously and currently have installed
     the SDKs specified in the parameters.
@@ -93,10 +93,6 @@ def numbers():
     }
 
     return resp
-
-
-def apps():
-    pass
 
 
 def _check_for_missing_params(resp: dict[str, object | list],
