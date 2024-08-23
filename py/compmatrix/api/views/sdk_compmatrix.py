@@ -52,6 +52,8 @@ def numbers():
     for from_sdk in from_sdks_param:
         from_sdk_id: int = from_sdk
         row_numbers: list = []
+
+        # Get the numbers of apps from and to SDKs.
         for to_sdk in to_sdks_param:
             to_sdk_id: int = to_sdk
             count: int = db.session.execute(
@@ -59,7 +61,8 @@ def numbers():
             ).scalar_one()
             row_numbers.append(count)
 
-        # And we're gonna have to add a column for "(none)".
+        # And we're gonna add a column for "(none)", since we're also gonna
+        # count apps that used to have SDKs installed.
         count: int = db.session.execute(
             _get_query_for_from_sdk_to_none(from_sdk_id, to_sdks_param)
         ).scalar_one()
@@ -68,7 +71,7 @@ def numbers():
         number_values.append(row_numbers)
 
     if len(from_sdks_param) < num_sdks:
-        # We're gonna have to add a row for "(none)".
+        # We're gonna have to add a row for SDKs that were not specified.
         row_numbers: list = []
         for to_sdk_id in to_sdks_param:
             count: int = db.session.execute(
@@ -76,6 +79,8 @@ def numbers():
             ).scalar_one()
             row_numbers.append(count)
 
+        # And then make a column for "(none)" again, since the apps that no
+        # longer have SDKs installed are still counted.
         count: int = db.session.execute(
             _get_query_for_none_to_none(from_sdks_param, to_sdks_param)
         ).scalar_one()
