@@ -1,5 +1,3 @@
-from compmatrix.tests.conftest import app, client
-
 SDKS_ENDPOINT = '/api/v1/sdks'
 
 

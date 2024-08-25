@@ -3,11 +3,7 @@ Tests the /api/v1/sdk-compmatrix/numbers endpoint.
 """
 from http import HTTPStatus
 
-import pytest
-
 from compmatrix.api.views.codes import AnomalyCode
-
-from compmatrix.tests.conftest import app, client
 from compmatrix.tests.api.views.test_sdk_compmatrix import (
     BASE_SDK_COMPMATRIX_ENDPOINT
 )
@@ -16,11 +12,6 @@ SDK_COMPMATRIX_NUMBERS_ENDPOINT = f'{BASE_SDK_COMPMATRIX_ENDPOINT}/numbers'
 
 # Try converting the integers immediately below to hex. ;-)
 UNKNOWN_SDK_IDS = [3737844653, 3405697037, 3669732608]
-
-
-@pytest.fixture(scope='session')
-def sdk_ids(test_db_data):
-    yield [sdk.id for sdk in test_db_data['sdks']]
 
 
 def test_all_row_cols(client, test_db_data, sdk_ids):

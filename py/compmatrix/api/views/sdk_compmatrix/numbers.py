@@ -8,6 +8,7 @@ from werkzeug.datastructures import MultiDict
 from compmatrix import db
 from compmatrix.api import models
 from compmatrix.api.views.codes import AnomalyCode
+from compmatrix.api.views.sdk_compmatrix import queries
 from compmatrix.utils import writing
 
 
@@ -57,7 +58,7 @@ def index():
         for to_sdk in to_sdks_param:
             to_sdk_id: int = to_sdk
             count: int = db.session.execute(
-                _get_query_for_from_to_sdks(from_sdk_id, to_sdk_id)
+                _get_count_query_for_from_to_sdks(from_sdk_id, to_sdk_id)
             ).scalar_one()
             row_numbers.append(count)
 
@@ -202,41 +203,9 @@ def _check_for_unknown_ids_in_param(ids: list[int]) -> list[int]:
     return unknown_ids
 
 
-def _get_query_for_from_to_sdks(from_sdk_id: int,
-                                to_sdk_id: int) -> Select:
-    if from_sdk_id == to_sdk_id:
-        sdk_id: int = from_sdk_id  # Can be `to_sdk` too if you prefer.
-        query: Select = (
-            db
-            .select(models.AppSDK)
-            .where(
-                db.and_(
-                    models.AppSDK.sdk_id == sdk_id,
-                    models.AppSDK.installed == True
-                )
-            )
-            .group_by(models.AppSDK.app_id)
-        )
-    else:
-        query: Select = (
-            db
-            .select(models.AppSDK)
-            .where(
-                db.or_(
-                    db.and_(
-                        models.AppSDK.sdk_id == from_sdk_id,
-                        models.AppSDK.installed == False
-                    ),
-                    db.and_(
-                        models.AppSDK.sdk_id == to_sdk_id,
-                        models.AppSDK.installed == True
-                    ),
-                )
-            )
-            .group_by(models.AppSDK.app_id)
-            .having(db.func.count(models.AppSDK.sdk_id) > 1)
-        )
-
+def _get_count_query_for_from_to_sdks(from_sdk_id: int,
+                                      to_sdk_id: int) -> Select:
+    query: Select = queries.get_query_for_from_to_sdks(from_sdk_id, to_sdk_id)
     return db.select(db.func.count('*')).select_from(query.subquery())
 
 

@@ -304,6 +304,16 @@ def test_db_data(app):
         _delete_model_objects_from_db(apps)
 
 
+@pytest.fixture(scope='session')
+def apps(test_db_data) -> list[models.App]:
+    yield test_db_data['apps']
+
+
+@pytest.fixture(scope='session')
+def sdk_ids(test_db_data):
+    yield [sdk.id for sdk in test_db_data['sdks']]
+
+
 def _add_model_objects_to_db(objects):
     for obj in objects:
         db.session.add(obj)
