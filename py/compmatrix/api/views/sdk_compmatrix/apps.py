@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from flask import request
 from flask_sqlalchemy.query import Query
-from sqlalchemy import Tuple
+from sqlalchemy import Subquery, Tuple
 
 from compmatrix import db
 from compmatrix.api import models
@@ -20,7 +20,16 @@ def index():
     resp: dict[str, object | list] = {}
 
     from_sdk_param: int = int(request.args.get('from_sdk'))
-    to_sdk_param: int = int(request.args.get('to_sdk'))
+
+    to_sdk_param: int | None = None
+    other_to_sdks_param: list[int] = []
+    if 'to_sdk' in request.args and request.args.get('to_sdk') != '':
+        to_sdk_param = int(request.args.get('to_sdk'))
+    else:
+        other_to_sdks_param = [
+            int(s) for s in request.args.getlist('other_to_sdks')
+        ]
+
     count_param: int = int(request.args.get('count'))
 
     cursor_param: str | None = request.args.get('cursor')
@@ -50,9 +59,14 @@ def index():
     if 'errors' in resp:
         return resp, HTTPStatus.UNPROCESSABLE_ENTITY
 
-    included_apps_query = queries.get_query_for_from_to_sdks(
-        from_sdk_param, to_sdk_param
-    ).subquery()
+    if to_sdk_param is None:
+        included_apps_query: Subquery = queries.get_query_for_from_sdk_to_none(
+            from_sdk_param, other_to_sdks_param
+        ).subquery()
+    else:
+        included_apps_query: Subquery = queries.get_query_for_from_to_sdks(
+            from_sdk_param, to_sdk_param
+        ).subquery()
     num_apps: int = db.session.execute(
         db.select(db.func.count('*')).select_from(included_apps_query)
     ).scalar_one()
@@ -122,7 +136,6 @@ def index():
             'two_star_ratings': app.two_star_ratings,
             'one_star_ratings': app.one_star_ratings
         })
-    print(resp_apps)
 
     return {
         'data': {

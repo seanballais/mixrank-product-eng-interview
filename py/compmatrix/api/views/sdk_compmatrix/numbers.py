@@ -66,7 +66,7 @@ def index():
         # And we're gonna add a column for "(none)", since we're also gonna
         # count apps that used to have SDKs installed.
         count: int = db.session.execute(
-            _get_query_for_from_sdk_to_none(from_sdk_id, to_sdks_param)
+            _get_count_query_for_from_sdk_to_none(from_sdk_id, to_sdks_param)
         ).scalar_one()
         row_numbers.append(count)
 
@@ -212,78 +212,13 @@ def _get_count_query_for_from_to_sdks(from_sdk_id: int,
     return db.select(db.func.count('*')).select_from(query.subquery())
 
 
-def _get_query_for_from_sdk_to_none(from_sdk_id: int,
-                                    to_sdks_param: list[int]) -> Select:
-    inner_query1: Select = (
-        db
-        .select(models.AppSDK)
-        .where(
-            db.or_(
-                db.and_(
-                    models.AppSDK.sdk_id == from_sdk_id,
-                    models.AppSDK.installed == False
-                ),
-                db.and_(
-                    models.AppSDK.sdk_id.not_in(to_sdks_param),
-                    models.AppSDK.installed == True
-                ),
-            )
-        )
-        .group_by(models.AppSDK.app_id)
-        .having(db.func.count(models.AppSDK.sdk_id) > 1)
-    )
-
-    # We're counting apps with no currently installed SDKs and one that used
-    # to have the current row's "from" SDK installed but no longer does.
-    no_sdk_apps_query: Select = (
-        db
-        .select(models.AppSDK)
-        .group_by(models.AppSDK.app_id)
-        .having(
-            db.func.sum(
-                db.case(
-                    (models.AppSDK.installed, 1),
-                    else_=0
-                )
-            ) == 0
-        )
-    )
-    no_sdk_apps = db.aliased(models.AppSDK, no_sdk_apps_query.subquery())
-
-    inner_query2: Select = (
-        db
-        .select(models.AppSDK)
-        .select_from(models.AppSDK, no_sdk_apps)
-        .where(
-            db.and_(
-                models.AppSDK.app_id == no_sdk_apps.app_id,
-                models.AppSDK.sdk_id == from_sdk_id
-            )
-        )
-    )
-
-    unionable_queries: list[Select] = [inner_query2]
-
-    if from_sdk_id not in to_sdks_param:
-        # The current SDK was not specified in the to_sdks parameter.
-        # So, it's part of the "(none)" column. We need this separate
-        # query since the prior query does not include apps that have
-        # the current SDK installed but is not part of the to_sdks
-        # parameters.
-        inner_query3: Select = (
-            db
-            .select(models.AppSDK)
-            .where(
-                db.and_(
-                    models.AppSDK.sdk_id == from_sdk_id,
-                    models.AppSDK.installed == True
-                )
-            )
-        )
-        unionable_queries.append(inner_query3)
-
-    inner_query1: CompoundSelect = inner_query1.union(*unionable_queries)
-    return db.select(db.func.count('*')).select_from(inner_query1.subquery())
+def _get_count_query_for_from_sdk_to_none(
+        from_sdk_id: int,
+        other_to_sdks_ids: list[int]
+) -> Select:
+    query: Select = queries.get_query_for_from_sdk_to_none(from_sdk_id,
+                                                           other_to_sdks_ids)
+    return db.select(db.func.count('*')).select_from(query.subquery())
 
 
 def _get_query_for_none_to_to_sdk(to_sdk_id: int,
