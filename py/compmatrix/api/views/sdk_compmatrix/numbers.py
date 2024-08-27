@@ -8,6 +8,7 @@ from werkzeug.datastructures import MultiDict
 from compmatrix import db
 from compmatrix.api import models
 from compmatrix.api.views.codes import AnomalyCode
+from compmatrix.api.views import messages
 from compmatrix.api.views.sdk_compmatrix import queries
 from compmatrix.utils import writing
 
@@ -112,7 +113,9 @@ def _check_for_missing_params(resp: dict[str, object | list],
         # to a list seems like the right choice... for now. (DUN DUN DUN!!!)
         missing_params_list: list[str] = sorted(list(missing_params))
         resp['errors'].append({
-            'message': _create_missing_params_message(missing_params_list),
+            'message': messages.create_missing_params_message(
+                missing_params_list
+            ),
             'code': AnomalyCode.MISSING_FIELD,
             'fields': list(missing_params)
         })
@@ -499,29 +502,6 @@ def _get_query_for_none_to_none(from_sdks_param: list[int],
 
     # Now, get the count.
     return db.select(db.func.count('*')).select_from(query.subquery())
-
-
-def _create_missing_params_message(missing_params: list[str]):
-    message: str = 'Required '
-    if len(missing_params) == 1:
-        message += 'parameter, '
-    else:
-        message += 'parameters, '
-
-    oxfordify: bool = len(missing_params) != 2
-    missing_params_list_str: str = writing.humanize_list(
-        missing_params, oxfordify, True
-    )
-    message += f'{missing_params_list_str}, '
-
-    if len(missing_params) == 1:
-        message += 'is '
-    else:
-        message += 'are '
-
-    message += 'missing.'
-
-    return message
 
 
 def _create_unknown_ids_params_message(affected_params: list[str],

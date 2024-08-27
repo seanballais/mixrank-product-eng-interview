@@ -1,9 +1,13 @@
+from http import HTTPStatus
+
 from flask import request
 from flask_sqlalchemy.query import Query
-from sqlalchemy import Select, Tuple
+from sqlalchemy import Tuple
 
 from compmatrix import db
 from compmatrix.api import models
+from compmatrix.api.views import messages
+from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.api.views.sdk_compmatrix import queries
 from compmatrix.utils import dt
 
@@ -13,6 +17,8 @@ def index():
     Returns the apps that previously and currently have installed the SDKs
     specified in the parameters.
     """
+    resp: dict[str, object | list] = {}
+
     from_sdk_param: int = int(request.args.get('from_sdk'))
     to_sdk_param: int = int(request.args.get('to_sdk'))
     count_param: int = int(request.args.get('count'))
@@ -21,7 +27,28 @@ def index():
     direction_param: str | None = None
     if cursor_param:
         cursor_param: str = str(cursor_param)
-        direction_param: str = str(request.args.get('direction'))
+
+        if 'direction' in request.args:
+            direction_param: str = str(request.args.get('direction'))
+        else:
+            if 'errors' not in resp:
+                resp['errors'] = []
+
+            missing_param: list[str] = ['direction']
+            message: str = messages.create_missing_params_message(
+                missing_param)
+            message = (
+                f'{message} It is required when the "cursor" parameter '
+                'has a value.'
+            )
+            resp['errors'].append({
+                'message': message,
+                'code': AnomalyCode.MISSING_FIELD,
+                'fields': list(missing_param)
+            })
+
+    if 'errors' in resp:
+        return resp, HTTPStatus.UNPROCESSABLE_ENTITY
 
     included_apps_query = queries.get_query_for_from_to_sdks(
         from_sdk_param, to_sdk_param

@@ -1,8 +1,10 @@
 from datetime import datetime
+from http import HTTPStatus
 
 import pytest
 
 from compmatrix import model_encoders
+from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.tests.api.views.test_sdk_compmatrix import (
     BASE_SDK_COMPMATRIX_ENDPOINT
 )
@@ -165,6 +167,39 @@ def test_from_to_sdk_same_ids_has_cursor_prev_direction2(client,
     }
 
     assert resp.json == expected_resp
+
+
+def test_from_to_sdk_same_ids_has_cursor_no_direction(client,
+                                                      paypal_to_paypal_apps,
+                                                      sdk_ids):
+    apps = paypal_to_paypal_apps
+    count = 2
+    cursor = _create_app_cursor(apps[2])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Required parameter, "direction", is missing. '
+                           'It is required when the "cursor" parameter '
+                           'has a value.',
+                'code': AnomalyCode.MISSING_FIELD,
+                'fields': [
+                    'direction'
+                ]
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 def _create_app_cursor(app_obj):
