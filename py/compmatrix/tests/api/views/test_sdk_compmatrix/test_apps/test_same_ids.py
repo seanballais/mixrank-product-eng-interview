@@ -1,4 +1,3 @@
-from datetime import datetime
 from http import HTTPStatus
 
 import pytest
@@ -7,6 +6,9 @@ from compmatrix import model_encoders
 from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.tests.api.views.test_sdk_compmatrix import (
     BASE_SDK_COMPMATRIX_ENDPOINT
+)
+from compmatrix.tests.api.views.test_sdk_compmatrix.test_apps import (
+    query_utils
 )
 from compmatrix.utils import dt
 
@@ -49,8 +51,10 @@ def test_from_to_sdk_same_ids_no_cursor(client, paypal_to_paypal_apps,
         'data': {
             'apps': paypal_to_paypal_apps[:count],
             'total_count': len(paypal_to_paypal_apps),
-            'start_cursor': _create_app_cursor(paypal_to_paypal_apps[0]),
-            'end_cursor': _create_app_cursor(paypal_to_paypal_apps[count - 1])
+            'start_cursor': query_utils._create_app_cursor(
+                paypal_to_paypal_apps[0]),
+            'end_cursor': query_utils._create_app_cursor(
+                paypal_to_paypal_apps[count - 1])
         }
     }
 
@@ -62,7 +66,7 @@ def test_from_to_sdk_same_ids_has_cursor_next_direction(client,
                                                         sdk_ids):
     apps = paypal_to_paypal_apps
     count = 2
-    cursor = _create_app_cursor(apps[1])
+    cursor = query_utils._create_app_cursor(apps[1])
     query_string = {
         'from_sdk': sdk_ids[0],
         'to_sdk': sdk_ids[0],
@@ -77,8 +81,8 @@ def test_from_to_sdk_same_ids_has_cursor_next_direction(client,
         'data': {
             'apps': apps[2:2 + count],
             'total_count': len(apps),
-            'start_cursor': _create_app_cursor(apps[count]),
-            'end_cursor': _create_app_cursor(apps[(count * 2) - 1])
+            'start_cursor': query_utils._create_app_cursor(apps[count]),
+            'end_cursor': query_utils._create_app_cursor(apps[(count * 2) - 1])
         }
     }
 
@@ -90,7 +94,7 @@ def test_from_to_sdk_same_ids_has_cursor_next_direction2(client,
                                                          sdk_ids):
     apps = paypal_to_paypal_apps
     count = 2
-    cursor = _create_app_cursor(apps[2])
+    cursor = query_utils._create_app_cursor(apps[2])
     query_string = {
         'from_sdk': sdk_ids[0],
         'to_sdk': sdk_ids[0],
@@ -105,8 +109,8 @@ def test_from_to_sdk_same_ids_has_cursor_next_direction2(client,
         'data': {
             'apps': apps[3:4],
             'total_count': len(apps),
-            'start_cursor': _create_app_cursor(apps[3]),
-            'end_cursor': _create_app_cursor(apps[3])
+            'start_cursor': query_utils._create_app_cursor(apps[3]),
+            'end_cursor': query_utils._create_app_cursor(apps[3])
         }
     }
 
@@ -118,7 +122,7 @@ def test_from_to_sdk_same_ids_has_cursor_prev_direction(client,
                                                         sdk_ids):
     apps = paypal_to_paypal_apps
     count = 2
-    cursor = _create_app_cursor(apps[2])
+    cursor = query_utils._create_app_cursor(apps[2])
     query_string = {
         'from_sdk': sdk_ids[0],
         'to_sdk': sdk_ids[0],
@@ -133,8 +137,8 @@ def test_from_to_sdk_same_ids_has_cursor_prev_direction(client,
         'data': {
             'apps': apps[:count],
             'total_count': len(apps),
-            'start_cursor': _create_app_cursor(apps[0]),
-            'end_cursor': _create_app_cursor(apps[count - 1])
+            'start_cursor': query_utils._create_app_cursor(apps[0]),
+            'end_cursor': query_utils._create_app_cursor(apps[count - 1])
         }
     }
 
@@ -146,7 +150,7 @@ def test_from_to_sdk_same_ids_has_cursor_prev_direction2(client,
                                                          sdk_ids):
     apps = paypal_to_paypal_apps
     count = 2
-    cursor = _create_app_cursor(apps[1])
+    cursor = query_utils._create_app_cursor(apps[1])
     query_string = {
         'from_sdk': sdk_ids[0],
         'to_sdk': sdk_ids[0],
@@ -161,8 +165,8 @@ def test_from_to_sdk_same_ids_has_cursor_prev_direction2(client,
         'data': {
             'apps': apps[0:1],
             'total_count': len(apps),
-            'start_cursor': _create_app_cursor(apps[0]),
-            'end_cursor': _create_app_cursor(apps[0])
+            'start_cursor': query_utils._create_app_cursor(apps[0]),
+            'end_cursor': query_utils._create_app_cursor(apps[0])
         }
     }
 
@@ -174,7 +178,7 @@ def test_from_to_sdk_same_ids_has_cursor_no_direction(client,
                                                       sdk_ids):
     apps = paypal_to_paypal_apps
     count = 2
-    cursor = _create_app_cursor(apps[2])
+    cursor = query_utils._create_app_cursor(apps[2])
     query_string = {
         'from_sdk': sdk_ids[0],
         'to_sdk': sdk_ids[0],
@@ -200,7 +204,3 @@ def test_from_to_sdk_same_ids_has_cursor_no_direction(client,
 
     assert resp.json == expected_resp
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def _create_app_cursor(app_obj):
-    return f'{app_obj["name"]};{app_obj["seller_name"]}'
