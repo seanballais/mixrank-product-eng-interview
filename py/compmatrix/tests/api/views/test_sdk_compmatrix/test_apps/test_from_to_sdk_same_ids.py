@@ -16,8 +16,8 @@ SDK_COMPMATRIX_APPS_ENDPOINT = f'{BASE_SDK_COMPMATRIX_ENDPOINT}/apps'
 
 
 @pytest.fixture(scope='module')
-def chartboost_to_paypal_apps(apps):
-    app_ids = [0, 3, 12]
+def paypal_to_paypal_apps(apps):
+    app_ids = [0, 3, 9, 12]
     expected_apps = []
     for app_id in app_ids:
         ignored_fields = ['sdks']
@@ -36,14 +36,92 @@ def chartboost_to_paypal_apps(apps):
     yield expected_apps
 
 
-def test_from_to_sdk_diff_ids_no_cursor(client, chartboost_to_paypal_apps,
-                                        sdk_ids):
-    apps = chartboost_to_paypal_apps
+def test_no_cursor(client, paypal_to_paypal_apps, sdk_ids):
     count = 2
     query_string = {
-        'from_sdk': sdk_ids[2],
+        'from_sdk': sdk_ids[0],
         'to_sdk': sdk_ids[0],
         'count': count
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': paypal_to_paypal_apps[:count],
+            'total_count': len(paypal_to_paypal_apps),
+            'start_cursor': query_utils._create_app_cursor(
+                paypal_to_paypal_apps[0]),
+            'end_cursor': query_utils._create_app_cursor(
+                paypal_to_paypal_apps[count - 1])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_has_cursor_next_direction(client, paypal_to_paypal_apps, sdk_ids):
+    apps = paypal_to_paypal_apps
+    count = 2
+    cursor = query_utils._create_app_cursor(apps[1])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'next'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[2:2 + count],
+            'total_count': len(apps),
+            'start_cursor': query_utils._create_app_cursor(apps[count]),
+            'end_cursor': query_utils._create_app_cursor(apps[(count * 2) - 1])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_has_cursor_next_direction2(client, paypal_to_paypal_apps, sdk_ids):
+    apps = paypal_to_paypal_apps
+    count = 2
+    cursor = query_utils._create_app_cursor(apps[2])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'next'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[3:4],
+            'total_count': len(apps),
+            'start_cursor': query_utils._create_app_cursor(apps[3]),
+            'end_cursor': query_utils._create_app_cursor(apps[3])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_has_cursor_prev_direction(client, paypal_to_paypal_apps, sdk_ids):
+    apps = paypal_to_paypal_apps
+    count = 2
+    cursor = query_utils._create_app_cursor(apps[2])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'previous'
     }
 
     resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
@@ -60,98 +138,12 @@ def test_from_to_sdk_diff_ids_no_cursor(client, chartboost_to_paypal_apps,
     assert resp.json == expected_resp
 
 
-def test_from_to_sdk_diff_ids_has_cursor_next_dir(client,
-                                                  chartboost_to_paypal_apps,
-                                                  sdk_ids):
-    apps = chartboost_to_paypal_apps
+def test_has_cursor_prev_direction2(client, paypal_to_paypal_apps, sdk_ids):
+    apps = paypal_to_paypal_apps
     count = 2
     cursor = query_utils._create_app_cursor(apps[1])
     query_string = {
-        'from_sdk': sdk_ids[2],
-        'to_sdk': sdk_ids[0],
-        'count': count,
-        'cursor': cursor,
-        'direction': 'next'
-    }
-
-    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
-
-    expected_resp = {
-        'data': {
-            'apps': apps[2:3],
-            'total_count': len(apps),
-            'start_cursor': query_utils._create_app_cursor(apps[2]),
-            'end_cursor': query_utils._create_app_cursor(apps[2])
-        }
-    }
-
-    assert resp.json == expected_resp
-
-
-def test_from_to_sdk_diff_ids_has_cursor_next_dir2(client,
-                                                   chartboost_to_paypal_apps,
-                                                   sdk_ids):
-    apps = chartboost_to_paypal_apps
-    count = 2
-    cursor = query_utils._create_app_cursor(apps[0])
-    query_string = {
-        'from_sdk': sdk_ids[2],
-        'to_sdk': sdk_ids[0],
-        'count': count,
-        'cursor': cursor,
-        'direction': 'next'
-    }
-
-    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
-
-    expected_resp = {
-        'data': {
-            'apps': apps[1:3],
-            'total_count': len(apps),
-            'start_cursor': query_utils._create_app_cursor(apps[1]),
-            'end_cursor': query_utils._create_app_cursor(apps[2])
-        }
-    }
-
-    assert resp.json == expected_resp
-
-
-def test_from_to_sdk_diff_ids_has_cursor_prev_dir(client,
-                                                  chartboost_to_paypal_apps,
-                                                  sdk_ids):
-    apps = chartboost_to_paypal_apps
-    count = 2
-    cursor = query_utils._create_app_cursor(apps[2])
-    query_string = {
-        'from_sdk': sdk_ids[2],
-        'to_sdk': sdk_ids[0],
-        'count': count,
-        'cursor': cursor,
-        'direction': 'previous'
-    }
-
-    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
-
-    expected_resp = {
-        'data': {
-            'apps': apps[:count],
-            'total_count': len(apps),
-            'start_cursor': query_utils._create_app_cursor(apps[0]),
-            'end_cursor': query_utils._create_app_cursor(apps[1])
-        }
-    }
-
-    assert resp.json == expected_resp
-
-
-def test_from_to_sdk_diff_ids_has_cursor_prev_dir2(client,
-                                                   chartboost_to_paypal_apps,
-                                                   sdk_ids):
-    apps = chartboost_to_paypal_apps
-    count = 2
-    cursor = query_utils._create_app_cursor(apps[1])
-    query_string = {
-        'from_sdk': sdk_ids[2],
+        'from_sdk': sdk_ids[0],
         'to_sdk': sdk_ids[0],
         'count': count,
         'cursor': cursor,
@@ -172,14 +164,12 @@ def test_from_to_sdk_diff_ids_has_cursor_prev_dir2(client,
     assert resp.json == expected_resp
 
 
-def test_from_to_sdk_diff_ids_has_cursor_no_dir(client,
-                                                chartboost_to_paypal_apps,
-                                                sdk_ids):
-    apps = chartboost_to_paypal_apps
+def test_has_cursor_no_direction(client, paypal_to_paypal_apps, sdk_ids):
+    apps = paypal_to_paypal_apps
     count = 2
     cursor = query_utils._create_app_cursor(apps[2])
     query_string = {
-        'from_sdk': sdk_ids[2],
+        'from_sdk': sdk_ids[0],
         'to_sdk': sdk_ids[0],
         'count': count,
         'cursor': cursor
