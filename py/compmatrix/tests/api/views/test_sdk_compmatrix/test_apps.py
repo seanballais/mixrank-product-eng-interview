@@ -83,5 +83,89 @@ def test_from_to_sdk_same_ids_has_cursor_next_direction(client,
     assert resp.json == expected_resp
 
 
+def test_from_to_sdk_same_ids_has_cursor_next_direction2(client,
+                                                         paypal_to_paypal_apps,
+                                                         sdk_ids):
+    apps = paypal_to_paypal_apps
+    count = 2
+    cursor = _create_app_cursor(apps[2])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'next'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[3:4],
+            'total_count': len(apps),
+            'start_cursor': _create_app_cursor(apps[3]),
+            'end_cursor': _create_app_cursor(apps[3])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_from_to_sdk_same_ids_has_cursor_prev_direction(client,
+                                                        paypal_to_paypal_apps,
+                                                        sdk_ids):
+    apps = paypal_to_paypal_apps
+    count = 2
+    cursor = _create_app_cursor(apps[2])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'previous'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[:count],
+            'total_count': len(apps),
+            'start_cursor': _create_app_cursor(apps[0]),
+            'end_cursor': _create_app_cursor(apps[count - 1])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_from_to_sdk_same_ids_has_cursor_prev_direction2(client,
+                                                         paypal_to_paypal_apps,
+                                                         sdk_ids):
+    apps = paypal_to_paypal_apps
+    count = 2
+    cursor = _create_app_cursor(apps[1])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'previous'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[0:1],
+            'total_count': len(apps),
+            'start_cursor': _create_app_cursor(apps[0]),
+            'end_cursor': _create_app_cursor(apps[0])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
 def _create_app_cursor(app_obj):
     return f'{app_obj["name"]};{app_obj["seller_name"]}'

@@ -1,6 +1,6 @@
 from flask import request
 from flask_sqlalchemy.query import Query
-from sqlalchemy import Select
+from sqlalchemy import Select, Tuple
 
 from compmatrix import db
 from compmatrix.api import models
@@ -36,18 +36,48 @@ def index():
         )
     )
     if cursor_param:
-        cursor_vals: tuple = db.tuple_(*cursor_param.split(';'))
-        apps_query = apps_query.where(
-            db.tuple_(models.App.name, models.App.seller_name) > cursor_vals
-        )
-    apps_query = (
-        apps_query
-        .order_by(models.App.name, models.App.seller_name)
-        .limit(count_param)
-    )
-    print(apps_query)
+        cursor_vals: Tuple = db.tuple_(*cursor_param.split(';'))
+        columns: Tuple = db.tuple_(models.App.name, models.App.seller_name)
 
+        if direction_param == 'previous':
+            # We're using less than because the query will have the results
+            # ordered descendingly, when the direction is "previous".
+            apps_query = apps_query.where(columns < cursor_vals)
+        else:
+            # direction_param == 'next'. Note that we are expecting that our
+            # guard code will check if any of the parameters have invalid
+            # values.
+            apps_query = apps_query.where(columns > cursor_vals)
+
+    if cursor_param and direction_param == 'previous':
+        apps_query = (
+            apps_query
+            .order_by(
+                db.desc(models.App.name),
+                db.desc(models.App.seller_name)
+            )
+        )
+    else:
+        apps_query = (
+            apps_query
+            .order_by(
+                db.asc(models.App.name),
+                db.asc(models.App.seller_name)
+            )
+        )
+
+    apps_query = apps_query.limit(count_param)
     apps: list[models.App] = apps_query.all()
+
+    if cursor_param and direction_param == 'previous':
+        # We need to reverse the order of the results if the direction was
+        # set to 'previous', since we're reversing the order earlier to get
+        # the correct values. Now, we're reversing the order once again to
+        # get the correct ordering. So far, we're just reversing the list
+        # to make our code simpler. However, we should implement some
+        # benchmarks to see if reversing the list from Python is faster than
+        # reversing the list via SQL.
+        apps.reverse()
 
     resp_apps: list[dict] = []
     for app in apps:
@@ -65,6 +95,7 @@ def index():
             'two_star_ratings': app.two_star_ratings,
             'one_star_ratings': app.one_star_ratings
         })
+    print(resp_apps)
 
     return {
         'data': {
