@@ -55,5 +55,33 @@ def test_from_to_sdk_same_ids_no_cursor(client, paypal_to_paypal_apps,
     assert resp.json == expected_resp
 
 
+def test_from_to_sdk_same_ids_has_cursor_next_direction(client,
+                                                        paypal_to_paypal_apps,
+                                                        sdk_ids):
+    apps = paypal_to_paypal_apps
+    count = 2
+    cursor = _create_app_cursor(apps[1])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'next'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[2:2 + count],
+            'total_count': len(apps),
+            'start_cursor': _create_app_cursor(apps[count]),
+            'end_cursor': _create_app_cursor(apps[(count * 2) - 1])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
 def _create_app_cursor(app_obj):
     return f'{app_obj["name"]};{app_obj["seller_name"]}'

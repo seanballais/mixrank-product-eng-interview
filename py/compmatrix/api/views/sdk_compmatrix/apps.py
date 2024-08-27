@@ -1,4 +1,5 @@
 from flask import request
+from flask_sqlalchemy.query import Query
 from sqlalchemy import Select
 
 from compmatrix import db
@@ -16,20 +17,37 @@ def index():
     to_sdk_param: int = int(request.args.get('to_sdk'))
     count_param: int = int(request.args.get('count'))
 
+    cursor_param: str | None = request.args.get('cursor')
+    direction_param: str | None = None
+    if cursor_param:
+        cursor_param: str = str(cursor_param)
+        direction_param: str = str(request.args.get('direction'))
+
     included_apps_query = queries.get_query_for_from_to_sdks(
         from_sdk_param, to_sdk_param
     ).subquery()
     num_apps: int = db.session.execute(
         db.select(db.func.count('*')).select_from(included_apps_query)
     ).scalar_one()
-    apps: list[models.App] = (
+
+    apps_query: Query = (
         models.App.query.join(
             included_apps_query, models.App.id == included_apps_query.c.app_id
         )
+    )
+    if cursor_param:
+        cursor_vals: tuple = db.tuple_(*cursor_param.split(';'))
+        apps_query = apps_query.where(
+            db.tuple_(models.App.name, models.App.seller_name) > cursor_vals
+        )
+    apps_query = (
+        apps_query
         .order_by(models.App.name, models.App.seller_name)
         .limit(count_param)
-        .all()
     )
+    print(apps_query)
+
+    apps: list[models.App] = apps_query.all()
 
     resp_apps: list[dict] = []
     for app in apps:
