@@ -383,7 +383,6 @@ def test_has_cursor_no_dir_no_to_sdks(client, paypal_to_only_none_apps,
 # the `to_sdk` parameter is not specified or is an empty string.
 def test_has_other_to_sdks_and_to_sdk(client, paypal_to_none_apps_sans_paypal,
                                       sdk_ids):
-    apps = paypal_to_none_apps_sans_paypal
     count = 2
     query_string = {
         'from_sdk': sdk_ids[0],
