@@ -25,6 +25,20 @@ def index():
     other_to_sdks_param: list[int] = []
     if 'to_sdk' in request.args and request.args.get('to_sdk') != '':
         to_sdk_param = int(request.args.get('to_sdk'))
+
+        if 'other_to_sdks' in request.args:
+            if 'errors' not in resp:
+                resp['errors'] = []
+
+            resp['errors'].append({
+                'message': 'Parameter, "other_to_sdks", must only be '
+                           'specified if the "to_sdk" parameter is '
+                           'unspecified.',
+                'code': AnomalyCode.MISUSED_FIELD,
+                'fields': [
+                    'other_to_sdks'
+                ]
+            })
     else:
         # TODO: Check for invalid values.
         for s in request.args.getlist('other_to_sdks'):

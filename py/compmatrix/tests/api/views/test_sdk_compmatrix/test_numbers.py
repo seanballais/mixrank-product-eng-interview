@@ -499,7 +499,7 @@ def test_unknown_sdks_in_from_to_param(client, test_db_data):
             {
                 'message': 'Parameters, "from_sdks" and "to_sdks", have IDs '
                            'that do not refer to an SDK.',
-                'code': AnomalyCode.UNKNOWN_IDS,
+                'code': AnomalyCode.UNKNOWN_ID,
                 'fields': [
                     'from_sdks',
                     'to_sdks'
@@ -541,7 +541,7 @@ def test_unknown_sdks_in_from_param(client, test_db_data, sdk_ids):
             {
                 'message': 'Parameter, "from_sdks", has IDs that do not refer '
                            'to an SDK.',
-                'code': AnomalyCode.UNKNOWN_IDS,
+                'code': AnomalyCode.UNKNOWN_ID,
                 'fields': ['from_sdks'],
                 'diagnostics': {
                     'from_sdks': UNKNOWN_SDK_IDS
@@ -567,7 +567,7 @@ def test_unknown_sdks_in_to_param(client, test_db_data, sdk_ids):
             {
                 'message': 'Parameter, "to_sdks", has IDs that do not refer '
                            'to an SDK.',
-                'code': AnomalyCode.UNKNOWN_IDS,
+                'code': AnomalyCode.UNKNOWN_ID,
                 'fields': ['to_sdks'],
                 'diagnostics': {
                     'to_sdks': UNKNOWN_SDK_IDS
@@ -647,7 +647,7 @@ def test_mixed_unknown_sdks_in_from_param(client, test_db_data, sdk_ids):
             {
                 'message': 'Parameter, "from_sdks", has IDs that do not refer '
                            'to an SDK.',
-                'code': AnomalyCode.UNKNOWN_IDS,
+                'code': AnomalyCode.UNKNOWN_ID,
                 'fields': ['from_sdks'],
                 'diagnostics': {
                     'from_sdks': unknown_sdks
@@ -687,7 +687,7 @@ def test_mixed_unknown_sdks_in_to_param(client, test_db_data, sdk_ids):
             {
                 'message': 'Parameter, "to_sdks", has IDs that do not refer '
                            'to an SDK.',
-                'code': AnomalyCode.UNKNOWN_IDS,
+                'code': AnomalyCode.UNKNOWN_ID,
                 'fields': ['to_sdks'],
                 'diagnostics': {
                     'to_sdks': unknown_sdks
@@ -763,7 +763,7 @@ def test_mixed_unknown_sdks_in_from_param_one_unknown(client, test_db_data,
             {
                 'message': 'Parameter, "from_sdks", has an ID that does not '
                            'refer to an SDK.',
-                'code': AnomalyCode.UNKNOWN_IDS,
+                'code': AnomalyCode.UNKNOWN_ID,
                 'fields': ['from_sdks'],
                 'diagnostics': {
                     'from_sdks': unknown_sdks
@@ -802,7 +802,7 @@ def test_mixed_unknown_sdks_in_to_param_one_unknown(client, test_db_data,
             {
                 'message': 'Parameter, "to_sdks", has an ID that does not '
                            'refer to an SDK.',
-                'code': AnomalyCode.UNKNOWN_IDS,
+                'code': AnomalyCode.UNKNOWN_ID,
                 'fields': ['to_sdks'],
                 'diagnostics': {
                     'to_sdks': unknown_sdks

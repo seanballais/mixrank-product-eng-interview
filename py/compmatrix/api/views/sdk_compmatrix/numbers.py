@@ -175,7 +175,7 @@ def _check_for_unknown_ids_in_params(resp: dict[str, object | list],
             params_with_unknown_ids, num_unknown_ids)
         resp['errors'].append({
             'message': message,
-            'code': AnomalyCode.UNKNOWN_IDS,
+            'code': AnomalyCode.UNKNOWN_ID,
             'fields': params_with_unknown_ids,
             'diagnostics': unknown_ids_per_param
         })

@@ -378,5 +378,35 @@ def test_has_cursor_no_dir_no_to_sdks(client, paypal_to_only_none_apps,
     assert resp.json == expected_resp
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
-# TODO: Add test as well to test that other_to_sdks is only specified when
-#       to_sdk is not specified or is an empty string.
+
+# Tests to ensure that the `other_to_sdks` parameter is only specified when
+# the `to_sdk` parameter is not specified or is an empty string.
+def test_has_other_to_sdks_and_to_sdk(client, paypal_to_none_apps_sans_paypal,
+                                      sdk_ids):
+    apps = paypal_to_none_apps_sans_paypal
+    count = 2
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': [sdk_ids[0]],
+        'other_to_sdks': [sdk_ids[0]],
+        'count': count
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Parameter, "other_to_sdks", must only be '
+                           'specified if the "to_sdk" parameter is '
+                           'unspecified.',
+                'code': AnomalyCode.MISUSED_FIELD,
+                'fields': [
+                    'other_to_sdks'
+                ]
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
