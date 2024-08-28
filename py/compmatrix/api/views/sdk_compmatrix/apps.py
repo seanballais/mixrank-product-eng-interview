@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from flask import request
 from flask_sqlalchemy.query import Query
-from sqlalchemy import Subquery, Tuple
+from sqlalchemy import Subquery, Tuple, Select, CompoundSelect
 
 from compmatrix import db
 from compmatrix.api import models
@@ -19,7 +19,29 @@ def index():
     """
     resp: dict[str, object | list] = {}
 
-    from_sdk_param: int = int(request.args.get('from_sdk'))
+    from_sdk_param: int | None = None
+    other_from_sdks_param: list[int] = []
+    if 'from_sdk' in request.args and request.args.get('from_sdk') != '':
+        from_sdk_param = int(request.args.get('from_sdk'))
+
+        if 'other_from_sdks' in request.args:
+            if 'errors' not in resp:
+                resp['errors'] = []
+
+            resp['errors'].append({
+                'message': 'Parameter, "other_from_sdks", must only be '
+                           'specified if the "from_sdk" parameter is '
+                           'unspecified.',
+                'code': AnomalyCode.MISUSED_FIELD,
+                'fields': [
+                    'other_from_sdks'
+                ]
+            })
+    else:
+        # TODO: Check for invalid values.
+        for s in request.args.getlist('other_from_sdks'):
+            if s != '':
+                other_from_sdks_param.append(int(s))
 
     to_sdk_param: int | None = None
     other_to_sdks_param: list[int] = []
@@ -74,14 +96,20 @@ def index():
     if 'errors' in resp:
         return resp, HTTPStatus.UNPROCESSABLE_ENTITY
 
-    if to_sdk_param is None:
-        included_apps_query: Subquery = queries.get_query_for_from_sdk_to_none(
-            from_sdk_param, other_to_sdks_param
-        ).subquery()
+    if from_sdk_param is None:
+        included_apps_query: Select = queries.get_query_for_none_to_to_sdk(
+            to_sdk_param, other_from_sdks_param
+        )
+    elif to_sdk_param is None:
+        included_apps_query: CompoundSelect = (
+            queries.get_query_for_from_sdk_to_none(from_sdk_param,
+                                                   other_to_sdks_param)
+        )
     else:
-        included_apps_query: Subquery = queries.get_query_for_from_to_sdks(
+        included_apps_query: Select = queries.get_query_for_from_to_sdks(
             from_sdk_param, to_sdk_param
-        ).subquery()
+        )
+    included_apps_query: Subquery = included_apps_query.subquery()
     num_apps: int = db.session.execute(
         db.select(db.func.count('*')).select_from(included_apps_query)
     ).scalar_one()

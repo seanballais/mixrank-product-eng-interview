@@ -15,10 +15,10 @@ from compmatrix.utils import dt
 SDK_COMPMATRIX_APPS_ENDPOINT = f'{BASE_SDK_COMPMATRIX_ENDPOINT}/apps'
 
 
-# Tests where other_to_sdks is specified.
+# Tests where other_from_sdks is specified.
 @pytest.fixture(scope='module')
-def paypal_to_none_apps_sans_paypal(apps):
-    app_ids = [1, 2, 4, 5, 6, 7]
+def none_sans_cardio_to_paypal_apps(apps):
+    app_ids = [0, 3, 9, 12]
     expected_apps = []
     for app_id in app_ids:
         ignored_fields = ['sdks']
@@ -37,12 +37,12 @@ def paypal_to_none_apps_sans_paypal(apps):
     yield expected_apps
 
 
-def test_no_cursor(client, paypal_to_none_apps_sans_paypal, sdk_ids):
-    apps = paypal_to_none_apps_sans_paypal
+def test_no_cursor(client, none_sans_cardio_to_paypal_apps, sdk_ids):
+    apps = none_sans_cardio_to_paypal_apps
     count = 4
     query_string = {
-        'from_sdk': sdk_ids[0],
-        'other_to_sdks': [sdk_ids[0]],
+        'other_from_sdks': [sdk_ids[1]],
+        'to_sdk': sdk_ids[0],
         'count': count
     }
 
@@ -53,75 +53,74 @@ def test_no_cursor(client, paypal_to_none_apps_sans_paypal, sdk_ids):
             'apps': apps[:count],
             'total_count': len(apps),
             'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[count - 1])
+            'end_cursor': query_utils.create_app_cursor(apps[3])
         }
     }
 
     assert resp.json == expected_resp
 
 
-def test_has_cursor_next_dir(client, paypal_to_none_apps_sans_paypal, sdk_ids):
-    apps = paypal_to_none_apps_sans_paypal
-    count = 4
+def test_has_cursor_next_dir(client, none_sans_cardio_to_paypal_apps, sdk_ids):
+    apps = none_sans_cardio_to_paypal_apps
+    count = 2
+    cursor = query_utils.create_app_cursor(apps[1])
+    query_string = {
+        'other_from_sdks': [sdk_ids[1]],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'next'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[2:],
+            'total_count': len(apps),
+            'start_cursor': query_utils.create_app_cursor(apps[2]),
+            'end_cursor': query_utils.create_app_cursor(apps[3])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_has_cursor_next_dir2(client, none_sans_cardio_to_paypal_apps,
+                              sdk_ids):
+    apps = none_sans_cardio_to_paypal_apps
+    count = 5
+    cursor = query_utils.create_app_cursor(apps[1])
+    query_string = {
+        'other_from_sdks': [sdk_ids[1]],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'next'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[2:4],
+            'total_count': len(apps),
+            'start_cursor': query_utils.create_app_cursor(apps[2]),
+            'end_cursor': query_utils.create_app_cursor(apps[3])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_has_cursor_prev_dir(client, none_sans_cardio_to_paypal_apps,
+                             sdk_ids):
+    apps = none_sans_cardio_to_paypal_apps
+    count = 2
     cursor = query_utils.create_app_cursor(apps[2])
     query_string = {
-        'from_sdk': sdk_ids[0],
-        'to_sdk': '',
-        'other_to_sdks': [sdk_ids[0]],
-        'count': count,
-        'cursor': cursor,
-        'direction': 'next'
-    }
-
-    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
-
-    expected_resp = {
-        'data': {
-            'apps': apps[3:6],
-            'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[3]),
-            'end_cursor': query_utils.create_app_cursor(apps[5])
-        }
-    }
-
-    assert resp.json == expected_resp
-
-
-def test_has_cursor_next_dir2(client, paypal_to_none_apps_sans_paypal,
-                              sdk_ids):
-    apps = paypal_to_none_apps_sans_paypal
-    count = 6
-    cursor = query_utils.create_app_cursor(apps[4])
-    query_string = {
-        'from_sdk': sdk_ids[0],
-        'other_to_sdks': [sdk_ids[0]],
-        'count': count,
-        'cursor': cursor,
-        'direction': 'next'
-    }
-
-    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
-
-    expected_resp = {
-        'data': {
-            'apps': apps[5:6],
-            'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[5]),
-            'end_cursor': query_utils.create_app_cursor(apps[5])
-        }
-    }
-
-    assert resp.json == expected_resp
-
-
-def test_has_cursor_prev_dir(client, paypal_to_none_apps_sans_paypal,
-                             sdk_ids):
-    apps = paypal_to_none_apps_sans_paypal
-    count = 4
-    cursor = query_utils.create_app_cursor(apps[3])
-    query_string = {
-        'from_sdk': sdk_ids[0],
-        'other_to_sdks': [sdk_ids[0]],
+        'other_from_sdks': [sdk_ids[1]],
+        'to_sdk': sdk_ids[0],
         'count': count,
         'cursor': cursor,
         'direction': 'previous'
@@ -131,7 +130,34 @@ def test_has_cursor_prev_dir(client, paypal_to_none_apps_sans_paypal,
 
     expected_resp = {
         'data': {
-            'apps': apps[:3],
+            'apps': apps[:2],
+            'total_count': len(apps),
+            'start_cursor': query_utils.create_app_cursor(apps[0]),
+            'end_cursor': query_utils.create_app_cursor(apps[1])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_has_cursor_prev_dir2(client, none_sans_cardio_to_paypal_apps,
+                              sdk_ids):
+    apps = none_sans_cardio_to_paypal_apps
+    count = 5
+    cursor = query_utils.create_app_cursor(apps[3])
+    query_string = {
+        'other_from_sdks': [sdk_ids[1]],
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'previous'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[0:3],
             'total_count': len(apps),
             'start_cursor': query_utils.create_app_cursor(apps[0]),
             'end_cursor': query_utils.create_app_cursor(apps[2])
@@ -141,40 +167,13 @@ def test_has_cursor_prev_dir(client, paypal_to_none_apps_sans_paypal,
     assert resp.json == expected_resp
 
 
-def test_has_cursor_prev_dir2(client, paypal_to_none_apps_sans_paypal,
-                              sdk_ids):
-    apps = paypal_to_none_apps_sans_paypal
-    count = 5
-    cursor = query_utils.create_app_cursor(apps[1])
-    query_string = {
-        'from_sdk': sdk_ids[0],
-        'other_to_sdks': [sdk_ids[0]],
-        'count': count,
-        'cursor': cursor,
-        'direction': 'previous'
-    }
-
-    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
-
-    expected_resp = {
-        'data': {
-            'apps': apps[0:1],
-            'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[0])
-        }
-    }
-
-    assert resp.json == expected_resp
-
-
-def test_has_cursor_no_dir(client, paypal_to_none_apps_sans_paypal, sdk_ids):
-    apps = paypal_to_none_apps_sans_paypal
+def test_has_cursor_no_dir(client, none_sans_cardio_to_paypal_apps, sdk_ids):
+    apps = none_sans_cardio_to_paypal_apps
     count = 2
     cursor = query_utils.create_app_cursor(apps[2])
     query_string = {
-        'from_sdk': sdk_ids[0],
-        'other_to_sdks': [sdk_ids[0]],
+        'other_from_sdks': [sdk_ids[1]],
+        'to_sdk': sdk_ids[0],
         'count': count,
         'cursor': cursor
     }
@@ -199,10 +198,10 @@ def test_has_cursor_no_dir(client, paypal_to_none_apps_sans_paypal, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-# Tests where other_to_sdks is not specified.
+# Tests where other_from_sdks is not specified.
 @pytest.fixture(scope='module')
-def paypal_to_only_none_apps(apps):
-    app_ids = [0, 1, 2, 3, 4, 5, 6, 7, 9, 12]
+def only_none_to_paypal_apps(apps):
+    app_ids = [0, 3, 9, 12]
     expected_apps = []
     for app_id in app_ids:
         ignored_fields = ['sdks']
@@ -221,12 +220,12 @@ def paypal_to_only_none_apps(apps):
     yield expected_apps
 
 
-def test_no_cursor_no_other_to_sdks(client, paypal_to_only_none_apps, sdk_ids):
-    apps = paypal_to_only_none_apps
+def test_no_cursor_no_other_from_sdks(client, only_none_to_paypal_apps,
+                                      sdk_ids):
+    apps = only_none_to_paypal_apps
     count = 4
     query_string = {
-        'from_sdk': sdk_ids[0],
-        'other_to_sdks': '',
+        'to_sdk': sdk_ids[0],
         'count': count
     }
 
@@ -244,13 +243,41 @@ def test_no_cursor_no_other_to_sdks(client, paypal_to_only_none_apps, sdk_ids):
     assert resp.json == expected_resp
 
 
-def test_has_cursor_next_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
-                                              sdk_ids):
-    apps = paypal_to_only_none_apps
-    count = 4
+def test_has_cursor_next_dir_no_other_from_sdks(client,
+                                                only_none_to_paypal_apps,
+                                                sdk_ids):
+    apps = only_none_to_paypal_apps
+    count = 2
+    cursor = query_utils.create_app_cursor(apps[1])
+    query_string = {
+        'to_sdk': sdk_ids[0],
+        'count': count,
+        'cursor': cursor,
+        'direction': 'next'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'apps': apps[2:4],
+            'total_count': len(apps),
+            'start_cursor': query_utils.create_app_cursor(apps[2]),
+            'end_cursor': query_utils.create_app_cursor(apps[3])
+        }
+    }
+
+    assert resp.json == expected_resp
+
+
+def test_has_cursor_next_dir2_no_other_from_sdks(client,
+                                                 only_none_to_paypal_apps,
+                                                 sdk_ids):
+    apps = only_none_to_paypal_apps
+    count = 7
     cursor = query_utils.create_app_cursor(apps[2])
     query_string = {
-        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
         'count': count,
         'cursor': cursor,
         'direction': 'next'
@@ -260,50 +287,24 @@ def test_has_cursor_next_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
 
     expected_resp = {
         'data': {
-            'apps': apps[3:3 + count],
+            'apps': apps[3:4],
             'total_count': len(apps),
             'start_cursor': query_utils.create_app_cursor(apps[3]),
-            'end_cursor': query_utils.create_app_cursor(apps[(3 + count) - 1])
+            'end_cursor': query_utils.create_app_cursor(apps[3])
         }
     }
 
     assert resp.json == expected_resp
 
 
-def test_has_cursor_next_dir2_no_other_to_sdks(client,
-                                               paypal_to_only_none_apps,
-                                               sdk_ids):
-    apps = paypal_to_only_none_apps
-    count = 7
-    cursor = query_utils.create_app_cursor(apps[4])
-    query_string = {
-        'from_sdk': sdk_ids[0],
-        'count': count,
-        'cursor': cursor,
-        'direction': 'next'
-    }
-
-    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
-
-    expected_resp = {
-        'data': {
-            'apps': apps[5:10],
-            'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[5]),
-            'end_cursor': query_utils.create_app_cursor(apps[9])
-        }
-    }
-
-    assert resp.json == expected_resp
-
-
-def test_has_cursor_prev_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
-                                              sdk_ids):
-    apps = paypal_to_only_none_apps
+def test_has_cursor_prev_dir_no_other_from_sdks(client,
+                                                only_none_to_paypal_apps,
+                                                sdk_ids):
+    apps = only_none_to_paypal_apps
     count = 2
-    cursor = query_utils.create_app_cursor(apps[3])
+    cursor = query_utils.create_app_cursor(apps[2])
     query_string = {
-        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
         'count': count,
         'cursor': cursor,
         'direction': 'previous'
@@ -313,24 +314,24 @@ def test_has_cursor_prev_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
 
     expected_resp = {
         'data': {
-            'apps': apps[1:3],
+            'apps': apps[0:2],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[1]),
-            'end_cursor': query_utils.create_app_cursor(apps[2])
+            'start_cursor': query_utils.create_app_cursor(apps[0]),
+            'end_cursor': query_utils.create_app_cursor(apps[1])
         }
     }
 
     assert resp.json == expected_resp
 
 
-def test_has_cursor_prev_dir2_no_other_to_sdks(client,
-                                               paypal_to_only_none_apps,
-                                               sdk_ids):
-    apps = paypal_to_only_none_apps
+def test_has_cursor_prev_dir2_no_other_from_sdks(client,
+                                                 only_none_to_paypal_apps,
+                                                 sdk_ids):
+    apps = only_none_to_paypal_apps
     count = 5
     cursor = query_utils.create_app_cursor(apps[1])
     query_string = {
-        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
         'count': count,
         'cursor': cursor,
         'direction': 'previous'
@@ -350,9 +351,9 @@ def test_has_cursor_prev_dir2_no_other_to_sdks(client,
     assert resp.json == expected_resp
 
 
-def test_has_cursor_no_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
-                                            sdk_ids):
-    apps = paypal_to_only_none_apps
+def test_has_cursor_no_dir_no_other_from_sdks(client, only_none_to_paypal_apps,
+                                              sdk_ids):
+    apps = only_none_to_paypal_apps
     count = 2
     cursor = query_utils.create_app_cursor(apps[2])
     query_string = {
@@ -383,12 +384,12 @@ def test_has_cursor_no_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
 
 # Tests to ensure that the `other_to_sdks` parameter is only specified when
 # the `to_sdk` parameter is not specified or is an empty string.
-def test_has_other_to_sdks_and_to_sdk(client, sdk_ids):
+def test_has_other_from_sdks_and_from_sdk(client, sdk_ids):
     count = 2
     query_string = {
         'from_sdk': sdk_ids[0],
         'to_sdk': [sdk_ids[0]],
-        'other_to_sdks': [sdk_ids[1]],
+        'other_from_sdks': [sdk_ids[1]],
         'count': count
     }
 
@@ -397,12 +398,12 @@ def test_has_other_to_sdks_and_to_sdk(client, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Parameter, "other_to_sdks", must only be '
-                           'specified if the "to_sdk" parameter is '
+                'message': 'Parameter, "other_from_sdks", must only be '
+                           'specified if the "from_sdk" parameter is '
                            'unspecified.',
                 'code': AnomalyCode.MISUSED_FIELD,
                 'fields': [
-                    'other_to_sdks'
+                    'other_from_sdks'
                 ]
             }
         ]
