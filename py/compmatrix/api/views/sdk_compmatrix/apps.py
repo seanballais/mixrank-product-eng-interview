@@ -26,9 +26,10 @@ def index():
     if 'to_sdk' in request.args and request.args.get('to_sdk') != '':
         to_sdk_param = int(request.args.get('to_sdk'))
     else:
-        other_to_sdks_param = [
-            int(s) for s in request.args.getlist('other_to_sdks')
-        ]
+        # TODO: Check for invalid values.
+        for s in request.args.getlist('other_to_sdks'):
+            if s != '':
+                other_to_sdks_param.append(int(s))
 
     count_param: int = int(request.args.get('count'))
 
