@@ -6,10 +6,9 @@ from sqlalchemy import Subquery, Tuple, Select, CompoundSelect
 
 from compmatrix import db
 from compmatrix.api import models
-from compmatrix.api.views import messages
+from compmatrix.api.views import messages, queries
 from compmatrix.api.views.codes import AnomalyCode
-from compmatrix.api.views.sdk_compmatrix import queries
-from compmatrix.utils import dt
+from compmatrix.api.views import view_encoders
 
 
 def index():
@@ -19,24 +18,21 @@ def index():
     """
     resp: dict[str, object | list] = {}
 
+    misused_params: list[str] = []
+
+    # Don't know what terms to use, but tangled is based off of the concept in
+    # quantum physics, called quantum entanglement, where a pair of particles
+    # are affected by each other.
+    tangled_params: list[str] = []
+
     from_sdk_param: int | None = None
     other_from_sdks_param: list[int] = []
     if 'from_sdk' in request.args and request.args.get('from_sdk') != '':
         from_sdk_param = int(request.args.get('from_sdk'))
 
         if 'other_from_sdks' in request.args:
-            if 'errors' not in resp:
-                resp['errors'] = []
-
-            resp['errors'].append({
-                'message': 'Parameter, "other_from_sdks", must only be '
-                           'specified if the "from_sdk" parameter is '
-                           'unspecified.',
-                'code': AnomalyCode.MISUSED_FIELD,
-                'fields': [
-                    'other_from_sdks'
-                ]
-            })
+            misused_params.append('other_from_sdks')
+            tangled_params.append('from_sdk')
     else:
         # TODO: Check for invalid values.
         for s in request.args.getlist('other_from_sdks'):
@@ -49,23 +45,24 @@ def index():
         to_sdk_param = int(request.args.get('to_sdk'))
 
         if 'other_to_sdks' in request.args:
-            if 'errors' not in resp:
-                resp['errors'] = []
-
-            resp['errors'].append({
-                'message': 'Parameter, "other_to_sdks", must only be '
-                           'specified if the "to_sdk" parameter is '
-                           'unspecified.',
-                'code': AnomalyCode.MISUSED_FIELD,
-                'fields': [
-                    'other_to_sdks'
-                ]
-            })
+            misused_params.append('other_to_sdks')
+            tangled_params.append('to_sdk')
     else:
         # TODO: Check for invalid values.
         for s in request.args.getlist('other_to_sdks'):
             if s != '':
                 other_to_sdks_param.append(int(s))
+
+    if misused_params:
+        if 'errors' not in resp:
+            resp['errors'] = []
+
+        resp['errors'].append({
+            'message': messages.create_misused_params_message(misused_params,
+                                                              tangled_params),
+            'code': AnomalyCode.MISUSED_PARAMETER,
+            'parameters': misused_params
+        })
 
     count_param: int = int(request.args.get('count'))
 
@@ -96,11 +93,14 @@ def index():
     if 'errors' in resp:
         return resp, HTTPStatus.UNPROCESSABLE_ENTITY
 
-    if from_sdk_param is None:
-        included_apps_query: Select = queries.get_query_for_none_to_to_sdk(
-            to_sdk_param, other_from_sdks_param
+    if from_sdk_param is None and to_sdk_param is None:
+        included_apps_query: Select = queries.get_query_for_none_to_none(
+            other_from_sdks_param, other_to_sdks_param
         )
-    elif to_sdk_param is None:
+    elif from_sdk_param is None and to_sdk_param is not None:
+        included_apps_query: Select = queries.get_query_for_none_to_to_sdk(
+            to_sdk_param, other_from_sdks_param)
+    elif to_sdk_param is None and from_sdk_param is not None:
         included_apps_query: CompoundSelect = (
             queries.get_query_for_from_sdk_to_none(from_sdk_param,
                                                    other_to_sdks_param)
@@ -165,20 +165,7 @@ def index():
 
     resp_apps: list[dict] = []
     for app in apps:
-        resp_apps.append({
-            'id': app.id,
-            'name': app.name,
-            'company_url': app.company_url,
-            'release_date': dt.dt_to_rfc2822_str(app.release_date),
-            'genre_id': app.genre_id,
-            'artwork_large_url': app.artwork_large_url,
-            'seller_name': app.seller_name,
-            'five_star_ratings': app.five_star_ratings,
-            'four_star_ratings': app.four_star_ratings,
-            'three_star_ratings': app.three_star_ratings,
-            'two_star_ratings': app.two_star_ratings,
-            'one_star_ratings': app.one_star_ratings
-        })
+        resp_apps.append(view_encoders.encode_app_model_object(app))
 
     return {
         'data': {

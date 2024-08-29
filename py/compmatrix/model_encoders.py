@@ -5,7 +5,7 @@ import typing
 @dataclass
 class ModelEncoderFilter:
     target_fields: list[str] | str
-    filter_func: typing.Callable[[object], object]
+    filter_func: typing.Callable[[typing.Any], typing.Any]
 
 
 # We used object here since the model type is _FSAModel, and we shouldn't

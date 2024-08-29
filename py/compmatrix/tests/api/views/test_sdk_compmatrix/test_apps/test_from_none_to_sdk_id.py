@@ -357,7 +357,7 @@ def test_has_cursor_no_dir_no_other_from_sdks(client, only_none_to_paypal_apps,
     count = 2
     cursor = query_utils.create_app_cursor(apps[2])
     query_string = {
-        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
         'count': count,
         'cursor': cursor
     }
@@ -382,8 +382,8 @@ def test_has_cursor_no_dir_no_other_from_sdks(client, only_none_to_paypal_apps,
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-# Tests to ensure that the `other_to_sdks` parameter is only specified when
-# the `to_sdk` parameter is not specified or is an empty string.
+# Tests to ensure that the `other_from_sdks` parameter is only specified when
+# the `from_sdk` parameter is not specified or is an empty string.
 def test_has_other_from_sdks_and_from_sdk(client, sdk_ids):
     count = 2
     query_string = {
@@ -401,8 +401,8 @@ def test_has_other_from_sdks_and_from_sdk(client, sdk_ids):
                 'message': 'Parameter, "other_from_sdks", must only be '
                            'specified if the "from_sdk" parameter is '
                            'unspecified.',
-                'code': AnomalyCode.MISUSED_FIELD,
-                'fields': [
+                'code': AnomalyCode.MISUSED_PARAMETER,
+                'parameters': [
                     'other_from_sdks'
                 ]
             }

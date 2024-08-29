@@ -400,8 +400,8 @@ def test_has_other_to_sdks_and_to_sdk(client, sdk_ids):
                 'message': 'Parameter, "other_to_sdks", must only be '
                            'specified if the "to_sdk" parameter is '
                            'unspecified.',
-                'code': AnomalyCode.MISUSED_FIELD,
-                'fields': [
+                'code': AnomalyCode.MISUSED_PARAMETER,
+                'parameters': [
                     'other_to_sdks'
                 ]
             }
