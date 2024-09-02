@@ -324,7 +324,7 @@ def test_error_unknown_params(client, test_db_data, sdk_ids):
                            '"chorus1", "music1", "chorus2", "chorus3", '
                            'and "chorus4".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': [
+                'parameters': [
                     'title',
                     'artist',
                     'chorus1',
@@ -356,7 +356,7 @@ def test_error_two_unknown_params(client, test_db_data, sdk_ids):
             {
                 'message': 'Unrecognized parameters, "title" and "artist".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': ['title', 'artist']
+                'parameters': ['title', 'artist']
             }
         ]
     }
@@ -374,7 +374,7 @@ def test_no_params(client, test_db_data):
                 'message': 'Required parameters, "from_sdks" and "to_sdks", '
                            'are missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': [
+                'parameters': [
                     'from_sdks',
                     'to_sdks'
                 ]
@@ -398,7 +398,7 @@ def test_no_from_sdks(client, test_db_data, sdk_ids):
             {
                 'message': 'Required parameter, "from_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': ['from_sdks']
+                'parameters': ['from_sdks']
             }
         ]
     }
@@ -419,7 +419,7 @@ def test_no_to_sdks(client, test_db_data, sdk_ids):
             {
                 'message': 'Required parameter, "to_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': ['to_sdks']
+                'parameters': ['to_sdks']
             }
         ]
     }
@@ -441,14 +441,14 @@ def test_typo_from_sdks(client, test_db_data, sdk_ids):
             {
                 'message': 'Required parameter, "from_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': [
+                'parameters': [
                     'from_sdks',
                 ]
             },
             {
                 'message': 'Unrecognized parameter, "frm".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': ['frm']
+                'parameters': ['frm']
             },
         ]
     }
@@ -470,12 +470,12 @@ def test_typo_to_sdks(client, test_db_data, sdk_ids):
             {
                 'message': 'Required parameter, "to_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': ['to_sdks']
+                'parameters': ['to_sdks']
             },
             {
                 'message': 'Unrecognized parameter, "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': [
+                'parameters': [
                     'to'
                 ]
             },
@@ -500,7 +500,7 @@ def test_unknown_sdks_in_from_to_param(client, test_db_data):
                 'message': 'Parameters, "from_sdks" and "to_sdks", have IDs '
                            'that do not refer to an SDK.',
                 'code': AnomalyCode.UNKNOWN_ID,
-                'fields': [
+                'parameters': [
                     'from_sdks',
                     'to_sdks'
                 ],
@@ -529,12 +529,12 @@ def test_unknown_sdks_in_from_param(client, test_db_data, sdk_ids):
             {
                 'message': 'Required parameter, "to_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': ['to_sdks']
+                'parameters': ['to_sdks']
             },
             {
                 'message': 'Unrecognized parameter, "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': [
+                'parameters': [
                     'to'
                 ]
             },
@@ -542,7 +542,7 @@ def test_unknown_sdks_in_from_param(client, test_db_data, sdk_ids):
                 'message': 'Parameter, "from_sdks", has IDs that do not refer '
                            'to an SDK.',
                 'code': AnomalyCode.UNKNOWN_ID,
-                'fields': ['from_sdks'],
+                'parameters': ['from_sdks'],
                 'diagnostics': {
                     'from_sdks': UNKNOWN_SDK_IDS
                 }
@@ -568,7 +568,7 @@ def test_unknown_sdks_in_to_param(client, test_db_data, sdk_ids):
                 'message': 'Parameter, "to_sdks", has IDs that do not refer '
                            'to an SDK.',
                 'code': AnomalyCode.UNKNOWN_ID,
-                'fields': ['to_sdks'],
+                'parameters': ['to_sdks'],
                 'diagnostics': {
                     'to_sdks': UNKNOWN_SDK_IDS
                 }
@@ -599,7 +599,7 @@ def test_mixed_unknown_sdks_in_from_to_param(client, test_db_data, sdk_ids):
                 'message': 'Required parameters, "from_sdks" and "to_sdks", '
                            'are missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': [
+                'parameters': [
                     'from_sdks',
                     'to_sdks'
                 ]
@@ -607,7 +607,7 @@ def test_mixed_unknown_sdks_in_from_to_param(client, test_db_data, sdk_ids):
             {
                 'message': 'Unrecognized parameters, "from" and "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': [
+                'parameters': [
                     'from',
                     'to'
                 ]
@@ -637,18 +637,18 @@ def test_mixed_unknown_sdks_in_from_param(client, test_db_data, sdk_ids):
             {
                 'message': 'Required parameter, "to_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': ['to_sdks']
+                'parameters': ['to_sdks']
             },
             {
                 'message': 'Unrecognized parameter, "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': ['to']
+                'parameters': ['to']
             },
             {
                 'message': 'Parameter, "from_sdks", has IDs that do not refer '
                            'to an SDK.',
                 'code': AnomalyCode.UNKNOWN_ID,
-                'fields': ['from_sdks'],
+                'parameters': ['from_sdks'],
                 'diagnostics': {
                     'from_sdks': unknown_sdks
                 }
@@ -677,18 +677,18 @@ def test_mixed_unknown_sdks_in_to_param(client, test_db_data, sdk_ids):
             {
                 'message': 'Required parameter, "from_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': ['from_sdks']
+                'parameters': ['from_sdks']
             },
             {
                 'message': 'Unrecognized parameter, "from".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': ['from']
+                'parameters': ['from']
             },
             {
                 'message': 'Parameter, "to_sdks", has IDs that do not refer '
                            'to an SDK.',
                 'code': AnomalyCode.UNKNOWN_ID,
-                'fields': ['to_sdks'],
+                'parameters': ['to_sdks'],
                 'diagnostics': {
                     'to_sdks': unknown_sdks
                 }
@@ -717,7 +717,7 @@ def test_mixed_unknown_sdks_in_from_to_param_one_unknown(client, test_db_data,
                 'message': 'Required parameters, "from_sdks" and "to_sdks", '
                            'are missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': [
+                'parameters': [
                     'from_sdks',
                     'to_sdks'
                 ]
@@ -725,7 +725,7 @@ def test_mixed_unknown_sdks_in_from_to_param_one_unknown(client, test_db_data,
             {
                 'message': 'Unrecognized parameters, "from" and "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': [
+                'parameters': [
                     'from',
                     'to'
                 ]
@@ -753,18 +753,18 @@ def test_mixed_unknown_sdks_in_from_param_one_unknown(client, test_db_data,
             {
                 'message': 'Required parameter, "to_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': ['to_sdks']
+                'parameters': ['to_sdks']
             },
             {
                 'message': 'Unrecognized parameter, "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': ['to']
+                'parameters': ['to']
             },
             {
                 'message': 'Parameter, "from_sdks", has an ID that does not '
                            'refer to an SDK.',
                 'code': AnomalyCode.UNKNOWN_ID,
-                'fields': ['from_sdks'],
+                'parameters': ['from_sdks'],
                 'diagnostics': {
                     'from_sdks': unknown_sdks
                 }
@@ -792,18 +792,18 @@ def test_mixed_unknown_sdks_in_to_param_one_unknown(client, test_db_data,
             {
                 'message': 'Required parameter, "from_sdks", is missing.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': ['from_sdks']
+                'parameters': ['from_sdks']
             },
             {
                 'message': 'Unrecognized parameter, "from".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
-                'fields': ['from']
+                'parameters': ['from']
             },
             {
                 'message': 'Parameter, "to_sdks", has an ID that does not '
                            'refer to an SDK.',
                 'code': AnomalyCode.UNKNOWN_ID,
-                'fields': ['to_sdks'],
+                'parameters': ['to_sdks'],
                 'diagnostics': {
                     'to_sdks': unknown_sdks
                 }

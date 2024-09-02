@@ -116,7 +116,7 @@ def _check_for_missing_params(resp: dict[str, object | list],
                 missing_params_list
             ),
             'code': AnomalyCode.MISSING_FIELD,
-            'fields': list(missing_params)
+            'parameters': list(missing_params)
         })
 
 
@@ -144,7 +144,7 @@ def _check_for_unknown_params(resp: dict[str, object | list],
         resp['errors'].append({
             'message': message,
             'code': AnomalyCode.UNRECOGNIZED_FIELD,
-            'fields': unknown_params
+            'parameters': unknown_params
         })
 
 
@@ -175,7 +175,7 @@ def _check_for_unknown_ids_in_params(resp: dict[str, object | list],
         resp['errors'].append({
             'message': message,
             'code': AnomalyCode.UNKNOWN_ID,
-            'fields': params_with_unknown_ids,
+            'parameters': params_with_unknown_ids,
             'diagnostics': unknown_ids_per_param
         })
 

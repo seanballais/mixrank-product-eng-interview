@@ -47,8 +47,9 @@ def test_no_cursor(client, expected_apps, sdk_ids):
         'data': {
             'apps': apps[:count],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[count - 1])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[0]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(
+                apps[count - 1])
         }
     }
 
@@ -58,7 +59,7 @@ def test_no_cursor(client, expected_apps, sdk_ids):
 def test_has_cursor_next_dir(client, expected_apps, sdk_ids):
     apps = expected_apps
     count = 3
-    cursor = query_utils.create_app_cursor(apps[4])
+    cursor = query_utils.create_cursor_from_app_dict(apps[4])
     query_string = {
         'other_from_sdks': sdk_ids[1],
         'count': count,
@@ -72,8 +73,8 @@ def test_has_cursor_next_dir(client, expected_apps, sdk_ids):
         'data': {
             'apps': apps[5:8],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[5]),
-            'end_cursor': query_utils.create_app_cursor(apps[7])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[5]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[7])
         }
     }
 
@@ -83,7 +84,7 @@ def test_has_cursor_next_dir(client, expected_apps, sdk_ids):
 def test_has_cursor_next_dir2(client, expected_apps, sdk_ids):
     apps = expected_apps
     count = 15
-    cursor = query_utils.create_app_cursor(apps[6])
+    cursor = query_utils.create_cursor_from_app_dict(apps[6])
     query_string = {
         'other_from_sdks': sdk_ids[1],
         'count': count,
@@ -97,8 +98,8 @@ def test_has_cursor_next_dir2(client, expected_apps, sdk_ids):
         'data': {
             'apps': apps[7:12],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[7]),
-            'end_cursor': query_utils.create_app_cursor(apps[10])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[7]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[10])
         }
     }
 
@@ -108,7 +109,7 @@ def test_has_cursor_next_dir2(client, expected_apps, sdk_ids):
 def test_has_cursor_prev_dir(client, expected_apps, sdk_ids):
     apps = expected_apps
     count = 3
-    cursor = query_utils.create_app_cursor(apps[5])
+    cursor = query_utils.create_cursor_from_app_dict(apps[5])
     query_string = {
         'other_from_sdks': sdk_ids[1],
         'count': count,
@@ -122,8 +123,8 @@ def test_has_cursor_prev_dir(client, expected_apps, sdk_ids):
         'data': {
             'apps': apps[2:5],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[2]),
-            'end_cursor': query_utils.create_app_cursor(apps[4])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[2]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[4])
         }
     }
 
@@ -133,7 +134,7 @@ def test_has_cursor_prev_dir(client, expected_apps, sdk_ids):
 def test_has_cursor_prev_dir2(client, expected_apps, sdk_ids):
     apps = expected_apps
     count = 15
-    cursor = query_utils.create_app_cursor(apps[5])
+    cursor = query_utils.create_cursor_from_app_dict(apps[5])
     query_string = {
         'other_from_sdks': sdk_ids[1],
         'count': count,
@@ -147,8 +148,8 @@ def test_has_cursor_prev_dir2(client, expected_apps, sdk_ids):
         'data': {
             'apps': apps[0:5],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[4])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[0]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[4])
         }
     }
 
@@ -158,7 +159,7 @@ def test_has_cursor_prev_dir2(client, expected_apps, sdk_ids):
 def test_has_cursor_no_dir(client, expected_apps, sdk_ids):
     apps = expected_apps
     count = 2
-    cursor = query_utils.create_app_cursor(apps[2])
+    cursor = query_utils.create_cursor_from_app_dict(apps[2])
     query_string = {
         'other_from_sdk': sdk_ids[1],
         'count': count,
@@ -174,7 +175,7 @@ def test_has_cursor_no_dir(client, expected_apps, sdk_ids):
                            'It is required when the "cursor" parameter '
                            'has a value.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': [
+                'parameters': [
                     'direction'
                 ]
             }

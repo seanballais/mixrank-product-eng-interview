@@ -26,7 +26,7 @@ def test_has_other_from_sdks_and_from_sdk(client, sdk_ids):
                 'message': 'Parameters, "other_from_sdks" and '
                            '"other_to_sdks", must only be specified if the '
                            '"from_sdk" and "to_sdk" parameters are '
-                           'unspecified.',
+                           'unspecified, respectively.',
                 'code': AnomalyCode.MISUSED_PARAMETER,
                 'parameters': [
                     'other_from_sdks',

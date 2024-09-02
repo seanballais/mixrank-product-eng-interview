@@ -52,8 +52,9 @@ def test_no_cursor(client, paypal_to_none_apps_sans_paypal, sdk_ids):
         'data': {
             'apps': apps[:count],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[count - 1])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[0]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(
+                apps[count - 1])
         }
     }
 
@@ -63,7 +64,7 @@ def test_no_cursor(client, paypal_to_none_apps_sans_paypal, sdk_ids):
 def test_has_cursor_next_dir(client, paypal_to_none_apps_sans_paypal, sdk_ids):
     apps = paypal_to_none_apps_sans_paypal
     count = 4
-    cursor = query_utils.create_app_cursor(apps[2])
+    cursor = query_utils.create_cursor_from_app_dict(apps[2])
     query_string = {
         'from_sdk': sdk_ids[0],
         'to_sdk': '',
@@ -79,8 +80,8 @@ def test_has_cursor_next_dir(client, paypal_to_none_apps_sans_paypal, sdk_ids):
         'data': {
             'apps': apps[3:6],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[3]),
-            'end_cursor': query_utils.create_app_cursor(apps[5])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[3]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[5])
         }
     }
 
@@ -91,7 +92,7 @@ def test_has_cursor_next_dir2(client, paypal_to_none_apps_sans_paypal,
                               sdk_ids):
     apps = paypal_to_none_apps_sans_paypal
     count = 6
-    cursor = query_utils.create_app_cursor(apps[4])
+    cursor = query_utils.create_cursor_from_app_dict(apps[4])
     query_string = {
         'from_sdk': sdk_ids[0],
         'other_to_sdks': [sdk_ids[0]],
@@ -106,8 +107,8 @@ def test_has_cursor_next_dir2(client, paypal_to_none_apps_sans_paypal,
         'data': {
             'apps': apps[5:6],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[5]),
-            'end_cursor': query_utils.create_app_cursor(apps[5])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[5]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[5])
         }
     }
 
@@ -118,7 +119,7 @@ def test_has_cursor_prev_dir(client, paypal_to_none_apps_sans_paypal,
                              sdk_ids):
     apps = paypal_to_none_apps_sans_paypal
     count = 4
-    cursor = query_utils.create_app_cursor(apps[3])
+    cursor = query_utils.create_cursor_from_app_dict(apps[3])
     query_string = {
         'from_sdk': sdk_ids[0],
         'other_to_sdks': [sdk_ids[0]],
@@ -133,8 +134,8 @@ def test_has_cursor_prev_dir(client, paypal_to_none_apps_sans_paypal,
         'data': {
             'apps': apps[:3],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[2])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[0]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[2])
         }
     }
 
@@ -145,7 +146,7 @@ def test_has_cursor_prev_dir2(client, paypal_to_none_apps_sans_paypal,
                               sdk_ids):
     apps = paypal_to_none_apps_sans_paypal
     count = 5
-    cursor = query_utils.create_app_cursor(apps[1])
+    cursor = query_utils.create_cursor_from_app_dict(apps[1])
     query_string = {
         'from_sdk': sdk_ids[0],
         'other_to_sdks': [sdk_ids[0]],
@@ -160,8 +161,8 @@ def test_has_cursor_prev_dir2(client, paypal_to_none_apps_sans_paypal,
         'data': {
             'apps': apps[0:1],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[0])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[0]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[0])
         }
     }
 
@@ -171,7 +172,7 @@ def test_has_cursor_prev_dir2(client, paypal_to_none_apps_sans_paypal,
 def test_has_cursor_no_dir(client, paypal_to_none_apps_sans_paypal, sdk_ids):
     apps = paypal_to_none_apps_sans_paypal
     count = 2
-    cursor = query_utils.create_app_cursor(apps[2])
+    cursor = query_utils.create_cursor_from_app_dict(apps[2])
     query_string = {
         'from_sdk': sdk_ids[0],
         'other_to_sdks': [sdk_ids[0]],
@@ -188,7 +189,7 @@ def test_has_cursor_no_dir(client, paypal_to_none_apps_sans_paypal, sdk_ids):
                            'It is required when the "cursor" parameter '
                            'has a value.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': [
+                'parameters': [
                     'direction'
                 ]
             }
@@ -236,8 +237,9 @@ def test_no_cursor_no_other_to_sdks(client, paypal_to_only_none_apps, sdk_ids):
         'data': {
             'apps': apps[:count],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[count - 1])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[0]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(
+                apps[count - 1])
         }
     }
 
@@ -248,7 +250,7 @@ def test_has_cursor_next_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
                                               sdk_ids):
     apps = paypal_to_only_none_apps
     count = 4
-    cursor = query_utils.create_app_cursor(apps[2])
+    cursor = query_utils.create_cursor_from_app_dict(apps[2])
     query_string = {
         'from_sdk': sdk_ids[0],
         'count': count,
@@ -262,8 +264,9 @@ def test_has_cursor_next_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
         'data': {
             'apps': apps[3:3 + count],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[3]),
-            'end_cursor': query_utils.create_app_cursor(apps[(3 + count) - 1])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[3]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(
+                apps[(3 + count) - 1])
         }
     }
 
@@ -275,7 +278,7 @@ def test_has_cursor_next_dir2_no_other_to_sdks(client,
                                                sdk_ids):
     apps = paypal_to_only_none_apps
     count = 7
-    cursor = query_utils.create_app_cursor(apps[4])
+    cursor = query_utils.create_cursor_from_app_dict(apps[4])
     query_string = {
         'from_sdk': sdk_ids[0],
         'count': count,
@@ -289,8 +292,8 @@ def test_has_cursor_next_dir2_no_other_to_sdks(client,
         'data': {
             'apps': apps[5:10],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[5]),
-            'end_cursor': query_utils.create_app_cursor(apps[9])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[5]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[9])
         }
     }
 
@@ -301,7 +304,7 @@ def test_has_cursor_prev_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
                                               sdk_ids):
     apps = paypal_to_only_none_apps
     count = 2
-    cursor = query_utils.create_app_cursor(apps[3])
+    cursor = query_utils.create_cursor_from_app_dict(apps[3])
     query_string = {
         'from_sdk': sdk_ids[0],
         'count': count,
@@ -315,8 +318,8 @@ def test_has_cursor_prev_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
         'data': {
             'apps': apps[1:3],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[1]),
-            'end_cursor': query_utils.create_app_cursor(apps[2])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[1]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[2])
         }
     }
 
@@ -328,7 +331,7 @@ def test_has_cursor_prev_dir2_no_other_to_sdks(client,
                                                sdk_ids):
     apps = paypal_to_only_none_apps
     count = 5
-    cursor = query_utils.create_app_cursor(apps[1])
+    cursor = query_utils.create_cursor_from_app_dict(apps[1])
     query_string = {
         'from_sdk': sdk_ids[0],
         'count': count,
@@ -342,8 +345,8 @@ def test_has_cursor_prev_dir2_no_other_to_sdks(client,
         'data': {
             'apps': apps[0:1],
             'total_count': len(apps),
-            'start_cursor': query_utils.create_app_cursor(apps[0]),
-            'end_cursor': query_utils.create_app_cursor(apps[0])
+            'start_cursor': query_utils.create_cursor_from_app_dict(apps[0]),
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[0])
         }
     }
 
@@ -354,7 +357,7 @@ def test_has_cursor_no_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
                                             sdk_ids):
     apps = paypal_to_only_none_apps
     count = 2
-    cursor = query_utils.create_app_cursor(apps[2])
+    cursor = query_utils.create_cursor_from_app_dict(apps[2])
     query_string = {
         'from_sdk': sdk_ids[0],
         'count': count,
@@ -370,7 +373,7 @@ def test_has_cursor_no_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
                            'It is required when the "cursor" parameter '
                            'has a value.',
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': [
+                'parameters': [
                     'direction'
                 ]
             }

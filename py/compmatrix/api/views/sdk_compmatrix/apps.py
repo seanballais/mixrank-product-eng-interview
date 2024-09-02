@@ -19,6 +19,7 @@ def index():
     resp: dict[str, object | list] = {}
 
     misused_params: list[str] = []
+    wrong_valued_params: list[str] = []
 
     # Don't know what terms to use, but tangled is based off of the concept in
     # quantum physics, called quantum entanglement, where a pair of particles
@@ -27,52 +28,78 @@ def index():
 
     from_sdk_param: int | None = None
     other_from_sdks_param: list[int] = []
-    if 'from_sdk' in request.args and request.args.get('from_sdk') != '':
-        from_sdk_param = int(request.args.get('from_sdk'))
+    is_from_sdk_specified: bool = ('from_sdk' in request.args
+                                   and request.args.get('from_sdk') != '')
+    if is_from_sdk_specified:
+        try:
+            from_sdk_param = int(request.args.get('from_sdk'))
+        except ValueError:
+            wrong_valued_params.append('from_sdk')
 
         if 'other_from_sdks' in request.args:
             misused_params.append('other_from_sdks')
             tangled_params.append('from_sdk')
-    else:
-        # TODO: Check for invalid values.
-        for s in request.args.getlist('other_from_sdks'):
-            if s != '':
-                other_from_sdks_param.append(int(s))
+
+    # We need to check the values of other_from_sdks even if they are not
+    # supposed to be specified.
+    for s in request.args.getlist('other_from_sdks'):
+        if s != '':
+            try:
+                sdk: int = int(s)
+                if not is_from_sdk_specified:
+                    other_from_sdks_param.append(sdk)
+            except ValueError:
+                wrong_valued_params.append('other_from_sdks')
+                break
 
     to_sdk_param: int | None = None
     other_to_sdks_param: list[int] = []
-    if 'to_sdk' in request.args and request.args.get('to_sdk') != '':
-        to_sdk_param = int(request.args.get('to_sdk'))
+    is_to_sdk_specified: bool = ('to_sdk' in request.args
+                                 and request.args.get('to_sdk') != '')
+    if is_to_sdk_specified:
+        try:
+            to_sdk_param = int(request.args.get('to_sdk'))
+        except ValueError:
+            wrong_valued_params.append('to_sdk')
 
         if 'other_to_sdks' in request.args:
             misused_params.append('other_to_sdks')
             tangled_params.append('to_sdk')
-    else:
-        # TODO: Check for invalid values.
-        for s in request.args.getlist('other_to_sdks'):
-            if s != '':
-                other_to_sdks_param.append(int(s))
 
-    if misused_params:
-        if 'errors' not in resp:
-            resp['errors'] = []
+    # We need to check the values of other_from_sdks even if they are not
+    # supposed to be specified.
+    for s in request.args.getlist('other_to_sdks'):
+        if s != '':
+            try:
+                sdk: int = int(s)
+                if not is_to_sdk_specified:
+                    other_to_sdks_param.append(sdk)
+            except ValueError:
+                wrong_valued_params.append('other_to_sdks')
+                break
 
-        resp['errors'].append({
-            'message': messages.create_misused_params_message(misused_params,
-                                                              tangled_params),
-            'code': AnomalyCode.MISUSED_PARAMETER,
-            'parameters': misused_params
-        })
-
-    count_param: int = int(request.args.get('count'))
+    count_param: int | None = None
+    try:
+        count_param = int(request.args.get('count'))
+    except ValueError:
+        wrong_valued_params.append('count')
 
     cursor_param: str | None = request.args.get('cursor')
+    if cursor_param:
+        cursor_parts: list[str] = cursor_param.split(';')
+        if len(cursor_parts) != 2:
+            wrong_valued_params.append('cursor')
+    else:
+        cursor_parts: list[str] = []
+
     direction_param: str | None = None
     if cursor_param:
         cursor_param: str = str(cursor_param)
 
         if 'direction' in request.args:
-            direction_param: str = str(request.args.get('direction'))
+            direction_param: str = request.args.get('direction')
+            if direction_param != "previous" and direction_param != "next":
+                wrong_valued_params.append('direction')
         else:
             if 'errors' not in resp:
                 resp['errors'] = []
@@ -87,8 +114,31 @@ def index():
             resp['errors'].append({
                 'message': message,
                 'code': AnomalyCode.MISSING_FIELD,
-                'fields': list(missing_param)
+                'parameters': list(missing_param)
             })
+
+    if wrong_valued_params:
+        if 'errors' not in resp:
+            resp['errors'] = []
+
+        message: str = messages.create_wrong_valued_params_message(
+            wrong_valued_params)
+        resp['errors'].append({
+            'message': message,
+            'code': AnomalyCode.INVALID_PARAMETER_VALUE,
+            'parameters': wrong_valued_params
+        })
+
+    if misused_params:
+        if 'errors' not in resp:
+            resp['errors'] = []
+
+        resp['errors'].append({
+            'message': messages.create_misused_params_message(misused_params,
+                                                              tangled_params),
+            'code': AnomalyCode.MISUSED_PARAMETER,
+            'parameters': misused_params
+        })
 
     if 'errors' in resp:
         return resp, HTTPStatus.UNPROCESSABLE_ENTITY
@@ -120,7 +170,7 @@ def index():
         )
     )
     if cursor_param:
-        cursor_vals: Tuple = db.tuple_(*cursor_param.split(';'))
+        cursor_vals: Tuple = db.tuple_(*cursor_parts)
         columns: Tuple = db.tuple_(models.App.name, models.App.seller_name)
 
         if direction_param == 'previous':
@@ -150,7 +200,9 @@ def index():
             )
         )
 
-    apps_query = apps_query.limit(count_param)
+    if count_param:
+        apps_query = apps_query.limit(count_param)
+
     apps: list[models.App] = apps_query.all()
 
     if cursor_param and direction_param == 'previous':
