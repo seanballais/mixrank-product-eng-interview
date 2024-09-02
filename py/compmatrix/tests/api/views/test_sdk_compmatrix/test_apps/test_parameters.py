@@ -538,3 +538,134 @@ def test_invalid_all_params4(client, apps, sdk_ids):
 
     assert resp.json == expected_resp
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_unknown_params(client, sdk_ids):
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': 2,
+        'f1': 'max verstappen',
+        'speed': 'vroooooom',
+        'smooooth_operator': 'carlos sainz'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Unrecognized parameters, "f1", "speed", '
+                           'and "smooooth_operator".',
+                'code': AnomalyCode.UNRECOGNIZED_FIELD,
+                'parameters': [
+                    'f1',
+                    'speed',
+                    'smooooth_operator'
+                ]
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_unknown_params1(client, sdk_ids):
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'count': 2,
+        'hanabi': 'hanabi'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Unrecognized parameter, "hanabi".',
+                'code': AnomalyCode.UNRECOGNIZED_FIELD,
+                'parameters': [
+                    'hanabi'
+                ]
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_invalid_and_unknown_params(client, apps, sdk_ids):
+    query_string = {
+        'from_sdk': 'Maia hiii',
+        'other_from_sdks': 'Maia hiii',
+        'to_sdk': 'Maia hooooo',
+        'other_to_sdks': 'Maia hooooo',
+        'count': 'Maia haaaa',
+        'cursor': 'Maia hahaaa',
+        'hanabi': 'hanabi',
+        'f1': 'max verstappen',
+        'speed': 'vroooooom',
+        'smooooth_operator': 'carlos sainz'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Unrecognized parameters, "hanabi", "f1", "speed", '
+                           'and "smooooth_operator".',
+                'code': AnomalyCode.UNRECOGNIZED_FIELD,
+                'parameters': [
+                    'hanabi',
+                    'f1',
+                    'speed',
+                    'smooooth_operator'
+                ]
+            },
+            {
+                'message': 'Required parameter, "direction", is missing. It '
+                           'is required when the "cursor" parameter has a '
+                           'value.',
+                'code': AnomalyCode.MISSING_FIELD,
+                'parameters': [
+                    'direction'
+                ],
+            },
+            {
+                'message': 'Parameters, "from_sdk", "other_from_sdks", '
+                           '"to_sdk", "other_to_sdks", "count", and "cursor", '
+                           'have invalid values. Values of "from_sdk", '
+                           '"other_from_sdks", "to_sdk", "other_to_sdks", and '
+                           '"count" must be integers. The correct format for '
+                           'the value of "cursor" is '
+                           '"<app name>;<app seller name>".',
+                'code': AnomalyCode.INVALID_PARAMETER_VALUE,
+                'parameters': [
+                    'from_sdk',
+                    'other_from_sdks',
+                    'to_sdk',
+                    'other_to_sdks',
+                    'count',
+                    'cursor'
+                ]
+            },
+            {
+                'message': 'Parameters, "other_from_sdks" and '
+                           '"other_to_sdks", must only be specified if the '
+                           '"from_sdk" and "to_sdk" parameters are '
+                           'unspecified, respectively.',
+                'code': AnomalyCode.MISUSED_PARAMETER,
+                'parameters': [
+                    'other_from_sdks',
+                    'other_to_sdks'
+                ]
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

@@ -131,16 +131,7 @@ def _check_for_unknown_params(resp: dict[str, object | list],
         if 'errors' not in resp:
             resp['errors'] = []
 
-        if len(unknown_params) == 1:
-            message: str = 'Unrecognized parameter, '
-        else:
-            message: str = 'Unrecognized parameters, '
-
-        oxfordify: bool = len(unknown_params) != 2
-        message_substr: str = writing.humanize_list(unknown_params,
-                                                    oxfordify,
-                                                    True)
-        message += f'{message_substr}.'
+        message: str = messages.create_unknown_params_message(unknown_params)
         resp['errors'].append({
             'message': message,
             'code': AnomalyCode.UNRECOGNIZED_FIELD,

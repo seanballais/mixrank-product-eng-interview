@@ -103,6 +103,19 @@ def create_wrong_valued_params_message(params: list[str]) -> str:
     return ' '.join(message_parts)
 
 
+def create_unknown_params_message(params: list[str]) -> str:
+    if len(params) == 1:
+        message: str = 'Unrecognized parameter, '
+    else:
+        message: str = 'Unrecognized parameters, '
+
+    oxfordify: bool = len(params) != 2
+    message_substr: str = writing.humanize_list(params, oxfordify, True)
+    message += f'{message_substr}.'
+
+    return message
+
+
 def _create_wrong_valued_int_params_message(params: list[str]) -> str | None:
     """
     Return a message about the parameters that requires an integer, but

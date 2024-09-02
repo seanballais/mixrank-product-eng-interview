@@ -3,6 +3,7 @@ from http import HTTPStatus
 from flask import request
 from flask_sqlalchemy.query import Query
 from sqlalchemy import Subquery, Tuple, Select, CompoundSelect
+from werkzeug.datastructures import MultiDict
 
 from compmatrix import db
 from compmatrix.api import models
@@ -17,6 +18,32 @@ def index():
     specified in the parameters.
     """
     resp: dict[str, object | list] = {}
+
+    known_params: list[str] = [
+        'from_sdk',
+        'to_sdk',
+        'other_from_sdks',
+        'other_to_sdks',
+        'count',
+        'cursor',
+        'direction'
+    ]
+
+    client_params: MultiDict[str, str] = request.args
+
+    unknown_params: list[str] = [
+        k for k in client_params.keys() if k not in known_params
+    ]
+    if unknown_params:
+        if 'errors' not in resp:
+            resp['errors'] = []
+
+        message: str = messages.create_unknown_params_message(unknown_params)
+        resp['errors'].append({
+            'message': message,
+            'code': AnomalyCode.UNRECOGNIZED_FIELD,
+            'parameters': unknown_params
+        })
 
     misused_params: list[str] = []
     wrong_valued_params: list[str] = []

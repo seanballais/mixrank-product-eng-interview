@@ -161,7 +161,7 @@ def test_has_cursor_no_dir(client, expected_apps, sdk_ids):
     count = 2
     cursor = query_utils.create_cursor_from_app_dict(apps[2])
     query_string = {
-        'other_from_sdk': sdk_ids[1],
+        'other_from_sdks': sdk_ids[1],
         'count': count,
         'cursor': cursor
     }
