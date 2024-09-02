@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from http import HTTPStatus
 
 from flask import request
@@ -7,7 +8,7 @@ from werkzeug.datastructures import MultiDict
 
 from compmatrix import db
 from compmatrix.api import models
-from compmatrix.api.views import messages, queries
+from compmatrix.api.views import messages, queries, checks
 from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.api.views import view_encoders
 
@@ -28,6 +29,8 @@ def index():
         'cursor',
         'direction'
     ]
+
+    params_with_sdk_ids_to_check: OrderedDict = OrderedDict()
 
     client_params: MultiDict[str, str] = request.args
 
@@ -55,63 +58,69 @@ def index():
 
     from_sdk_param: int | None = None
     other_from_sdks_param: list[int] = []
-    is_from_sdk_specified: bool = ('from_sdk' in request.args
-                                   and request.args.get('from_sdk') != '')
-    if is_from_sdk_specified:
+    if 'from_sdk' in client_params and client_params.get('from_sdk') != '':
         try:
-            from_sdk_param = int(request.args.get('from_sdk'))
+            from_sdk_param = int(client_params.get('from_sdk'))
+            params_with_sdk_ids_to_check['from_sdk'] = from_sdk_param
         except ValueError:
             wrong_valued_params.append('from_sdk')
 
-        if 'other_from_sdks' in request.args:
+        if 'other_from_sdks' in client_params:
             misused_params.append('other_from_sdks')
             tangled_params.append('from_sdk')
 
     # We need to check the values of other_from_sdks even if they are not
     # supposed to be specified.
-    for s in request.args.getlist('other_from_sdks'):
+    has_bad_val: bool = False
+    for s in client_params.getlist('other_from_sdks'):
         if s != '':
             try:
                 sdk: int = int(s)
-                if not is_from_sdk_specified:
-                    other_from_sdks_param.append(sdk)
+                other_from_sdks_param.append(sdk)
             except ValueError:
-                wrong_valued_params.append('other_from_sdks')
-                break
+                has_bad_val = True
+
+    if has_bad_val:
+        wrong_valued_params.append('other_from_sdks')
+
+    params_with_sdk_ids_to_check['other_from_sdks'] = other_from_sdks_param
 
     to_sdk_param: int | None = None
     other_to_sdks_param: list[int] = []
-    is_to_sdk_specified: bool = ('to_sdk' in request.args
-                                 and request.args.get('to_sdk') != '')
-    if is_to_sdk_specified:
+    if 'to_sdk' in client_params and client_params.get('to_sdk') != '':
         try:
-            to_sdk_param = int(request.args.get('to_sdk'))
+            to_sdk_param = int(client_params.get('to_sdk'))
+            params_with_sdk_ids_to_check['to_sdk'] = to_sdk_param
         except ValueError:
             wrong_valued_params.append('to_sdk')
 
-        if 'other_to_sdks' in request.args:
+        if 'other_to_sdks' in client_params:
             misused_params.append('other_to_sdks')
             tangled_params.append('to_sdk')
 
     # We need to check the values of other_from_sdks even if they are not
     # supposed to be specified.
-    for s in request.args.getlist('other_to_sdks'):
+    has_bad_val: bool = False
+    for s in client_params.getlist('other_to_sdks'):
         if s != '':
             try:
                 sdk: int = int(s)
-                if not is_to_sdk_specified:
-                    other_to_sdks_param.append(sdk)
+                other_to_sdks_param.append(sdk)
             except ValueError:
-                wrong_valued_params.append('other_to_sdks')
-                break
+                has_bad_val = True
+
+    if has_bad_val:
+        wrong_valued_params.append('other_to_sdks')
+
+    params_with_sdk_ids_to_check['other_to_sdks'] = other_to_sdks_param
 
     count_param: int | None = None
     try:
-        count_param = int(request.args.get('count'))
+        count_param = int(client_params.get('count'))
     except ValueError:
         wrong_valued_params.append('count')
 
-    cursor_param: str | None = request.args.get('cursor')
+    cursor_param: str | None = client_params.get('cursor')
     if cursor_param:
         cursor_parts: list[str] = cursor_param.split(';')
         if len(cursor_parts) != 2:
@@ -123,8 +132,8 @@ def index():
     if cursor_param:
         cursor_param: str = str(cursor_param)
 
-        if 'direction' in request.args:
-            direction_param: str = request.args.get('direction')
+        if 'direction' in client_params:
+            direction_param: str = client_params.get('direction')
             if direction_param != "previous" and direction_param != "next":
                 wrong_valued_params.append('direction')
         else:
@@ -155,6 +164,10 @@ def index():
             'code': AnomalyCode.INVALID_PARAMETER_VALUE,
             'parameters': wrong_valued_params
         })
+
+    if params_with_sdk_ids_to_check:
+        checks.check_for_unknown_ids_in_params(resp,
+                                               params_with_sdk_ids_to_check)
 
     if misused_params:
         if 'errors' not in resp:

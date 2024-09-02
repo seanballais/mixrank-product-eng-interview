@@ -4,6 +4,9 @@ from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.tests.api.views.test_sdk_compmatrix import (
     BASE_SDK_COMPMATRIX_ENDPOINT
 )
+from compmatrix.tests.api.views.test_sdk_compmatrix.constants import (
+    UNKNOWN_SDK_IDS
+)
 
 from . import query_utils
 
@@ -137,8 +140,8 @@ def test_other_from_sdks_non_integer3(client, apps, sdk_ids):
         'other_from_sdks': [
             'Do you think time would pass me by',
             'Cause you know I\'d walk a',
-            1000,
-            '1000',
+            sdk_ids[0],
+            str(sdk_ids[1]),
             'miles',
             'If I could just see you tonight'
         ],
@@ -237,8 +240,8 @@ def test_other_to_sdks_non_integer3(client, apps, sdk_ids):
         'other_to_sdks': [
             'Do you think time would pass me by',
             'Cause you know I\'d walk a',
-            1000,
-            '1000',
+            sdk_ids[0],
+            str(sdk_ids[1]),
             'miles',
             'If I could just see you tonight'
         ],
@@ -663,6 +666,67 @@ def test_invalid_and_unknown_params(client, apps, sdk_ids):
                     'other_from_sdks',
                     'other_to_sdks'
                 ]
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_unknown_sdks_in_params(client, test_db_data):
+    query_string = {
+        'other_from_sdks': UNKNOWN_SDK_IDS,
+        'to_sdk': UNKNOWN_SDK_IDS[1],
+        'count': 2
+    }
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Parameters, "other_from_sdks" and "to_sdk", have '
+                           'IDs that do not refer to an SDK.',
+                'code': AnomalyCode.UNKNOWN_ID,
+                'parameters': [
+                    'other_from_sdks',
+                    'to_sdk'
+                ],
+                'diagnostics': {
+                    'other_from_sdks': UNKNOWN_SDK_IDS,
+                    'to_sdk': UNKNOWN_SDK_IDS[1]
+                }
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_unknown_sdks_in_params2(client, test_db_data):
+    query_string = {
+        'other_from_sdks': UNKNOWN_SDK_IDS,
+        'other_to_sdks': UNKNOWN_SDK_IDS,
+        'count': 2
+    }
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Parameters, "other_from_sdks" and '
+                           '"other_to_sdks", have IDs that do not refer to an '
+                           'SDK.',
+                'code': AnomalyCode.UNKNOWN_ID,
+                'parameters': [
+                    'other_from_sdks',
+                    'other_to_sdks'
+                ],
+                'diagnostics': {
+                    'other_from_sdks': UNKNOWN_SDK_IDS,
+                    'other_to_sdks': UNKNOWN_SDK_IDS
+                }
             }
         ]
     }

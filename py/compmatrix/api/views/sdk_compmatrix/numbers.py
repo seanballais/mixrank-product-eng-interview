@@ -8,7 +8,7 @@ from werkzeug.datastructures import MultiDict
 from compmatrix import db
 from compmatrix.api import models
 from compmatrix.api.views.codes import AnomalyCode
-from compmatrix.api.views import messages, queries
+from compmatrix.api.views import messages, queries, checks
 from compmatrix.utils import writing
 
 
@@ -38,11 +38,12 @@ def index():
 
     _check_for_missing_params(resp, required_params, client_params)
     _check_for_unknown_params(resp, required_params, client_params)
-    _check_for_unknown_ids_in_params(resp,
-                                     OrderedDict({
-                                         'from_sdks': from_sdks_param,
-                                         'to_sdks': to_sdks_param
-                                     }))
+
+    params_with_sdk_ids: OrderedDict = OrderedDict({
+        'from_sdks': from_sdks_param,
+        'to_sdks': to_sdks_param
+    })
+    checks.check_for_unknown_ids_in_params(resp, params_with_sdk_ids)
 
     if 'errors' in resp:
         return resp, HTTPStatus.UNPROCESSABLE_ENTITY
@@ -139,63 +140,6 @@ def _check_for_unknown_params(resp: dict[str, object | list],
         })
 
 
-def _check_for_unknown_ids_in_params(resp: dict[str, object | list],
-                                     params: OrderedDict[str, list[int]]):
-    # We need the `params` parameters to be in order. Although insertion order
-    # of dictionaries since Python 3.7 is preserved, we opted to use
-    # OrderedDict here to properly communicate that we're expecting the
-    # parameter to have its key-value pairs in a specific order.
-    params_with_unknown_ids: list[str] = []
-    unknown_ids_per_param: dict[str, list[int]] = {}
-    for name, value in params.items():
-        unknown_ids: list[int] = _check_for_unknown_ids_in_param(value)
-        if unknown_ids:
-            params_with_unknown_ids.append(name)
-            unknown_ids_per_param[name] = unknown_ids
-
-    if params_with_unknown_ids:
-        if 'errors' not in resp:
-            resp['errors'] = []
-
-        num_unknown_ids: int = sum(
-            [len(unknown_ids)
-             for unknown_ids in unknown_ids_per_param.values()]
-        )
-        message: str = _create_unknown_ids_params_message(
-            params_with_unknown_ids, num_unknown_ids)
-        resp['errors'].append({
-            'message': message,
-            'code': AnomalyCode.UNKNOWN_ID,
-            'parameters': params_with_unknown_ids,
-            'diagnostics': unknown_ids_per_param
-        })
-
-
-def _check_for_unknown_ids_in_param(ids: list[int]) -> list[int]:
-    # As of August 2024, SQLAlchemy 2.0 does not have proper support for CTEs
-    # for VALUES() rows. You would still need to use a SELECT FROM VALUES()
-    # query inside the CTE just to make things work with SQLAlchemy. I'm also
-    # having difficulty with such a query form in SQLite, where I am getting
-    # syntax errors. So, we're just gonna use a raw SQL query for this one.
-    query = db.text(
-        'WITH id_list(id) AS :ids '
-        'SELECT id '
-        'FROM id_list '
-        'WHERE NOT EXISTS ('
-        '    SELECT * '
-        '    FROM sdk '
-        '    WHERE sdk.id = id_list.id'
-        ')'
-    )
-    query = query.bindparams(db.bindparam('ids', expanding=True))
-    params: dict = {
-        'ids': [(_id,) for _id in ids]
-    }
-    unknown_id_results: list = db.session.execute(query, params).fetchall()
-    unknown_ids: list[int] = [result[0] for result in unknown_id_results]
-    return unknown_ids
-
-
 def _get_count_query_for_from_to_sdks(from_sdk_id: int,
                                       to_sdk_id: int) -> Select:
     query: Select = queries.get_query_for_from_to_sdks(from_sdk_id, to_sdk_id)
@@ -228,27 +172,3 @@ def _get_count_query_for_none_to_none(
     query: Select = queries.get_query_for_none_to_none(other_from_sdks_param,
                                                        other_to_sdks_param)
     return db.select(db.func.count('*')).select_from(query.subquery())
-
-
-def _create_unknown_ids_params_message(affected_params: list[str],
-                                       num_unknown_ids: int) -> str:
-    oxfordify: bool = len(affected_params) != 2
-    message: str = writing.humanize_list(affected_params, oxfordify, True)
-
-    # NOTE: A message with 'Parameters, ":param1" and ":param2", have an ID
-    #       that does...' will only happen if we have two parameters with
-    #       unknown IDs but only having one unknown ID in actuality. However,
-    #       this is unlikely to happen.
-    if len(affected_params) == 1:
-        message = f'Parameter, {message}, has '
-    else:
-        message = f'Parameters, {message}, have '
-
-    if num_unknown_ids == 1:
-        message += 'an ID that does '
-    else:
-        message += 'IDs that do '
-
-    message += 'not refer to an SDK.'
-
-    return message

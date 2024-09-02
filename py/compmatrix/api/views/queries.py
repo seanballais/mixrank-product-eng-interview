@@ -329,3 +329,28 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
     # resulting from the effects of the innermost subqueries. So, we'll
     # just reference the column directly with 'app_id'.
     return db.select(query.subquery()).group_by('app_id')
+
+
+def get_unknown_ids_in_list(ids: list[int]) -> list[int]:
+    # As of August 2024, SQLAlchemy 2.0 does not have proper support for CTEs
+    # for VALUES() rows. You would still need to use a SELECT FROM VALUES()
+    # query inside the CTE just to make things work with SQLAlchemy. I'm also
+    # having difficulty with such a query form in SQLite, where I am getting
+    # syntax errors. So, we're just gonna use a raw SQL query for this one.
+    query = db.text(
+        'WITH id_list(id) AS :ids '
+        'SELECT id '
+        'FROM id_list '
+        'WHERE NOT EXISTS ('
+        '    SELECT * '
+        '    FROM sdk '
+        '    WHERE sdk.id = id_list.id'
+        ')'
+    )
+    query = query.bindparams(db.bindparam('ids', expanding=True))
+    params: dict = {
+        'ids': [(_id,) for _id in ids]
+    }
+    unknown_id_results: list = db.session.execute(query, params).fetchall()
+    unknown_ids: list[int] = [result[0] for result in unknown_id_results]
+    return unknown_ids

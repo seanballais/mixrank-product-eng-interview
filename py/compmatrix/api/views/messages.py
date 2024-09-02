@@ -116,6 +116,30 @@ def create_unknown_params_message(params: list[str]) -> str:
     return message
 
 
+def create_unknown_ids_params_message(affected_params: list[str],
+                                      num_unknown_ids: int) -> str:
+    oxfordify: bool = len(affected_params) != 2
+    message: str = writing.humanize_list(affected_params, oxfordify, True)
+
+    # NOTE: A message with 'Parameters, ":param1" and ":param2", have an ID
+    #       that does...' will only happen if we have two parameters with
+    #       unknown IDs but only having one unknown ID in actuality. However,
+    #       this is unlikely to happen.
+    if len(affected_params) == 1:
+        message = f'Parameter, {message}, has '
+    else:
+        message = f'Parameters, {message}, have '
+
+    if num_unknown_ids == 1:
+        message += 'an ID that does '
+    else:
+        message += 'IDs that do '
+
+    message += 'not refer to an SDK.'
+
+    return message
+
+
 def _create_wrong_valued_int_params_message(params: list[str]) -> str | None:
     """
     Return a message about the parameters that requires an integer, but

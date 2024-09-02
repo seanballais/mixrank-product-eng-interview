@@ -7,11 +7,11 @@ from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.tests.api.views.test_sdk_compmatrix import (
     BASE_SDK_COMPMATRIX_ENDPOINT
 )
+from compmatrix.tests.api.views.test_sdk_compmatrix.constants import (
+    UNKNOWN_SDK_IDS
+)
 
 SDK_COMPMATRIX_NUMBERS_ENDPOINT = f'{BASE_SDK_COMPMATRIX_ENDPOINT}/numbers'
-
-# Try converting the integers immediately below to hex. ;-)
-UNKNOWN_SDK_IDS = [3737844653, 3405697037, 3669732608]
 
 
 def test_all_row_cols(client, test_db_data, sdk_ids):
