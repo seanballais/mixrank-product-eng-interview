@@ -9,7 +9,6 @@ from compmatrix import db
 from compmatrix.api import models
 from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.api.views import messages, queries, checks
-from compmatrix.utils import writing
 
 
 def index():
@@ -36,7 +35,7 @@ def index():
 
     client_params: MultiDict[str, str] = request.args
 
-    _check_for_missing_params(resp, required_params, client_params)
+    checks.check_for_missing_params(resp, required_params, client_params)
     _check_for_unknown_params(resp, required_params, client_params)
 
     params_with_sdk_ids: OrderedDict = OrderedDict({
@@ -95,30 +94,6 @@ def index():
     }
 
     return resp
-
-
-def _check_for_missing_params(resp: dict[str, object | list],
-                              required_params: list[str],
-                              client_params: MultiDict[str, str]):
-    missing_params: list[str] = [
-        p for p in required_params if p not in client_params.keys()
-    ]
-    if missing_params:
-        if 'errors' not in resp:
-            resp['errors'] = []
-
-        # We want `from_sdks` to go first instead of `to_sdks` for
-        # aesthetics reasons. It just so happens that `from_sdks` will be
-        # before `to_sdks`. So, sorting them after converting the collection
-        # to a list seems like the right choice... for now. (DUN DUN DUN!!!)
-        missing_params_list: list[str] = sorted(list(missing_params))
-        resp['errors'].append({
-            'message': messages.create_missing_params_message(
-                missing_params_list
-            ),
-            'code': AnomalyCode.MISSING_FIELD,
-            'parameters': list(missing_params)
-        })
 
 
 def _check_for_unknown_params(resp: dict[str, object | list],

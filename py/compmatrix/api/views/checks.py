@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+from werkzeug.datastructures import MultiDict
+
 from compmatrix.api.views import queries, messages
 from compmatrix.api.views.codes import AnomalyCode
 
@@ -48,4 +50,24 @@ def check_for_unknown_ids_in_params(resp: dict[str, object | list],
             'code': AnomalyCode.UNKNOWN_ID,
             'parameters': params_with_unknown_ids,
             'diagnostics': diagnostics
+        })
+
+
+def check_for_missing_params(resp: dict[str, object | list],
+                             required_params: list[str],
+                             client_params: MultiDict[str, str]):
+    missing_params: list[str] = [
+        p for p in required_params if p not in client_params.keys()
+    ]
+    if missing_params:
+        if 'errors' not in resp:
+            resp['errors'] = []
+
+        missing_params_list: list[str] = sorted(list(missing_params))
+        resp['errors'].append({
+            'message': messages.create_missing_params_message(
+                missing_params_list
+            ),
+            'code': AnomalyCode.MISSING_FIELD,
+            'parameters': list(missing_params)
         })

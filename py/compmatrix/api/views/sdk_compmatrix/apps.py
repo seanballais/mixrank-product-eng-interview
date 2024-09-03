@@ -37,6 +37,7 @@ def index():
         'cursor',
         'direction'
     ]
+    required_params: list[str] = ['count']
     partner_params: dict[str, str] = {
         'from_sdk': 'other_from_sdks',
         'to_sdk': 'other_to_sdks',
@@ -49,6 +50,8 @@ def index():
     params_with_sdk_ids_to_check: OrderedDict = OrderedDict()
 
     client_params: MultiDict[str, str] = request.args
+
+    checks.check_for_missing_params(resp, required_params, client_params)
 
     unknown_params: list[str] = [
         k for k in client_params.keys() if k not in known_params
@@ -130,10 +133,12 @@ def index():
             MisusedParamGroup(misused_sdk_params, ParamPartnership.INVERSE))
 
     count_param: int | None = None
-    try:
-        count_param = int(client_params.get('count'))
-    except ValueError:
-        wrong_valued_params.append('count')
+    raw_count_param: str | None = client_params.get('count')
+    if raw_count_param:
+        try:
+            count_param = int(raw_count_param)
+        except ValueError:
+            wrong_valued_params.append('count')
 
     cursor_param: str | None = client_params.get('cursor')
     if cursor_param:

@@ -742,6 +742,78 @@ def test_invalid_and_unknown_params2(client, apps, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
+def test_invalid_and_unknown_params3(client, apps, sdk_ids):
+    query_string = {
+        'from_sdk': 'Maia hiii',
+        'other_from_sdks': 'Maia hiii',
+        'to_sdk': 'Maia hooooo',
+        'other_to_sdks': 'Maia hooooo',
+        'direction': 'Maia hahaaa',
+        'hanabi': 'hanabi',
+        'f1': 'max verstappen',
+        'speed': 'vroooooom',
+        'smooooth_operator': 'carlos sainz'
+    }
+
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Required parameter, "count", is missing.',
+                'code': AnomalyCode.MISSING_FIELD,
+                'parameters': [
+                    'count'
+                ]
+            },
+            {
+                'message': 'Unrecognized parameters, "hanabi", "f1", "speed", '
+                           'and "smooooth_operator".',
+                'code': AnomalyCode.UNRECOGNIZED_FIELD,
+                'parameters': [
+                    'hanabi',
+                    'f1',
+                    'speed',
+                    'smooooth_operator'
+                ]
+            },
+            {
+                'message': 'Parameters, "from_sdk", "other_from_sdks", '
+                           '"to_sdk", "other_to_sdks", and "direction", have '
+                           'invalid values. Values of "from_sdk", '
+                           '"other_from_sdks", "to_sdk", and "other_to_sdks" '
+                           'must be integers. The value of "direction" must '
+                           'only be either "previous" or "next".',
+                'code': AnomalyCode.INVALID_PARAMETER_VALUE,
+                'parameters': [
+                    'from_sdk',
+                    'other_from_sdks',
+                    'to_sdk',
+                    'other_to_sdks',
+                    'direction'
+                ]
+            },
+            {
+                'message': 'Parameters, "other_from_sdks" and '
+                           '"other_to_sdks", must only be specified if the '
+                           '"from_sdk" and "to_sdk" parameters are '
+                           'unspecified, respectively. Parameter, '
+                           '"direction", must only be specified if '
+                           'the "cursor" parameter is specified.',
+                'code': AnomalyCode.MISUSED_PARAMETER,
+                'parameters': [
+                    'other_from_sdks',
+                    'other_to_sdks',
+                    'direction'
+                ]
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
 def test_unknown_sdks_in_params(client, test_db_data):
     query_string = {
         'other_from_sdks': UNKNOWN_SDK_IDS,
@@ -857,6 +929,32 @@ def test_has_direction_but_no_cursor2(client, sdk_ids):
                 'code': AnomalyCode.MISUSED_PARAMETER,
                 'parameters': [
                     'direction'
+                ]
+            }
+        ]
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_no_count(client, apps, sdk_ids):
+    cursor = query_utils.create_cursor_from_app_obj(apps[2])
+    query_string = {
+        'from_sdk': sdk_ids[0],
+        'to_sdk': sdk_ids[0],
+        'cursor': cursor,
+        'direction': 'next'
+    }
+    resp = client.get(SDK_COMPMATRIX_APPS_ENDPOINT, query_string=query_string)
+
+    expected_resp = {
+        'errors': [
+            {
+                'message': 'Required parameter, "count", is missing.',
+                'code': AnomalyCode.MISSING_FIELD,
+                'parameters': [
+                    'count'
                 ]
             }
         ]
