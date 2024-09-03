@@ -1,3 +1,5 @@
+from compmatrix.api.views.parameters import ParamPartnership
+from compmatrix.api.views.sdk_compmatrix.apps import MisusedParamGroup
 from compmatrix.utils import writing
 
 
@@ -24,32 +26,42 @@ def create_missing_params_message(missing_params: list[str]):
     return message
 
 
-def create_misused_params_message(misused_params: list[str],
-                                  tangled_params: list[str]) -> str:
-    if len(misused_params) == 1:
+def create_misused_params_message(misused_params_group: MisusedParamGroup,
+                                  partner_params: dict[str, str]) -> str:
+    params: list[str] = misused_params_group.parameters
+    tangled_params: list[str] = []
+    for param in params:
+        tangled_params.append(partner_params[param])
+
+    if len(params) == 1:
         parameter_word: str = 'parameter'
     else:
         parameter_word: str = 'parameters'
 
     message: str = f'{parameter_word.capitalize()}, '
 
-    oxfordify: bool = len(misused_params) != 2
-    misused_params_list_str: str = writing.humanize_list(misused_params,
+    oxfordify: bool = len(params) != 2
+    misused_params_list_str: str = writing.humanize_list(params,
                                                          oxfordify,
                                                          True)
     dependee_params_list_str: str = writing.humanize_list(tangled_params,
                                                           oxfordify,
                                                           True)
 
-    auxiliary_verb: str = 'is' if len(misused_params) == 1 else 'are'
+    auxiliary_verb: str = 'is' if len(params) == 1 else 'are'
+
+    if misused_params_group.partnership == ParamPartnership.COUPLED:
+        specification: str = 'specified'
+    else:
+        specification: str = 'unspecified'
 
     message += (
         f'{misused_params_list_str}, must only be specified if '
         f'the {dependee_params_list_str} {parameter_word} {auxiliary_verb} '
-        'unspecified'
+        f'{specification}'
     )
 
-    if len(misused_params) <= 1:
+    if len(params) <= 1:
         message += '.'
     else:
         message += ', respectively.'

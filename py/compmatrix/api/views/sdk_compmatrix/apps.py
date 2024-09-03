@@ -1,3 +1,4 @@
+import dataclasses
 from collections import OrderedDict
 from http import HTTPStatus
 
@@ -11,6 +12,13 @@ from compmatrix.api import models
 from compmatrix.api.views import messages, queries, checks
 from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.api.views import view_encoders
+from compmatrix.api.views.parameters import ParamPartnership
+
+
+@dataclasses.dataclass
+class MisusedParamGroup:
+    parameters: list[str]
+    partnership: ParamPartnership
 
 
 def index():
@@ -29,6 +37,14 @@ def index():
         'cursor',
         'direction'
     ]
+    partner_params: dict[str, str] = {
+        'from_sdk': 'other_from_sdks',
+        'to_sdk': 'other_to_sdks',
+        'other_from_sdks': 'from_sdk',
+        'other_to_sdks': 'to_sdk',
+        'cursor': 'direction',
+        'direction': 'cursor'
+    }
 
     params_with_sdk_ids_to_check: OrderedDict = OrderedDict()
 
@@ -48,13 +64,10 @@ def index():
             'parameters': unknown_params
         })
 
-    misused_params: list[str] = []
+    misused_params_groups: list[MisusedParamGroup] = []
     wrong_valued_params: list[str] = []
 
-    # Don't know what terms to use, but tangled is based off of the concept in
-    # quantum physics, called quantum entanglement, where a pair of particles
-    # are affected by each other.
-    tangled_params: list[str] = []
+    misused_sdk_params: list[str] = []
 
     from_sdk_param: int | None = None
     other_from_sdks_param: list[int] = []
@@ -66,8 +79,7 @@ def index():
             wrong_valued_params.append('from_sdk')
 
         if 'other_from_sdks' in client_params:
-            misused_params.append('other_from_sdks')
-            tangled_params.append('from_sdk')
+            misused_sdk_params.append('other_from_sdks')
 
     # We need to check the values of other_from_sdks even if they are not
     # supposed to be specified.
@@ -95,8 +107,7 @@ def index():
             wrong_valued_params.append('to_sdk')
 
         if 'other_to_sdks' in client_params:
-            misused_params.append('other_to_sdks')
-            tangled_params.append('to_sdk')
+            misused_sdk_params.append('other_to_sdks')
 
     # We need to check the values of other_from_sdks even if they are not
     # supposed to be specified.
@@ -114,6 +125,10 @@ def index():
 
     params_with_sdk_ids_to_check['other_to_sdks'] = other_to_sdks_param
 
+    if misused_sdk_params:
+        misused_params_groups.append(
+            MisusedParamGroup(misused_sdk_params, ParamPartnership.INVERSE))
+
     count_param: int | None = None
     try:
         count_param = int(client_params.get('count'))
@@ -128,15 +143,19 @@ def index():
     else:
         cursor_parts: list[str] = []
 
-    direction_param: str | None = None
+    # We need to also check the value of the direction parameter, where the
+    # cursor parameter exists or not.
+    if 'direction' in client_params:
+        direction_param: str = client_params.get('direction')
+        if direction_param != "previous" and direction_param != "next":
+            wrong_valued_params.append('direction')
+    else:
+        direction_param: None = None
+
     if cursor_param:
         cursor_param: str = str(cursor_param)
 
-        if 'direction' in client_params:
-            direction_param: str = client_params.get('direction')
-            if direction_param != "previous" and direction_param != "next":
-                wrong_valued_params.append('direction')
-        else:
+        if 'direction' not in client_params:
             if 'errors' not in resp:
                 resp['errors'] = []
 
@@ -152,6 +171,10 @@ def index():
                 'code': AnomalyCode.MISSING_FIELD,
                 'parameters': list(missing_param)
             })
+    elif direction_param is not None:
+        # direction parameter specified even if cursor was not.
+        misused_params_groups.append(
+            MisusedParamGroup(['direction'], ParamPartnership.COUPLED))
 
     if wrong_valued_params:
         if 'errors' not in resp:
@@ -169,15 +192,23 @@ def index():
         checks.check_for_unknown_ids_in_params(resp,
                                                params_with_sdk_ids_to_check)
 
-    if misused_params:
+    if misused_params_groups:
         if 'errors' not in resp:
             resp['errors'] = []
 
+        message_parts: list[str] = []
+        for group in misused_params_groups:
+            message_parts.append(
+                messages.create_misused_params_message(group, partner_params))
+
+        message: str = ' '.join(message_parts)
+
         resp['errors'].append({
-            'message': messages.create_misused_params_message(misused_params,
-                                                              tangled_params),
+            'message': message,
             'code': AnomalyCode.MISUSED_PARAMETER,
-            'parameters': misused_params
+            'parameters': [
+                p for g in misused_params_groups for p in g.parameters
+            ]
         })
 
     if 'errors' in resp:
