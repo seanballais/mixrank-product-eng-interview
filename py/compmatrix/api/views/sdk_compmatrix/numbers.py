@@ -32,11 +32,12 @@ def index():
         int(s) for s in request.args.getlist('to_sdks')
     ]
     required_params: list[str] = ['from_sdks', 'to_sdks']
+    known_params: list[str] = required_params  # Alias.
 
     client_params: MultiDict[str, str] = request.args
 
     checks.check_for_missing_params(resp, required_params, client_params)
-    _check_for_unknown_params(resp, required_params, client_params)
+    checks.check_for_unknown_params(resp, known_params, client_params)
 
     params_with_sdk_ids: OrderedDict = OrderedDict({
         'from_sdks': from_sdks_param,
@@ -94,25 +95,6 @@ def index():
     }
 
     return resp
-
-
-def _check_for_unknown_params(resp: dict[str, object | list],
-                              known_params: list[str],
-                              client_params: MultiDict[str, str]):
-    # We need to preserve the order.
-    unknown_params: list[str] = [
-        k for k in client_params.keys() if k not in known_params
-    ]
-    if unknown_params:
-        if 'errors' not in resp:
-            resp['errors'] = []
-
-        message: str = messages.create_unknown_params_message(unknown_params)
-        resp['errors'].append({
-            'message': message,
-            'code': AnomalyCode.UNRECOGNIZED_FIELD,
-            'parameters': unknown_params
-        })
 
 
 def _get_count_query_for_from_to_sdks(from_sdk_id: int,

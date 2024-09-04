@@ -500,8 +500,8 @@ def test_invalid_all_params4(client, apps, sdk_ids):
         'errors': [
             {
                 'message': 'Required parameter, "direction", is missing. It '
-                           'is required when the "cursor" parameter has a '
-                           'value.',
+                           'is required when the "cursor" parameter is '
+                           'specified.',
                 'code': AnomalyCode.MISSING_FIELD,
                 'parameters': [
                     'direction'
@@ -631,8 +631,8 @@ def test_invalid_and_unknown_params(client, apps, sdk_ids):
             },
             {
                 'message': 'Required parameter, "direction", is missing. It '
-                           'is required when the "cursor" parameter has a '
-                           'value.',
+                           'is required when the "cursor" parameter is '
+                           'specified.',
                 'code': AnomalyCode.MISSING_FIELD,
                 'parameters': [
                     'direction'

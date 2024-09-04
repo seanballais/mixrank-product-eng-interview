@@ -16,6 +16,12 @@ from compmatrix.api.views.parameters import ParamPartnership
 
 
 @dataclasses.dataclass
+class SDKParam:
+    target_sdk: int | None
+    other_sdks: list[int]
+
+
+@dataclasses.dataclass
 class MisusedParamGroup:
     parameters: list[str]
     partnership: ParamPartnership
@@ -52,173 +58,64 @@ def index():
     client_params: MultiDict[str, str] = request.args
 
     checks.check_for_missing_params(resp, required_params, client_params)
+    checks.check_for_unknown_params(resp, known_params, client_params)
 
-    unknown_params: list[str] = [
-        k for k in client_params.keys() if k not in known_params
-    ]
-    if unknown_params:
-        if 'errors' not in resp:
-            resp['errors'] = []
-
-        message: str = messages.create_unknown_params_message(unknown_params)
-        resp['errors'].append({
-            'message': message,
-            'code': AnomalyCode.UNRECOGNIZED_FIELD,
-            'parameters': unknown_params
-        })
-
-    misused_params_groups: list[MisusedParamGroup] = []
+    misused_param_groups: list[MisusedParamGroup] = []
     wrong_valued_params: list[str] = []
 
     misused_sdk_params: list[str] = []
 
-    from_sdk_param: int | None = None
-    other_from_sdks_param: list[int] = []
-    if 'from_sdk' in client_params and client_params.get('from_sdk') != '':
-        try:
-            from_sdk_param = int(client_params.get('from_sdk'))
-            params_with_sdk_ids_to_check['from_sdk'] = from_sdk_param
-        except ValueError:
-            wrong_valued_params.append('from_sdk')
+    raw_from_sdks_params = _get_paired_sdk_params('from_sdk',
+                                                  'other_from_sdks',
+                                                  client_params,
+                                                  params_with_sdk_ids_to_check,
+                                                  wrong_valued_params,
+                                                  misused_sdk_params)
+    from_sdk_param: int | None = raw_from_sdks_params.target_sdk
+    other_from_sdks_param: list[int] = raw_from_sdks_params.other_sdks
 
-        if 'other_from_sdks' in client_params:
-            misused_sdk_params.append('other_from_sdks')
-
-    # We need to check the values of other_from_sdks even if they are not
-    # supposed to be specified.
-    has_bad_val: bool = False
-    for s in client_params.getlist('other_from_sdks'):
-        if s != '':
-            try:
-                sdk: int = int(s)
-                other_from_sdks_param.append(sdk)
-            except ValueError:
-                has_bad_val = True
-
-    if has_bad_val:
-        wrong_valued_params.append('other_from_sdks')
-
-    params_with_sdk_ids_to_check['other_from_sdks'] = other_from_sdks_param
-
-    to_sdk_param: int | None = None
-    other_to_sdks_param: list[int] = []
-    if 'to_sdk' in client_params and client_params.get('to_sdk') != '':
-        try:
-            to_sdk_param = int(client_params.get('to_sdk'))
-            params_with_sdk_ids_to_check['to_sdk'] = to_sdk_param
-        except ValueError:
-            wrong_valued_params.append('to_sdk')
-
-        if 'other_to_sdks' in client_params:
-            misused_sdk_params.append('other_to_sdks')
-
-    # We need to check the values of other_from_sdks even if they are not
-    # supposed to be specified.
-    has_bad_val: bool = False
-    for s in client_params.getlist('other_to_sdks'):
-        if s != '':
-            try:
-                sdk: int = int(s)
-                other_to_sdks_param.append(sdk)
-            except ValueError:
-                has_bad_val = True
-
-    if has_bad_val:
-        wrong_valued_params.append('other_to_sdks')
-
-    params_with_sdk_ids_to_check['other_to_sdks'] = other_to_sdks_param
+    raw_to_sdks_params = _get_paired_sdk_params('to_sdk',
+                                                'other_to_sdks',
+                                                client_params,
+                                                params_with_sdk_ids_to_check,
+                                                wrong_valued_params,
+                                                misused_sdk_params)
+    to_sdk_param: int | None = raw_to_sdks_params.target_sdk
+    other_to_sdks_param: list[int] = raw_to_sdks_params.other_sdks
 
     if misused_sdk_params:
-        misused_params_groups.append(
+        misused_param_groups.append(
             MisusedParamGroup(misused_sdk_params, ParamPartnership.INVERSE))
 
-    count_param: int | None = None
-    raw_count_param: str | None = client_params.get('count')
-    if raw_count_param:
-        try:
-            count_param = int(raw_count_param)
-        except ValueError:
-            wrong_valued_params.append('count')
-
+    count_param: int | None = _get_count_param_value(client_params,
+                                                     wrong_valued_params)
     cursor_param: str | None = client_params.get('cursor')
-    if cursor_param:
-        cursor_parts: list[str] = cursor_param.split(';')
-        if len(cursor_parts) != 2:
-            wrong_valued_params.append('cursor')
-    else:
-        cursor_parts: list[str] = []
-
-    # We need to also check the value of the direction parameter, where the
-    # cursor parameter exists or not.
-    if 'direction' in client_params:
-        direction_param: str = client_params.get('direction')
-        if direction_param != "previous" and direction_param != "next":
-            wrong_valued_params.append('direction')
-    else:
-        direction_param: None = None
-
-    if cursor_param:
-        cursor_param: str = str(cursor_param)
-
-        if 'direction' not in client_params:
-            if 'errors' not in resp:
-                resp['errors'] = []
-
-            missing_param: list[str] = ['direction']
-            message: str = messages.create_missing_params_message(
-                missing_param)
-            message = (
-                f'{message} It is required when the "cursor" parameter '
-                'has a value.'
-            )
-            resp['errors'].append({
-                'message': message,
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': list(missing_param)
-            })
-    elif direction_param is not None:
-        # direction parameter specified even if cursor was not.
-        misused_params_groups.append(
-            MisusedParamGroup(['direction'], ParamPartnership.COUPLED))
+    cursor_parts: list[str] | None = _get_cursor_parts(cursor_param,
+                                                       wrong_valued_params)
+    direction_param: str | None = _get_direction_param(client_params,
+                                                       wrong_valued_params)
+    _validate_cursor_and_direction_params(cursor_param,
+                                          direction_param,
+                                          resp,
+                                          client_params,
+                                          misused_param_groups)
 
     if wrong_valued_params:
-        if 'errors' not in resp:
-            resp['errors'] = []
-
-        message: str = messages.create_wrong_valued_params_message(
-            wrong_valued_params)
-        resp['errors'].append({
-            'message': message,
-            'code': AnomalyCode.INVALID_PARAMETER_VALUE,
-            'parameters': wrong_valued_params
-        })
+        _generate_wrong_valued_params_resp_error(resp, wrong_valued_params)
 
     if params_with_sdk_ids_to_check:
         checks.check_for_unknown_ids_in_params(resp,
                                                params_with_sdk_ids_to_check)
 
-    if misused_params_groups:
-        if 'errors' not in resp:
-            resp['errors'] = []
-
-        message_parts: list[str] = []
-        for group in misused_params_groups:
-            message_parts.append(
-                messages.create_misused_params_message(group, partner_params))
-
-        message: str = ' '.join(message_parts)
-
-        resp['errors'].append({
-            'message': message,
-            'code': AnomalyCode.MISUSED_PARAMETER,
-            'parameters': [
-                p for g in misused_params_groups for p in g.parameters
-            ]
-        })
+    if misused_param_groups:
+        _generate_misused_params_resp_error(resp, misused_param_groups,
+                                            partner_params)
 
     if 'errors' in resp:
         return resp, HTTPStatus.UNPROCESSABLE_ENTITY
 
+    # We finally got all the parameter values. It's time to query our database
+    # for it.
     if from_sdk_param is None and to_sdk_param is None:
         included_apps_query: Select = queries.get_query_for_none_to_none(
             other_from_sdks_param, other_to_sdks_param
@@ -303,6 +200,146 @@ def index():
             'end_cursor': _create_cursor_from_app(apps[-1])
         }
     }
+
+
+def _get_paired_sdk_params(target_sdk_param: str,
+                           other_sdks_param: str,
+                           client_params: MultiDict[str, str],
+                           params_with_ids_to_check: OrderedDict,
+                           wrong_valued_params: list[str],
+                           misused_sdk_params: list[str]) -> SDKParam:
+    target_sdk: int | None = None
+    other_sdks: list[int] = []
+    is_target_sdk_specified = (target_sdk_param in client_params
+                               and client_params.get(target_sdk_param) != '')
+    if is_target_sdk_specified:
+        try:
+            target_sdk = int(client_params.get(target_sdk_param))
+            params_with_ids_to_check[target_sdk_param] = target_sdk
+        except ValueError:
+            wrong_valued_params.append(target_sdk_param)
+
+        if other_sdks_param in client_params:
+            misused_sdk_params.append(other_sdks_param)
+
+    # We need to check the values of other_from_sdks even if they are not
+    # supposed to be specified.
+    has_bad_val: bool = False
+    for s in client_params.getlist(other_sdks_param):
+        if s != '':
+            try:
+                sdk: int = int(s)
+                other_sdks.append(sdk)
+            except ValueError:
+                has_bad_val = True
+
+    if has_bad_val:
+        wrong_valued_params.append(other_sdks_param)
+
+    params_with_ids_to_check[other_sdks_param] = other_sdks
+
+    return SDKParam(target_sdk, other_sdks)
+
+
+def _get_count_param_value(client_params: MultiDict[str, str],
+                           wrong_valued_params: list[str]) -> int | None:
+    raw_count_value: str | None = client_params.get('count')
+    if raw_count_value:
+        try:
+            count_param = int(raw_count_value)
+            return count_param
+        except ValueError:
+            wrong_valued_params.append('count')
+
+    return None
+
+
+def _get_cursor_parts(cursor_param: str | None,
+                      wrong_valued_params: list[str]) -> list[str]:
+    if cursor_param:
+        cursor_parts: list[str] = cursor_param.split(';')
+        if len(cursor_parts) != 2:
+            wrong_valued_params.append('cursor')
+    else:
+        cursor_parts: list[str] = []
+
+    return cursor_parts
+
+
+def _get_direction_param(client_params: MultiDict[str, str],
+                         wrong_valued_params: list[str]) -> str | None:
+    if 'direction' in client_params:
+        direction_param: str = client_params.get('direction')
+        if direction_param != "previous" and direction_param != "next":
+            wrong_valued_params.append('direction')
+    else:
+        direction_param: None = None
+
+    return direction_param
+
+
+def _generate_wrong_valued_params_resp_error(resp: dict[str, object | list],
+                                             params: list[str]):
+    if 'errors' not in resp:
+        resp['errors'] = []
+
+    resp['errors'].append({
+        'message': messages.create_wrong_valued_params_message(params),
+        'code': AnomalyCode.INVALID_PARAMETER_VALUE,
+        'parameters': params
+    })
+
+
+def _generate_misused_params_resp_error(resp: dict[str, object | list],
+                                        param_groups: list[MisusedParamGroup],
+                                        partner_params: dict[str, str]):
+    if param_groups:
+        if 'errors' not in resp:
+            resp['errors'] = []
+
+        message_parts: list[str] = []
+        for group in param_groups:
+            message_parts.append(
+                messages.create_misused_params_message(group, partner_params))
+
+        message: str = ' '.join(message_parts)
+
+        resp['errors'].append({
+            'message': message,
+            'code': AnomalyCode.MISUSED_PARAMETER,
+            'parameters': [
+                p for g in param_groups for p in g.parameters
+            ]
+        })
+
+
+def _validate_cursor_and_direction_params(
+        cursor_param: str | None,
+        direction_param: str | None,
+        resp: dict[str, object | list],
+        client_params: MultiDict[str, str],
+        misused_param_groups: list[MisusedParamGroup]):
+    if cursor_param:
+        if 'direction' not in client_params:
+            if 'errors' not in resp:
+                resp['errors'] = []
+
+            missing_param: list[str] = ['direction']
+            message: str = messages.create_missing_params_message(
+                missing_param)
+            message = (
+                f'{message} It is required when the "cursor" parameter '
+                'is specified.'
+            )
+            resp['errors'].append({
+                'message': message,
+                'code': AnomalyCode.MISSING_FIELD,
+                'parameters': list(missing_param)
+            })
+    elif direction_param is not None:
+        # direction parameter specified even if cursor was not.
+        misused_param_groups.append(
+            MisusedParamGroup(['direction'], ParamPartnership.COUPLED))
 
 
 def _create_cursor_from_app(app: models.App) -> str:

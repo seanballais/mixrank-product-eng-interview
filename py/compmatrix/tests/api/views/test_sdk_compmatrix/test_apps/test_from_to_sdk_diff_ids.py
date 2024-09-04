@@ -182,7 +182,7 @@ def test_has_cursor_no_dir(client, chartboost_to_paypal_apps, sdk_ids):
             {
                 'message': 'Required parameter, "direction", is missing. '
                            'It is required when the "cursor" parameter '
-                           'has a value.',
+                           'is specified.',
                 'code': AnomalyCode.MISSING_FIELD,
                 'parameters': [
                     'direction'

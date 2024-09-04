@@ -187,7 +187,7 @@ def test_has_cursor_no_dir(client, paypal_to_none_apps_sans_paypal, sdk_ids):
             {
                 'message': 'Required parameter, "direction", is missing. '
                            'It is required when the "cursor" parameter '
-                           'has a value.',
+                           'is specified.',
                 'code': AnomalyCode.MISSING_FIELD,
                 'parameters': [
                     'direction'
@@ -371,7 +371,7 @@ def test_has_cursor_no_dir_no_other_to_sdks(client, paypal_to_only_none_apps,
             {
                 'message': 'Required parameter, "direction", is missing. '
                            'It is required when the "cursor" parameter '
-                           'has a value.',
+                           'is specified.',
                 'code': AnomalyCode.MISSING_FIELD,
                 'parameters': [
                     'direction'
