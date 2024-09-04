@@ -5,7 +5,7 @@ from compmatrix import create_app
 
 import config
 
-app = create_app(config.DB_PATH)
+app = create_app(config.DB_PATH, config.ASSETS_PATH, config.TEMPLATES_PATH)
 
 
 def main():
