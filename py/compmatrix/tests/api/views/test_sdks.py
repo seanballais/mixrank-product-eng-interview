@@ -10,7 +10,8 @@ def test_sdks_endpoint(client, test_db_data):
     # response. Additionally, `sdk_records` might be used in its original
     # unsorted version in a different test.
     sorted_sdk_records = sorted(test_db_data['sdks'], key=lambda s: s.name)
-    for resp_sdk, test_sdk in zip(resp.json['sdks'], sorted_sdk_records):
+    sdks = resp.json['data']['sdks']
+    for resp_sdk, test_sdk in zip(sdks, sorted_sdk_records):
         assert resp_sdk['name'] == test_sdk.name
         assert resp_sdk['slug'] == test_sdk.slug
         assert resp_sdk['url'] == test_sdk.url

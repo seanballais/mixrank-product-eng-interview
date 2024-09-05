@@ -10,5 +10,7 @@ def index():
         cleaned_sdks.append(model_encoders.encode_model_as_dict(sdk))
 
     return {
-        'sdks': cleaned_sdks
+        'data': {
+            'sdks': cleaned_sdks
+        }
     }
