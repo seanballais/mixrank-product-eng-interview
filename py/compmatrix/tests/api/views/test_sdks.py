@@ -9,7 +9,8 @@ def test_sdks_endpoint(client, test_db_data):
     # place, so that we can properly communicate that we're expecting a sorted
     # response. Additionally, `sdk_records` might be used in its original
     # unsorted version in a different test.
-    sorted_sdk_records = sorted(test_db_data['sdks'], key=lambda s: s.name)
+    sorted_sdk_records = sorted(test_db_data['sdks'],
+                                key=lambda s: s.name.casefold())
     sdks = resp.json['data']['sdks']
     for resp_sdk, test_sdk in zip(sdks, sorted_sdk_records):
         assert resp_sdk['name'] == test_sdk.name
