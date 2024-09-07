@@ -29,13 +29,19 @@ class App {
         this.toSDKAddBtn = new Button('to-sdk-config-list-add-btn');
 
         this.fromSDKAddBtn.setOnClick((e) => {
-            const selectedID = this.fromSDKComboBox.selectedIndex;
+            const selectedIndex = this.fromSDKComboBox.selectedIndex;
             this.activeFromSDKs.setValue((v) => {
-                v.push(this.selectableFromSDKs.getValue()[selectedID]);
+                v.push(this.selectableFromSDKs.getValue()[selectedIndex]);
             });
             this.selectableFromSDKs.setValue((v) => {
-                v.splice(selectedID, 1);
+                v.splice(selectedIndex, 1);
             });
+
+            const newSelectedIndex = Math.min(
+                selectedIndex,
+                this.fromSDKComboBox.options.length - 1
+            );
+            this.fromSDKComboBox.selectedIndex = newSelectedIndex;
         });
         this.selectedFromSDKUpBtn.setOnClick((e) => {
             const selectedID = this.activeFromSDKsList.selectedIndex;

@@ -57,6 +57,10 @@ export class SDKSelect extends Widget {
         return this.idToIndexMap.get(this.value);
     }
 
+    get options() {
+        return this.rootNode.options;
+    }
+
     set selectedIndex(newIndex) {
         this.rootNode.selectedIndex = newIndex;
     }
