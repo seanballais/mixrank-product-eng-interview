@@ -24,7 +24,15 @@ class App {
         this.activeToSDKs.addWidgetSubscriber(this.activeToSDKsList);
 
         this.fromSDKAddBtn = new Button('from-sdk-config-list-add-btn');
-        this.selectedFromSDKUpBtn = new Button('from-sdk-selected-move-up');
+        this.selectedFromSDKUpBtn = new Button(
+            'from-sdk-selected-move-up-btn'
+        );
+        this.selectedFromSDKDownBtn = new Button(
+            'from-sdk-selected-move-down-btn'
+        );
+        this.selectedFromSDKRemoveBtn = new Button(
+            'from-sdk-selected-remove-btn'
+        );
 
         this.toSDKAddBtn = new Button('to-sdk-config-list-add-btn');
 
@@ -50,6 +58,45 @@ class App {
                 [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
             });
             this.activeFromSDKsList.selectedIndex = newIndex;
+        });
+        this.selectedFromSDKDownBtn.setOnClick((e) => {
+            const selectedID = this.activeFromSDKsList.selectedIndex;
+            const newIndex = Math.min(
+                selectedID + 1,
+                this.activeFromSDKsList.options.length - 1
+            );
+            this.activeFromSDKs.setValue((v) => {
+                [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
+            });
+            this.activeFromSDKsList.selectedIndex = newIndex;
+        });
+        this.selectedFromSDKRemoveBtn.setOnClick((e) => {
+            const activeSelectedIndex = this.activeFromSDKsList.selectedIndex;
+            const dropDownSelectedIndex = this.fromSDKComboBox.selectedIndex;
+            
+            this.selectableFromSDKs.setValue((v) => {
+                v.push(this.activeFromSDKs.getValue()[activeSelectedIndex]);
+                v.sort((a, b) => {
+                    if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                        return -1;
+                    } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                })
+            });
+            this.activeFromSDKs.setValue((v) => {
+                v.splice(activeSelectedIndex, 1);
+            });
+
+            this.fromSDKComboBox.selectedIndex = dropDownSelectedIndex;
+
+            const newListSelectedIndex = Math.min(
+                activeSelectedIndex,
+                this.activeFromSDKsList.options.length - 1
+            );
+            this.activeFromSDKsList.selectedIndex = newListSelectedIndex;
         });
         
         this.toSDKAddBtn.setOnClick((e) => {
