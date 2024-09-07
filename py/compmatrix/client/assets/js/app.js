@@ -72,7 +72,29 @@ class App {
         });
         this.selectedFromSDKRemoveBtn.setOnClick((e) => {
             const activeSelectedIndex = this.activeFromSDKsList.selectedIndex;
-            const dropDownSelectedIndex = this.fromSDKComboBox.selectedIndex;
+            const comboBoxSelectedIndex = this.fromSDKComboBox.selectedIndex;
+
+            let comboBoxIndexOffset = 0;
+            const comboBoxSDKName = this
+                .selectableFromSDKs
+                .getValue()[comboBoxSelectedIndex]
+                .name;
+            const activeSDKName = this
+                .activeFromSDKs
+                .getValue()[activeSelectedIndex]
+                .name;
+            if (
+                comboBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase()
+                && comboBoxSDKName > activeSDKName
+            ) {
+                // The SDK removed from the active list of From SDKs will be
+                // placed behind the currently selected SDK in the From SDK
+                // combo box. So, we need to offset the new combo box index
+                // by 1. Second condition handles the edge case where two SDKs
+                // have the same names in lowercase, but are technically
+                // different when their original cases.
+                comboBoxIndexOffset = 1;
+            }
             
             this.selectableFromSDKs.setValue((v) => {
                 v.push(this.activeFromSDKs.getValue()[activeSelectedIndex]);
@@ -90,7 +112,8 @@ class App {
                 v.splice(activeSelectedIndex, 1);
             });
 
-            this.fromSDKComboBox.selectedIndex = dropDownSelectedIndex;
+            const newCBSelIndex = comboBoxSelectedIndex + comboBoxIndexOffset;
+            this.fromSDKComboBox.selectedIndex = newCBSelIndex;
 
             const newListSelectedIndex = Math.min(
                 activeSelectedIndex,
