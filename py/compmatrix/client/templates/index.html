@@ -3,8 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <title>SDK Competitive Matrix</title>
+    <script type="module" src="/assets/js/app.js"></script>
+    <script src="https://kit.fontawesome.com/d69cc82c51.js" crossorigin="anonymous"></script>
 </head>
 <body>
-<h1>SDK Competitive Matrix</h1>
+    <h1>SDK Competitive Matrix</h1>
+    <div id="matrix">
+        <div id="matrix-display"></div>
+        <div id="matrix-config">
+            <div>
+                <div>
+                    <select id="from-sdk-selectables"></select>
+                    <button id="from-sdk-config-list-add-btn">
+                        <span class="fa-solid fa-plus"></span>
+                    </button>
+                </div>
+                <div>
+                    <div>
+                        <select id="from-sdk-selected" size="20"></select>
+                    </div>
+                    <div>
+                        <button id="from-sdk-selected-move-up">
+                            <span class="fa-solid fa-arrow-up-long"></span>
+                        </button>
+                        <button id="from-sdk-selected-move-down">
+                            <span class="fa-solid fa-arrow-down-long"></span>
+                        </button>
+                        <button id="from-sdk-selected-remove"></button>
+                            <span class="fa-solid fa-minus"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <select id="to-sdk-selectables"></select>
+                    <button id="to-sdk-config-list-add-btn"><span class="fa-solid fa-plus"></span></button>
+                </div>
+                <div>
+                    <div>
+                        <select id="to-sdk-selected" size="20"></select>
+                    </div>
+                    <div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
