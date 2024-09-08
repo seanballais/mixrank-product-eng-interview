@@ -41,10 +41,8 @@ def get_query_for_from_to_sdks(from_sdk_id: int, to_sdk_id: int) -> Select:
     return query
 
 
-def get_query_for_from_sdk_to_none(
-        from_sdk_id: int,
-        other_to_sdks_ids: list[int]
-) -> CompoundSelect:
+def get_query_for_from_sdk_to_none(from_sdk_id: int,
+                                   other_to_sdks_ids: list[int]) -> Select:
     inner_query1: Select = (
         db
         .select(models.AppSDK)
@@ -113,7 +111,8 @@ def get_query_for_from_sdk_to_none(
         )
         unionable_queries.append(inner_query3)
 
-    return inner_query1.union(*unionable_queries)
+    query: CompoundSelect = inner_query1.union(*unionable_queries)
+    return db.select(query.subquery()).group_by('app_id')
 
 
 def get_query_for_none_to_to_sdk(to_sdk_id: int,
@@ -190,43 +189,39 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
                                other_to_sdks_param: list[int]) -> Select:
     # Expected Rough Equivalent SQL Query:
     #
-    # SELECT COUNT(*)
+    # SELECT *
     # FROM (
-    # 	SELECT *
-    # 	FROM (
-    # 		SELECT *
-    # 		FROM (
-    # 			SELECT *
-    # 			FROM app_sdk
-    # 			WHERE
-    # 				sdk_id NOT IN (from_sdks_param)
-    # 	    			AND installed = false
-    # 	      		OR
-    # 				sdk_id NOT IN (to_sdks_param) AND installed = true
-    # 			GROUP BY app_id
-    # 			HAVING COUNT(*) > 1
-    # 	   		    AND SUM(CASE WHEN installed THEN 1 ELSE 0 END) > 0
-    # 		)
-    # 		UNION
-    # 		SELECT *
-    # 		FROM app_sdk
-    # 		WHERE
-    # 			sdk_id NOT IN (from_sdks_param + to_sdks_param)
-    # 	   		    AND installed = true
-    #       UNION
-    #       SELECT COUNT(*)
-    #       FROM app_sdk, (
-    #           SELECT app_id
-    #           FROM app_sdk
-    #           GROUP BY app_id
-    #           HAVING SUM(CASE WHEN installed THEN 1 ELSE 0 END) = 0
-    #       ) AS filtered_apps
-    #       WHERE
-    #           app_sdk.app_id = filtered_apps.app_id
-    #               AND app_sdk.sdk_id NOT IN (2)
-    # 	)
-    # 	GROUP BY app_id -- [^.^]
+    #     SELECT *
+    #     FROM (
+    #         SELECT *
+    #         FROM app_sdk
+    # 		  WHERE
+    # 			  sdk_id NOT IN (from_sdks_param) AND installed = false
+    # 	          OR sdk_id NOT IN (to_sdks_param) AND installed = true
+    #         GROUP BY app_id
+    # 	      HAVING
+    #             COUNT(*) > 1
+    #             AND SUM(CASE WHEN installed THEN 1 ELSE 0 END) > 0
+    #     )
+    #     UNION
+    #     SELECT *
+    #     FROM app_sdk
+    #     WHERE
+    #         sdk_id NOT IN (from_sdks_param + to_sdks_param)
+    #         AND installed = true
+    #     UNION
+    #     SELECT COUNT(*)
+    #     FROM app_sdk, (
+    #         SELECT app_id
+    #         FROM app_sdk
+    #         GROUP BY app_id
+    #         HAVING SUM(CASE WHEN installed THEN 1 ELSE 0 END) = 0
+    #     ) AS filtered_apps
+    #     WHERE
+    #         app_sdk.app_id = filtered_apps.app_id
+    #         AND app_sdk.sdk_id NOT IN (2)
     # )
+    # GROUP BY app_id -- [^.^]
     #
     # First, get all the apps that had previous SDKs that are not part
     # of the `other_from_sdks_param` but are now using SDKs that are not part

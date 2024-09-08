@@ -308,9 +308,9 @@ def test_two_rows_none_col(client, sdk_ids):
     #
     #            | (none) |
     # -----------+--------|
-    # PayPal     |      9 |
-    # card.io    |     10 |
-    # (none)     |      7 |
+    # PayPal     |     10 |
+    # card.io    |     12 |
+    # (none)     |      9 |
     query_string = {
         'from_sdks': [sdk_ids[0], sdk_ids[1]]
     }
@@ -320,9 +320,9 @@ def test_two_rows_none_col(client, sdk_ids):
     expected_resp = {
         'data': {
             'numbers': [
-                [9],
                 [10],
-                [7]
+                [12],
+                [9]
             ]
         }
     }
@@ -363,11 +363,7 @@ def test_no_row_no_col(client, sdk_ids):
     #        | (none) |
     # -------+--------|
     # (none) |     14 |
-    query_string = {
-        'to_sdks': sdk_ids
-    }
-    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
-                      query_string=query_string)
+    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT)
 
     expected_resp = {
         'data': {

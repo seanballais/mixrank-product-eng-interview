@@ -7,8 +7,7 @@ from werkzeug.datastructures import MultiDict
 
 from compmatrix import db
 from compmatrix.api import models
-from compmatrix.api.views.codes import AnomalyCode
-from compmatrix.api.views import messages, queries, checks
+from compmatrix.api.views import queries, checks
 
 
 def index():
@@ -25,18 +24,17 @@ def index():
     """
     resp: dict[str, object | list] = {}
 
+    # TODO: Validate these params.
     from_sdks_param: list[int] = [
         int(s) for s in request.args.getlist('from_sdks')
     ]
     to_sdks_param: list[int] = [
         int(s) for s in request.args.getlist('to_sdks')
     ]
-    required_params: list[str] = ['from_sdks', 'to_sdks']
-    known_params: list[str] = required_params  # Alias.
+    known_params: list[str] = ['from_sdks', 'to_sdks']
 
     client_params: MultiDict[str, str] = request.args
 
-    checks.check_for_missing_params(resp, required_params, client_params)
     checks.check_for_unknown_params(resp, known_params, client_params)
 
     params_with_sdk_ids: OrderedDict = OrderedDict({
@@ -107,7 +105,7 @@ def _get_count_query_for_from_sdk_to_none(
         from_sdk_id: int,
         other_to_sdks_ids: list[int]
 ) -> Select:
-    query: CompoundSelect = queries.get_query_for_from_sdk_to_none(
+    query: Select = queries.get_query_for_from_sdk_to_none(
         from_sdk_id,
         other_to_sdks_ids)
     return db.select(db.func.count('*')).select_from(query.subquery())
