@@ -1,3 +1,4 @@
+import * as interactivity from './interactivity.js';
 import { State } from './state.js';
 import { Button, SDKSelect } from './widgets.js';
 
@@ -50,14 +51,14 @@ class App {
         );
 
         this.fromSDKAddBtn.setOnClick(() => {
-            this.#moveSDKFromComboBoxToList(
+            interactivity.moveSDKFromComboBoxToList(
                 this.fromSDKComboBox,
                 this.selectableFromSDKs,
                 this.activeFromSDKs
             );
         });
         this.selectedFromSDKRemoveBtn.setOnClick(() => {
-            this.#moveSDKFromListToComboBox(
+            interactivity.moveSDKFromListToComboBox(
                 this.fromSDKComboBox,
                 this.selectableFromSDKs,
                 this.activeFromSDKs
@@ -71,14 +72,14 @@ class App {
         });
         
         this.toSDKAddBtn.setOnClick(() => {
-            this.#moveSDKFromComboBoxToList(
+            interactivity.moveSDKFromComboBoxToList(
                 this.toSDKComboBox,
                 this.selectableToSDKs,
                 this.activeToSDKs
             )
         });
         this.selectedToSDKRemoveBtn.setOnClick(() => {
-            this.#moveSDKFromListToComboBox(
+            interactivity.moveSDKFromListToComboBox(
                 this.toSDKComboBox,
                 this.selectableToSDKs,
                 this.activeToSDKs
@@ -112,70 +113,6 @@ class App {
         } catch (error) {
             console.error(error.message);
         }
-    }
-
-    #moveSDKFromComboBoxToList(comboBox, selectableSDKs, activeSDKs) {
-        const selectedIndex = comboBox.selectedIndex;
-        activeSDKs.setValue((v) => {
-            v.push(selectableSDKs.getValue()[selectedIndex]);
-        });
-        selectableSDKs.setValue((v) => { v.splice(selectedIndex, 1); });
-
-        const newSelectedIndex = Math.min(
-            selectedIndex,
-            comboBox.options.length - 1
-        );
-        comboBox.selectedIndex = newSelectedIndex;
-    }
-
-    #moveSDKFromListToComboBox(comboBox, selectableSDKs, activeSDKsList) {
-        const activeSelectedIndex = activeSDKsList.selectedIndex;
-        const comboBoxSelectedIndex = comboBox.selectedIndex;
-
-        let comboBoxIndexOffset = 0;
-        const comboBoxSDKName = selectableSDKs
-                                    .getValue()[comboBoxSelectedIndex]
-                                    .name;
-        const activeSDKName = activeSDKsList
-                                    .getValue()[activeSelectedIndex]
-                                    .name;
-        if (
-            comboBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase()
-            && comboBoxSDKName > activeSDKName
-        ) {
-            // The SDK removed from the active list of From SDKs will be
-            // placed behind the currently selected SDK in the From SDK
-            // combo box. So, we need to offset the new combo box index
-            // by 1. Second condition handles the edge case where two SDKs
-            // have the same names in lowercase, but are technically
-            // different when their original cases.
-            comboBoxIndexOffset = 1;
-        }
-        
-        selectableSDKs.setValue((v) => {
-            v.push(activeSDKsList.getValue()[activeSelectedIndex]);
-            v.sort((a, b) => {
-                if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                    return -1;
-                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            })
-        });
-        activeSDKsList.setValue((v) => {
-            v.splice(activeSelectedIndex, 1);
-        });
-
-        const newCBSelIndex = comboBoxSelectedIndex + comboBoxIndexOffset;
-        comboBox.selectedIndex = newCBSelIndex;
-
-        const newListSelectedIndex = Math.min(
-            activeSelectedIndex,
-            activeSDKsList.options.length - 1
-        );
-        activeSDKsList.selectedIndex = newListSelectedIndex;
     }
 }
 
