@@ -13,123 +13,82 @@ class App {
         this.selectableToSDKs = new State([]);
         this.activeToSDKs = new State([]);
 
-        this.fromSDKComboBox = new SDKSelect('from-sdk-selectables');
-        this.activeFromSDKsList = new SDKSelect('from-sdk-selected');
-        this.selectableFromSDKs.addWidgetSubscriber(this.fromSDKComboBox);
-        this.activeFromSDKs.addWidgetSubscriber(this.activeFromSDKsList);
+        this.fromSDKComboBox = new SDKSelect(
+            'from-sdk-selectables',
+            this.selectableFromSDKs
+        );
+        this.activeFromSDKsList = new SDKSelect(
+            'from-sdk-selected',
+            this.activeFromSDKs
+        );
 
-        this.toSDKComboBox = new SDKSelect('to-sdk-selectables');
-        this.activeToSDKsList = new SDKSelect('to-sdk-selected');
-        this.selectableToSDKs.addWidgetSubscriber(this.toSDKComboBox);
-        this.activeToSDKs.addWidgetSubscriber(this.activeToSDKsList);
+        this.toSDKComboBox = new SDKSelect(
+            'to-sdk-selectables',
+            this.selectableToSDKs
+        );
+        this.activeToSDKsList = new SDKSelect(
+            'to-sdk-selected',
+            this.activeToSDKs
+        );
 
         this.fromSDKAddBtn = new Button('from-sdk-config-list-add-btn');
+        this.selectedFromSDKRemoveBtn = new Button(
+            'from-sdk-selected-remove-btn'
+        );
         this.selectedFromSDKUpBtn = new Button(
             'from-sdk-selected-move-up-btn'
         );
         this.selectedFromSDKDownBtn = new Button(
             'from-sdk-selected-move-down-btn'
         );
-        this.selectedFromSDKRemoveBtn = new Button(
-            'from-sdk-selected-remove-btn'
-        );
 
         this.toSDKAddBtn = new Button('to-sdk-config-list-add-btn');
+        this.selectedToSDKRemoveBtn = new Button('to-sdk-selected-remove-btn');
+        this.selectedToSDKUpBtn = new Button('to-sdk-selected-move-up-btn');
+        this.selectedToSDKDownBtn = new Button(
+            'to-sdk-selected-move-down-btn'
+        );
 
-        this.fromSDKAddBtn.setOnClick((e) => {
-            const selectedIndex = this.fromSDKComboBox.selectedIndex;
-            this.activeFromSDKs.setValue((v) => {
-                v.push(this.selectableFromSDKs.getValue()[selectedIndex]);
-            });
-            this.selectableFromSDKs.setValue((v) => {
-                v.splice(selectedIndex, 1);
-            });
-
-            const newSelectedIndex = Math.min(
-                selectedIndex,
-                this.fromSDKComboBox.options.length - 1
+        this.fromSDKAddBtn.setOnClick(() => {
+            this.#moveSDKFromComboBoxToList(
+                this.fromSDKComboBox,
+                this.selectableFromSDKs,
+                this.activeFromSDKs
             );
-            this.fromSDKComboBox.selectedIndex = newSelectedIndex;
         });
-        this.selectedFromSDKUpBtn.setOnClick((e) => {
-            const selectedID = this.activeFromSDKsList.selectedIndex;
-            const newIndex = Math.max(selectedID - 1, 0);
-            this.activeFromSDKs.setValue((v) => {
-                [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
-            });
-            this.activeFromSDKsList.selectedIndex = newIndex;
-        });
-        this.selectedFromSDKDownBtn.setOnClick((e) => {
-            const selectedID = this.activeFromSDKsList.selectedIndex;
-            const newIndex = Math.min(
-                selectedID + 1,
-                this.activeFromSDKsList.options.length - 1
+        this.selectedFromSDKRemoveBtn.setOnClick(() => {
+            this.#moveSDKFromListToComboBox(
+                this.fromSDKComboBox,
+                this.selectableFromSDKs,
+                this.activeFromSDKs
             );
-            this.activeFromSDKs.setValue((v) => {
-                [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
-            });
-            this.activeFromSDKsList.selectedIndex = newIndex;
         });
-        this.selectedFromSDKRemoveBtn.setOnClick((e) => {
-            const activeSelectedIndex = this.activeFromSDKsList.selectedIndex;
-            const comboBoxSelectedIndex = this.fromSDKComboBox.selectedIndex;
-
-            let comboBoxIndexOffset = 0;
-            const comboBoxSDKName = this
-                .selectableFromSDKs
-                .getValue()[comboBoxSelectedIndex]
-                .name;
-            const activeSDKName = this
-                .activeFromSDKs
-                .getValue()[activeSelectedIndex]
-                .name;
-            if (
-                comboBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase()
-                && comboBoxSDKName > activeSDKName
-            ) {
-                // The SDK removed from the active list of From SDKs will be
-                // placed behind the currently selected SDK in the From SDK
-                // combo box. So, we need to offset the new combo box index
-                // by 1. Second condition handles the edge case where two SDKs
-                // have the same names in lowercase, but are technically
-                // different when their original cases.
-                comboBoxIndexOffset = 1;
-            }
-            
-            this.selectableFromSDKs.setValue((v) => {
-                v.push(this.activeFromSDKs.getValue()[activeSelectedIndex]);
-                v.sort((a, b) => {
-                    if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                        return -1;
-                    } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                })
-            });
-            this.activeFromSDKs.setValue((v) => {
-                v.splice(activeSelectedIndex, 1);
-            });
-
-            const newCBSelIndex = comboBoxSelectedIndex + comboBoxIndexOffset;
-            this.fromSDKComboBox.selectedIndex = newCBSelIndex;
-
-            const newListSelectedIndex = Math.min(
-                activeSelectedIndex,
-                this.activeFromSDKsList.options.length - 1
-            );
-            this.activeFromSDKsList.selectedIndex = newListSelectedIndex;
+        this.selectedFromSDKUpBtn.setOnClick(() => {
+            this.activeFromSDKsList.moveSelectedOptionUp();
+        });
+        this.selectedFromSDKDownBtn.setOnClick(() => {
+            this.activeFromSDKsList.moveSelectedOptionDown();
         });
         
-        this.toSDKAddBtn.setOnClick((e) => {
-            const selectedSDKID = this.toSDKComboBox.selectedIndex;
-            this.toFromSDKs.setValue((v) => {
-                v.push(this.selectableToSDKs.getValue()[selectedSDKID]);
-            });
-            this.selectableToSDKs.setValue((v) => {
-                v.splice(selectedSDKID, 1);
-            });
+        this.toSDKAddBtn.setOnClick(() => {
+            this.#moveSDKFromComboBoxToList(
+                this.toSDKComboBox,
+                this.selectableToSDKs,
+                this.activeToSDKs
+            )
+        });
+        this.selectedToSDKRemoveBtn.setOnClick(() => {
+            this.#moveSDKFromListToComboBox(
+                this.toSDKComboBox,
+                this.selectableToSDKs,
+                this.activeToSDKs
+            );
+        });
+        this.selectedToSDKUpBtn.setOnClick(() => {
+            this.activeToSDKsList.moveSelectedOptionUp();
+        });
+        this.selectedToSDKDownBtn.setOnClick(() => {
+            this.activeToSDKsList.moveSelectedOptionDown();
         });
     }
 
@@ -148,11 +107,75 @@ class App {
                 })
             }
 
-            this.selectableFromSDKs.setValue(sdks);
-            this.selectableToSDKs.setValue(sdks);
+            this.selectableFromSDKs.setValue(structuredClone(sdks));
+            this.selectableToSDKs.setValue(structuredClone(sdks));
         } catch (error) {
             console.error(error.message);
         }
+    }
+
+    #moveSDKFromComboBoxToList(comboBox, selectableSDKs, activeSDKs) {
+        const selectedIndex = comboBox.selectedIndex;
+        activeSDKs.setValue((v) => {
+            v.push(selectableSDKs.getValue()[selectedIndex]);
+        });
+        selectableSDKs.setValue((v) => { v.splice(selectedIndex, 1); });
+
+        const newSelectedIndex = Math.min(
+            selectedIndex,
+            comboBox.options.length - 1
+        );
+        comboBox.selectedIndex = newSelectedIndex;
+    }
+
+    #moveSDKFromListToComboBox(comboBox, selectableSDKs, activeSDKsList) {
+        const activeSelectedIndex = activeSDKsList.selectedIndex;
+        const comboBoxSelectedIndex = comboBox.selectedIndex;
+
+        let comboBoxIndexOffset = 0;
+        const comboBoxSDKName = selectableSDKs
+                                    .getValue()[comboBoxSelectedIndex]
+                                    .name;
+        const activeSDKName = activeSDKsList
+                                    .getValue()[activeSelectedIndex]
+                                    .name;
+        if (
+            comboBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase()
+            && comboBoxSDKName > activeSDKName
+        ) {
+            // The SDK removed from the active list of From SDKs will be
+            // placed behind the currently selected SDK in the From SDK
+            // combo box. So, we need to offset the new combo box index
+            // by 1. Second condition handles the edge case where two SDKs
+            // have the same names in lowercase, but are technically
+            // different when their original cases.
+            comboBoxIndexOffset = 1;
+        }
+        
+        selectableSDKs.setValue((v) => {
+            v.push(activeSDKsList.getValue()[activeSelectedIndex]);
+            v.sort((a, b) => {
+                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                    return -1;
+                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            })
+        });
+        activeSDKsList.setValue((v) => {
+            v.splice(activeSelectedIndex, 1);
+        });
+
+        const newCBSelIndex = comboBoxSelectedIndex + comboBoxIndexOffset;
+        comboBox.selectedIndex = newCBSelIndex;
+
+        const newListSelectedIndex = Math.min(
+            activeSelectedIndex,
+            activeSDKsList.options.length - 1
+        );
+        activeSDKsList.selectedIndex = newListSelectedIndex;
     }
 }
 

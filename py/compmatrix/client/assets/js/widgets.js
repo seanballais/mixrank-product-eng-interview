@@ -43,8 +43,11 @@ export class Button extends Widget {
 }
 
 export class SDKSelect extends Widget {
-    constructor(rootNode) {
+    constructor(rootNode, state) {
         super(rootNode);
+
+        this.state = state;
+        this.state.addWidgetSubscriber(this);
 
         this.idToIndexMap = new Map();
     }
@@ -80,5 +83,26 @@ export class SDKSelect extends Widget {
         }
 
         return htmlToNodes(html);
+    }
+
+    moveSelectedOptionUp() {
+        const selectedID = this.selectedIndex;
+        const newIndex = Math.max(selectedID - 1, 0);
+        this.state.setValue((v) => {
+            [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
+        });
+        this.selectedIndex = newIndex;
+    }
+
+    moveSelectedOptionDown() {
+        const selectedID = this.selectedIndex;
+        const newIndex = Math.min(
+            selectedID + 1,
+            this.options.length - 1
+        );
+        this.state.setValue((v) => {
+            [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
+        });
+        this.selectedIndex = newIndex;
     }
 }
