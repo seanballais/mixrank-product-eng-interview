@@ -7,8 +7,6 @@ export class Widget {
         this.nodes = [];
     }
 
-    init() {}
-
     onStateValueChange(newValue) {
         this.updateWithValue(newValue);
     }
@@ -32,6 +30,15 @@ export class Widget {
     }
 }
 
+export class StatefulWidget extends Widget {
+    constructor(rootNode, state) {
+        super(rootNode);
+
+        this.state = state;
+        this.state.addReactor((value) => { this.onStateValueChange(value); });
+    }
+}
+
 export class Button extends Widget {
     constructor(rootNode) {
         super(rootNode);
@@ -42,12 +49,9 @@ export class Button extends Widget {
     }
 }
 
-export class SDKSelect extends Widget {
+export class SDKSelect extends StatefulWidget {
     constructor(rootNode, state) {
-        super(rootNode);
-
-        this.state = state;
-        this.state.addReactor((value) => { this.onStateValueChange(value); });
+        super(rootNode, state);
 
         this.idToIndexMap = new Map();
     }
