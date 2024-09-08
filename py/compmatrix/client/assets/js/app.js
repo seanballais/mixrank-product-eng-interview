@@ -1,3 +1,4 @@
+import { DataState } from './fetching.js';
 import * as interactivity from './interactivity.js';
 import { State } from './state.js';
 import { Button, SDKSelect } from './widgets.js';
@@ -13,6 +14,14 @@ class App {
         
         this.selectableToSDKs = new State([]);
         this.activeToSDKs = new State([]);
+
+        this.compmatrixValues = new State({
+            'status': DataState.EMPTY,
+            'data': {
+                'raw': [],
+                'normalized': []
+            }
+        });
 
         this.fromSDKComboBox = new SDKSelect(
             'from-sdk-selectables',
@@ -93,6 +102,14 @@ class App {
         this.selectedToSDKDownBtn.setOnClick(() => {
             this.activeToSDKsList.moveSelectedOptionDown();
         });
+
+        this.activeFromSDKs.addReactor(() => {
+            this.#fetchCompMatrixValues();
+        });
+
+        this.activeToSDKs.addReactor(() => {
+            this.#fetchCompMatrixValues();
+        });
     }
 
     async init() {
@@ -112,6 +129,35 @@ class App {
 
             this.selectableFromSDKs.setValue(structuredClone(sdks));
             this.selectableToSDKs.setValue(structuredClone(sdks));
+        } catch (error) {
+            console.error(error.message);
+        }
+    }
+
+    async #fetchCompMatrixValues() {
+        const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/numbers`;
+        const fromSDKs = this.activeFromSDKs.getValue().map((s) => s.id);
+        const toSDKs = this.activeToSDKs.getValue().map((s) => s.id);
+
+        let rawParamPairs = [];
+        if (fromSDKs.length !== 0) {
+            rawParamPairs.push(...fromSDKs.map((s) => ['from_sdks', s.id]));
+        } else {
+            rawParamPairs.push(['from_sdks', '']);
+        }
+
+        if (toSDKs.length !== 0) {
+            rawParamPairs.push(...toSDKs.map((s) => ['to_sdks', s.id]));
+        } else {
+            rawParamPairs.push(['to_sdks', '']);
+        }
+
+        const params = new URLSearchParams(rawParamPairs);
+        const paramString = params.toString();
+        try {
+            const response = await fetch(`${url}?${paramString}`);
+            const numbersJSON = await response.json();
+            console.log(numbersJSON);
         } catch (error) {
             console.error(error.message);
         }

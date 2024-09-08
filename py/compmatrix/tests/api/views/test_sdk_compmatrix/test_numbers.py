@@ -302,6 +302,85 @@ def test_two_rows_one_cols(client, test_db_data, sdk_ids):
     assert resp.status_code == HTTPStatus.OK
 
 
+def test_two_rows_none_col(client, sdk_ids):
+    #  Expected Competitive
+    #     Matrix Values
+    #
+    #            | (none) |
+    # -----------+--------|
+    # PayPal     |      9 |
+    # card.io    |     10 |
+    # (none)     |      7 |
+    query_string = {
+        'from_sdks': [sdk_ids[0], sdk_ids[1]]
+    }
+    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
+                      query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'numbers': [
+                [9],
+                [10],
+                [7]
+            ]
+        }
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.OK
+
+
+def test_one_row_three_cols(client, sdk_ids):
+    #        Expected Competitive Matrix Values
+    #
+    #        | PayPal | card.io | Chartboost | (none) |
+    # -------+--------+---------+------------+--------|
+    # (none) |      4 |       5 |          4 |      2 |
+    query_string = {
+        'to_sdks': sdk_ids
+    }
+    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
+                      query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'numbers': [
+                [4, 5, 4, 2]
+            ]
+        }
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.OK
+
+
+def test_no_row_no_col(client, sdk_ids):
+    #    Expected
+    #   Competitive
+    #  Matrix Values
+    #
+    #        | (none) |
+    # -------+--------|
+    # (none) |     14 |
+    query_string = {
+        'to_sdks': sdk_ids
+    }
+    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
+                      query_string=query_string)
+
+    expected_resp = {
+        'data': {
+            'numbers': [
+                [14]
+            ]
+        }
+    }
+
+    assert resp.json == expected_resp
+    assert resp.status_code == HTTPStatus.OK
+
+
 def test_error_unknown_params(client, test_db_data, sdk_ids):
     query_string = {
         'from_sdks': sdk_ids,
@@ -365,69 +444,6 @@ def test_error_two_unknown_params(client, test_db_data, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_no_params(client, test_db_data):
-    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT)
-
-    expected_resp = {
-        'errors': [
-            {
-                'message': 'Required parameters, "from_sdks" and "to_sdks", '
-                           'are missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': [
-                    'from_sdks',
-                    'to_sdks'
-                ]
-            }
-        ]
-    }
-
-    assert resp.json == expected_resp
-    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_no_from_sdks(client, test_db_data, sdk_ids):
-    query_string = {
-        'to_sdks': sdk_ids
-    }
-    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
-                      query_string=query_string)
-
-    expected_resp = {
-        'errors': [
-            {
-                'message': 'Required parameter, "from_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': ['from_sdks']
-            }
-        ]
-    }
-
-    assert resp.json == expected_resp
-    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_no_to_sdks(client, test_db_data, sdk_ids):
-    query_string = {
-        'from_sdks': sdk_ids
-    }
-    resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
-                      query_string=query_string)
-
-    expected_resp = {
-        'errors': [
-            {
-                'message': 'Required parameter, "to_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': ['to_sdks']
-            }
-        ]
-    }
-
-    assert resp.json == expected_resp
-    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
 def test_typo_from_sdks(client, test_db_data, sdk_ids):
     query_string = {
         'frm': sdk_ids,
@@ -438,13 +454,6 @@ def test_typo_from_sdks(client, test_db_data, sdk_ids):
 
     expected_resp = {
         'errors': [
-            {
-                'message': 'Required parameter, "from_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': [
-                    'from_sdks',
-                ]
-            },
             {
                 'message': 'Unrecognized parameter, "frm".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
@@ -467,11 +476,6 @@ def test_typo_to_sdks(client, test_db_data, sdk_ids):
 
     expected_resp = {
         'errors': [
-            {
-                'message': 'Required parameter, "to_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': ['to_sdks']
-            },
             {
                 'message': 'Unrecognized parameter, "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
@@ -526,11 +530,6 @@ def test_unknown_sdks_in_from_param(client, test_db_data, sdk_ids):
 
     expected_resp = {
         'errors': [
-            {
-                'message': 'Required parameter, "to_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': ['to_sdks']
-            },
             {
                 'message': 'Unrecognized parameter, "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
@@ -596,15 +595,6 @@ def test_mixed_unknown_sdks_in_from_to_param(client, test_db_data, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Required parameters, "from_sdks" and "to_sdks", '
-                           'are missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': [
-                    'from_sdks',
-                    'to_sdks'
-                ]
-            },
-            {
                 'message': 'Unrecognized parameters, "from" and "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
                 'parameters': [
@@ -634,11 +624,6 @@ def test_mixed_unknown_sdks_in_from_param(client, test_db_data, sdk_ids):
 
     expected_resp = {
         'errors': [
-            {
-                'message': 'Required parameter, "to_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': ['to_sdks']
-            },
             {
                 'message': 'Unrecognized parameter, "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
@@ -675,11 +660,6 @@ def test_mixed_unknown_sdks_in_to_param(client, test_db_data, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Required parameter, "from_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': ['from_sdks']
-            },
-            {
                 'message': 'Unrecognized parameter, "from".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
                 'parameters': ['from']
@@ -714,15 +694,6 @@ def test_mixed_unknown_sdks_in_from_to_param_one_unknown(client, test_db_data,
     expected_resp = {
         'errors': [
             {
-                'message': 'Required parameters, "from_sdks" and "to_sdks", '
-                           'are missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': [
-                    'from_sdks',
-                    'to_sdks'
-                ]
-            },
-            {
                 'message': 'Unrecognized parameters, "from" and "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
                 'parameters': [
@@ -750,11 +721,6 @@ def test_mixed_unknown_sdks_in_from_param_one_unknown(client, test_db_data,
 
     expected_resp = {
         'errors': [
-            {
-                'message': 'Required parameter, "to_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': ['to_sdks']
-            },
             {
                 'message': 'Unrecognized parameter, "to".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
@@ -789,11 +755,6 @@ def test_mixed_unknown_sdks_in_to_param_one_unknown(client, test_db_data,
 
     expected_resp = {
         'errors': [
-            {
-                'message': 'Required parameter, "from_sdks", is missing.',
-                'code': AnomalyCode.MISSING_FIELD,
-                'parameters': ['from_sdks']
-            },
             {
                 'message': 'Unrecognized parameter, "from".',
                 'code': AnomalyCode.UNRECOGNIZED_FIELD,
