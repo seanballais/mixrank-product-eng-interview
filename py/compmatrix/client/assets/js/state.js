@@ -33,11 +33,11 @@ export class State {
         }
     }
 
-    addWidgetSubscriber(widget) {
-        this.subscriptions.push((value) => {
-            widget.onStateValueChange(value);
-        });
+    addReactor(f, runOnAdd = true) {
+        this.subscriptions.push(f);
 
-        widget.updateWithValue(this.value);
+        if (runOnAdd) {
+            f(this.value);
+        }
     }
 }

@@ -47,7 +47,7 @@ export class SDKSelect extends Widget {
         super(rootNode);
 
         this.state = state;
-        this.state.addWidgetSubscriber(this);
+        this.state.addReactor((value) => { this.onStateValueChange(value); });
 
         this.idToIndexMap = new Map();
     }
