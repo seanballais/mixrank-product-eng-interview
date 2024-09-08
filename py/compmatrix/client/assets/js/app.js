@@ -60,6 +60,7 @@ class App {
         this.selectedFromSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(
                 this.fromSDKComboBox,
+                this.activeFromSDKsList,
                 this.selectableFromSDKs,
                 this.activeFromSDKs
             );
@@ -81,6 +82,7 @@ class App {
         this.selectedToSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(
                 this.toSDKComboBox,
+                this.activeToSDKsList,
                 this.selectableToSDKs,
                 this.activeToSDKs
             );

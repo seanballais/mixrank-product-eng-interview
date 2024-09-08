@@ -1,4 +1,8 @@
-export function moveSDKFromComboBoxToList(comboBox, selectableSDKs, activeSDKs) {
+export function moveSDKFromComboBoxToList(
+    comboBox,
+    selectableSDKs,
+    activeSDKs
+) {
     const selectedIndex = comboBox.selectedIndex;
     activeSDKs.setValue((v) => {
         v.push(selectableSDKs.getValue()[selectedIndex]);
@@ -14,19 +18,17 @@ export function moveSDKFromComboBoxToList(comboBox, selectableSDKs, activeSDKs) 
 
 export function moveSDKFromListToComboBox(
     comboBox,
+    activeSDKsList,
     selectableSDKs,
-    activeSDKsList
+    activeSDKs
 ) {
     const activeSelectedIndex = activeSDKsList.selectedIndex;
     const comboBoxSelectedIndex = comboBox.selectedIndex;
-
     let comboBoxIndexOffset = 0;
     const comboBoxSDKName = selectableSDKs
                                 .getValue()[comboBoxSelectedIndex]
                                 .name;
-    const activeSDKName = activeSDKsList
-                                .getValue()[activeSelectedIndex]
-                                .name;
+    const activeSDKName = activeSDKs.getValue()[activeSelectedIndex].name;
     if (
         comboBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase()
         && comboBoxSDKName > activeSDKName
@@ -41,7 +43,7 @@ export function moveSDKFromListToComboBox(
     }
     
     selectableSDKs.setValue((v) => {
-        v.push(activeSDKsList.getValue()[activeSelectedIndex]);
+        v.push(activeSDKs.getValue()[activeSelectedIndex]);
         v.sort((a, b) => {
             if (a.name.toLowerCase() < b.name.toLowerCase()) {
                 return -1;
@@ -52,7 +54,7 @@ export function moveSDKFromListToComboBox(
             }
         })
     });
-    activeSDKsList.setValue((v) => {
+    activeSDKs.setValue((v) => {
         v.splice(activeSelectedIndex, 1);
     });
 
