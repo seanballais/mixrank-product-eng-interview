@@ -24,7 +24,6 @@ def index():
     """
     resp: dict[str, object | list] = {}
 
-    # TODO: Validate these params.
     from_sdks_param: list[int] = [
         int(s) for s in request.args.getlist('from_sdks')
     ]
@@ -93,6 +92,17 @@ def index():
     }
 
     return resp
+
+
+def _get_sdk_param_values(
+        param_name: str,
+        client_params: MultiDict[str, str]
+) -> list[int] | None:
+    sdk_param: list[int] = [
+        int(s) for s in request.args.getlist('from_sdks')
+    ]
+    is_sdk_param_specified = (param_name in client_params
+                              and client_params.get(param_name) != '')
 
 
 def _get_count_query_for_from_to_sdks(from_sdk_id: int,

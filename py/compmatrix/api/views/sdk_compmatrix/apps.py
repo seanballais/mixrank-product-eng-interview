@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from flask import request
 from flask_sqlalchemy.query import Query
-from sqlalchemy import Subquery, Tuple, Select, CompoundSelect
+from sqlalchemy import Subquery, Tuple, Select
 from werkzeug.datastructures import MultiDict
 
 from compmatrix import db
@@ -124,7 +124,7 @@ def index():
         included_apps_query: Select = queries.get_query_for_none_to_to_sdk(
             to_sdk_param, other_from_sdks_param)
     elif to_sdk_param is None and from_sdk_param is not None:
-        included_apps_query: CompoundSelect = (
+        included_apps_query: Select = (
             queries.get_query_for_from_sdk_to_none(from_sdk_param,
                                                    other_to_sdks_param)
         )
