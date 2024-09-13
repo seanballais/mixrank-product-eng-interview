@@ -784,8 +784,8 @@ def test_one_invalid_value_from_sdk_param_str_only(client, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Parameter, "from_sdks", has an invalid value. '
-                           'It must be an integer.',
+                'message': 'Parameter, "from_sdks", has invalid values. '
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -801,8 +801,8 @@ def test_one_invalid_value_from_sdk_param_str_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_one_invalid_value_from_sdk_param_int_only(client, sdk_ids):
-    invalid_values = [2.0]
+def test_one_invalid_value_from_sdk_param_num_only(client, sdk_ids):
+    invalid_values = ['2.0']
     query_string = {
         'from_sdks': invalid_values[0],
         'to_sdks': sdk_ids
@@ -813,8 +813,8 @@ def test_one_invalid_value_from_sdk_param_int_only(client, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Parameter, "from_sdks", has an invalid value. '
-                           'It must be an integer.',
+                'message': 'Parameter, "from_sdks", has invalid values. '
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -830,7 +830,7 @@ def test_one_invalid_value_from_sdk_param_int_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_from_sdk_str_only(client, sdk_ids):
+def test_invalid_values_from_sdk_words_only(client, sdk_ids):
     invalid_values = ['Harder', 'Better', 'Faster', 'Strong']
     query_string = {
         'from_sdks': invalid_values,
@@ -843,7 +843,7 @@ def test_invalid_values_from_sdk_str_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "from_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -859,8 +859,8 @@ def test_invalid_values_from_sdk_str_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_from_sdk_param_int_only(client, sdk_ids):
-    invalid_values = [1.2, 3.4, 5.61, 6.45]
+def test_invalid_values_from_sdk_param_num_only(client, sdk_ids):
+    invalid_values = ['1.2', '3.4', '5.61', '6.45']
     query_string = {
         'from_sdks': invalid_values,
         'to_sdks': sdk_ids
@@ -872,7 +872,7 @@ def test_invalid_values_from_sdk_param_int_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "from_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -888,7 +888,7 @@ def test_invalid_values_from_sdk_param_int_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_lone_from_sdk_param_str_only(client, sdk_ids):
+def test_invalid_values_lone_from_sdk_param_words_only(client, sdk_ids):
     invalid_values = ['Harder', 'Better', 'Faster', 'Strong']
     query_string = {
         'from_sdks': invalid_values
@@ -900,7 +900,7 @@ def test_invalid_values_lone_from_sdk_param_str_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "from_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -916,8 +916,8 @@ def test_invalid_values_lone_from_sdk_param_str_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_lone_from_sdk_param_int_only(client, sdk_ids):
-    invalid_values = [1.23, 4.56, 7.89, 10.11]
+def test_invalid_values_lone_from_sdk_param_num_only(client, sdk_ids):
+    invalid_values = ['1.23', '4.56', '7.89', '10.11']
     query_string = {
         'from_sdks': invalid_values
     }
@@ -928,7 +928,7 @@ def test_invalid_values_lone_from_sdk_param_int_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "from_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -945,7 +945,7 @@ def test_invalid_values_lone_from_sdk_param_int_only(client, sdk_ids):
 
 
 def test_invalid_values_from_sdk_param_mixed_types(client, sdk_ids):
-    invalid_values = ['Harder', 3.5, 'Faster', 4.0]
+    invalid_values = ['Harder', '3.5', 'Faster', '4.0']
     query_string = {
         'from_sdks': invalid_values,
         'to_sdks': sdk_ids
@@ -957,7 +957,7 @@ def test_invalid_values_from_sdk_param_mixed_types(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "from_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -974,7 +974,7 @@ def test_invalid_values_from_sdk_param_mixed_types(client, sdk_ids):
 
 
 def test_invalid_values_lone_from_sdk_param_mixed_types(client, sdk_ids):
-    invalid_values = ['Harder', 3.5, 'Faster', 4.0]
+    invalid_values = ['Harder', '3.5', 'Faster', '4.0']
     query_string = {
         'from_sdks': invalid_values
     }
@@ -985,7 +985,7 @@ def test_invalid_values_lone_from_sdk_param_mixed_types(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "from_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -1001,7 +1001,7 @@ def test_invalid_values_lone_from_sdk_param_mixed_types(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_one_invalid_value_to_sdk_param_str_only(client, sdk_ids):
+def test_one_invalid_value_to_sdk_param_words_only(client, sdk_ids):
     invalid_values = ['Harder']
     query_string = {
         'from_sdks': sdk_ids,
@@ -1013,8 +1013,8 @@ def test_one_invalid_value_to_sdk_param_str_only(client, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Parameter, "to_sdks", has an invalid value. '
-                           'It must be an integer.',
+                'message': 'Parameter, "to_sdks", has invalid values. '
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1030,8 +1030,8 @@ def test_one_invalid_value_to_sdk_param_str_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_one_invalid_value_to_sdk_param_int_only(client, sdk_ids):
-    invalid_values = [2.0]
+def test_one_invalid_value_to_sdk_param_num_only(client, sdk_ids):
+    invalid_values = ['2.0']
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': invalid_values[0]
@@ -1042,8 +1042,8 @@ def test_one_invalid_value_to_sdk_param_int_only(client, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Parameter, "to_sdks", has an invalid value. '
-                           'It must be an integer.',
+                'message': 'Parameter, "to_sdks", has invalid values. '
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1059,7 +1059,7 @@ def test_one_invalid_value_to_sdk_param_int_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_to_sdk_str_only(client, sdk_ids):
+def test_invalid_values_to_sdk_words_only(client, sdk_ids):
     invalid_values = ['Harder', 'Better', 'Faster', 'Strong']
     query_string = {
         'from_sdks': sdk_ids,
@@ -1072,7 +1072,7 @@ def test_invalid_values_to_sdk_str_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "to_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1088,8 +1088,8 @@ def test_invalid_values_to_sdk_str_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_to_sdk_param_int_only(client, sdk_ids):
-    invalid_values = [1.2, 3.4, 5.61, 6.45]
+def test_invalid_values_to_sdk_param_num_only(client, sdk_ids):
+    invalid_values = ['1.2', '3.4', '5.61', '6.45']
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': invalid_values
@@ -1101,7 +1101,7 @@ def test_invalid_values_to_sdk_param_int_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "to_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1117,7 +1117,7 @@ def test_invalid_values_to_sdk_param_int_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_lone_to_sdk_param_str_only(client, sdk_ids):
+def test_invalid_values_lone_to_sdk_param_words_only(client, sdk_ids):
     invalid_values = ['Harder', 'Better', 'Faster', 'Strong']
     query_string = {
         'to_sdks': invalid_values
@@ -1129,7 +1129,7 @@ def test_invalid_values_lone_to_sdk_param_str_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "to_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1145,8 +1145,8 @@ def test_invalid_values_lone_to_sdk_param_str_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_lone_to_sdk_param_int_only(client, sdk_ids):
-    invalid_values = [1.23, 4.56, 7.89, 10.11]
+def test_invalid_values_lone_to_sdk_param_num_only(client, sdk_ids):
+    invalid_values = ['1.23', '4.56', '7.89', '10.11']
     query_string = {
         'to_sdks': invalid_values
     }
@@ -1157,7 +1157,7 @@ def test_invalid_values_lone_to_sdk_param_int_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "to_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1174,7 +1174,7 @@ def test_invalid_values_lone_to_sdk_param_int_only(client, sdk_ids):
 
 
 def test_invalid_values_to_sdk_param_mixed_types(client, sdk_ids):
-    invalid_values = ['Harder', 3.5, 'Faster', 4.0]
+    invalid_values = ['Harder', '3.5', 'Faster', '4.0']
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': invalid_values
@@ -1186,7 +1186,7 @@ def test_invalid_values_to_sdk_param_mixed_types(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "to_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1203,7 +1203,7 @@ def test_invalid_values_to_sdk_param_mixed_types(client, sdk_ids):
 
 
 def test_invalid_values_lone_to_sdk_param_mixed_types(client, sdk_ids):
-    invalid_values = ['Harder', 3.5, 'Faster', 4.0]
+    invalid_values = ['Harder', '3.5', 'Faster', '4.0']
     query_string = {
         'to_sdks': invalid_values
     }
@@ -1214,7 +1214,7 @@ def test_invalid_values_lone_to_sdk_param_mixed_types(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "to_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1230,7 +1230,7 @@ def test_invalid_values_lone_to_sdk_param_mixed_types(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_one_invalid_value_sdk_params_str_only(client, sdk_ids):
+def test_one_invalid_value_sdk_params_words_only(client, sdk_ids):
     invalid_from_sdk_values = ['Bling']
     invalid_to_sdk_values = ['Harder']
     query_string = {
@@ -1244,7 +1244,8 @@ def test_one_invalid_value_sdk_params_str_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameters, "from_sdks" and "to_sdks", have '
-                           'invalid values. They must all be integers.',
+                           'invalid values. Values of "from_sdks", and '
+                           '"to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -1262,9 +1263,9 @@ def test_one_invalid_value_sdk_params_str_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_one_invalid_value_sdk_params_int_only(client, sdk_ids):
-    invalid_from_sdk_values = [1.65]
-    invalid_to_sdk_values = [3.4]
+def test_one_invalid_value_sdk_params_num_only(client, sdk_ids):
+    invalid_from_sdk_values = ['1.65']
+    invalid_to_sdk_values = ['3.4']
     query_string = {
         'from_sdks': invalid_from_sdk_values,
         'to_sdks': invalid_to_sdk_values
@@ -1276,7 +1277,8 @@ def test_one_invalid_value_sdk_params_int_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameters, "from_sdks" and "to_sdks", have '
-                           'invalid values. They must all be integers.',
+                           'invalid values. Values of "from_sdks", and '
+                           '"to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -1294,7 +1296,7 @@ def test_one_invalid_value_sdk_params_int_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_sdk_params_str_only(client, sdk_ids):
+def test_invalid_values_sdk_params_words_only(client, sdk_ids):
     invalid_from_sdk_values = ['Bling', 'Bang', 'Bang', 'Born']
     invalid_to_sdk_values = ['Harder', 'Better', 'Faster', 'Strong']
     query_string = {
@@ -1308,7 +1310,8 @@ def test_invalid_values_sdk_params_str_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameters, "from_sdks" and "to_sdks", have '
-                           'invalid values. They must all be integers.',
+                           'invalid values. Values of "from_sdks", and '
+                           '"to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -1326,9 +1329,9 @@ def test_invalid_values_sdk_params_str_only(client, sdk_ids):
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_invalid_values_sdk_params_int_only(client, sdk_ids):
-    invalid_from_sdk_values = [1.2, 3.4, 5.6, 7.8]
-    invalid_to_sdk_values = [9.1, 23.5, 32.1, 90.4]
+def test_invalid_values_sdk_params_num_only(client, sdk_ids):
+    invalid_from_sdk_values = ['1.2', '3.4', '5.6', '7.8']
+    invalid_to_sdk_values = ['9.1', '23.5', '32.1', '90.4']
     query_string = {
         'from_sdks': invalid_from_sdk_values,
         'to_sdks': invalid_to_sdk_values
@@ -1340,7 +1343,8 @@ def test_invalid_values_sdk_params_int_only(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameters, "from_sdks" and "to_sdks", have '
-                           'invalid values. They must all be integers.',
+                           'invalid values. Values of "from_sdks", and '
+                           '"to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -1359,7 +1363,7 @@ def test_invalid_values_sdk_params_int_only(client, sdk_ids):
 
 
 def test_mixed_valid_invalid_values_from_sdk_param(client, sdk_ids):
-    invalid_values = ['Bling', 2.34, 'Bang']
+    invalid_values = ['Bling', '2.34', 'Bang']
     query_string = {
         'from_sdks': [
             sdk_ids[0], invalid_values[0], invalid_values[1],
@@ -1374,13 +1378,13 @@ def test_mixed_valid_invalid_values_from_sdk_param(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameter, "from_sdks", has invalid values. '
-                           'They must all be integers.',
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
-                    'to_sdks',
+                    'from_sdks',
                 ],
                 'diagnostics': {
-                    'to_sdks': invalid_values
+                    'from_sdks': invalid_values
                 }
             },
         ]
@@ -1391,7 +1395,7 @@ def test_mixed_valid_invalid_values_from_sdk_param(client, sdk_ids):
 
 
 def test_lone_mixed_valid_invalid_values_from_sdk(client, sdk_ids):
-    invalid_values = ['Bling', 2.45, 'Bang']
+    invalid_values = ['Bling', '2.45', 'Bang']
     query_string = {
         'from_sdks': [
             sdk_ids[0], invalid_values[0], invalid_values[1],
@@ -1404,8 +1408,8 @@ def test_lone_mixed_valid_invalid_values_from_sdk(client, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Parameters, "from_sdks", has invalid values. '
-                           'They must all be integers.',
+                'message': 'Parameter, "from_sdks", has invalid values. '
+                           'Values of "from_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'from_sdks',
@@ -1422,7 +1426,7 @@ def test_lone_mixed_valid_invalid_values_from_sdk(client, sdk_ids):
 
 
 def test_mixed_valid_invalid_values_to_sdk_param(client, sdk_ids):
-    invalid_values = ['Bling', 1.23, 'Bang']
+    invalid_values = ['Bling', '1.23', 'Bang']
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': [
@@ -1436,8 +1440,8 @@ def test_mixed_valid_invalid_values_to_sdk_param(client, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Parameters, "to_sdks", has invalid values. '
-                           'They must all be integers.',
+                'message': 'Parameter, "to_sdks", has invalid values. '
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1454,7 +1458,7 @@ def test_mixed_valid_invalid_values_to_sdk_param(client, sdk_ids):
 
 
 def test_lone_mixed_valid_invalid_values_to_sdk_param(client, sdk_ids):
-    invalid_values = ['Bling', 'Bang', 154.2]
+    invalid_values = ['Bling', 'Bang', '154.2']
     query_string = {
         'to_sdks': [
             sdk_ids[0], invalid_values[0], invalid_values[1],
@@ -1467,8 +1471,8 @@ def test_lone_mixed_valid_invalid_values_to_sdk_param(client, sdk_ids):
     expected_resp = {
         'errors': [
             {
-                'message': 'Parameters, "to_sdks", has invalid values. '
-                           'They must all be integers.',
+                'message': 'Parameter, "to_sdks", has invalid values. '
+                           'Values of "to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
                     'to_sdks',
@@ -1485,8 +1489,8 @@ def test_lone_mixed_valid_invalid_values_to_sdk_param(client, sdk_ids):
 
 
 def test_mixed_valid_invalid_values_sdk_params(client, sdk_ids):
-    invalid_from_values = ['Bling', 1.2, 'Bang']
-    invalid_to_values = [3.43, 'to believe in', 'Kung Fury']
+    invalid_from_values = ['Bling', '1.2', 'Bang']
+    invalid_to_values = ['3.43', 'to believe in', 'Kung Fury']
     query_string = {
         'from_sdks': [
             sdk_ids[0], invalid_from_values[0], invalid_from_values[1],
@@ -1504,9 +1508,11 @@ def test_mixed_valid_invalid_values_sdk_params(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameters, "from_sdks" and "to_sdks", have '
-                           'invalid values. They must all be integers.',
+                           'invalid values. Values of "from_sdks", and '
+                           '"to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
+                    'from_sdks',
                     'to_sdks',
                 ],
                 'diagnostics': {
@@ -1522,8 +1528,8 @@ def test_mixed_valid_invalid_values_sdk_params(client, sdk_ids):
 
 
 def test_mixed_valid_invalid_values_sdk_params1(client, sdk_ids):
-    invalid_from_values = ['Bling', 9478.3, 'Bang']
-    invalid_to_values = [123.45, 'to believe in', 678.9]
+    invalid_from_values = ['Bling', '9478.3', 'Bang']
+    invalid_to_values = ['123.45', 'to believe in', '678.9']
     query_string = {
         'from_sdks': [
             sdk_ids[0], invalid_from_values[0], invalid_from_values[1],
@@ -1541,10 +1547,12 @@ def test_mixed_valid_invalid_values_sdk_params1(client, sdk_ids):
         'errors': [
             {
                 'message': 'Parameters, "from_sdks" and "to_sdks", have '
-                           'invalid values. They must all be integers.',
+                           'invalid values. Values of "from_sdks", and '
+                           '"to_sdks" must be integers.',
                 'code': AnomalyCode.INVALID_PARAMETER_VALUE,
                 'parameters': [
-                    'to_sdks',
+                    'from_sdks',
+                    'to_sdks'
                 ],
                 'diagnostics': {
                     'from_sdks': invalid_from_values,

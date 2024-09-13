@@ -9,14 +9,14 @@ from werkzeug.datastructures import MultiDict
 
 from compmatrix import db
 from compmatrix.api import models
-from compmatrix.api.views import messages, queries, checks
+from compmatrix.api.views import messages, queries, checks, responses
 from compmatrix.api.views.codes import AnomalyCode
 from compmatrix.api.views import view_encoders
 from compmatrix.api.views.parameters import ParamPartnership
 
 
 @dataclasses.dataclass
-class SDKParam:
+class SDKParamPair:
     target_sdk: int | None
     other_sdks: list[int]
 
@@ -101,7 +101,8 @@ def index():
                                           misused_param_groups)
 
     if wrong_valued_params:
-        _generate_wrong_valued_params_resp_error(resp, wrong_valued_params)
+        responses.generate_wrong_valued_params_resp_error(resp,
+                                                          wrong_valued_params)
 
     if params_with_sdk_ids_to_check:
         checks.check_for_unknown_ids_in_params(resp,
@@ -207,7 +208,7 @@ def _get_paired_sdk_params(target_sdk_param: str,
                            client_params: MultiDict[str, str],
                            params_with_ids_to_check: OrderedDict,
                            wrong_valued_params: list[str],
-                           misused_sdk_params: list[str]) -> SDKParam:
+                           misused_sdk_params: list[str]) -> SDKParamPair:
     target_sdk: int | None = None
     other_sdks: list[int] = []
     is_target_sdk_specified = (target_sdk_param in client_params
@@ -238,7 +239,7 @@ def _get_paired_sdk_params(target_sdk_param: str,
 
     params_with_ids_to_check[other_sdks_param] = other_sdks
 
-    return SDKParam(target_sdk, other_sdks)
+    return SDKParamPair(target_sdk, other_sdks)
 
 
 def _get_count_param_value(client_params: MultiDict[str, str],
@@ -276,18 +277,6 @@ def _get_direction_param(client_params: MultiDict[str, str],
         direction_param: None = None
 
     return direction_param
-
-
-def _generate_wrong_valued_params_resp_error(resp: dict[str, object | list],
-                                             params: list[str]):
-    if 'errors' not in resp:
-        resp['errors'] = []
-
-    resp['errors'].append({
-        'message': messages.create_wrong_valued_params_message(params),
-        'code': AnomalyCode.INVALID_PARAMETER_VALUE,
-        'parameters': params
-    })
 
 
 def _generate_misused_params_resp_error(resp: dict[str, object | list],
