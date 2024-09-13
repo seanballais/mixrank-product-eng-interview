@@ -165,7 +165,12 @@ export class CompMatrix extends StatefulWidget {
             html += '<tr>';
             html += `<th>${from_sdks[i]}</th>`;
             for (let j = 0; j < rowData.length; j++) {
-                html += `<td>${rowData[j]}</td>`
+                let cellData = rowData[j];
+                if (activeData == 'normalized') {
+                    cellData = `${(cellData * 100).toFixed(0)}%`;
+                }
+
+                html += `<td>${cellData}</td>`
             }
             html += '</tr>';
         }
