@@ -1,7 +1,12 @@
 import { DataState } from './fetching.js';
 import * as interactivity from './interactivity.js';
 import { State } from './state.js';
-import { Button, SDKSelect, Table } from './widgets.js';
+import {
+    Button,
+    CompMatrix,
+    CompMatrixDataToggler,
+    SDKSelect
+} from './widgets.js';
 
 const BASE_API_ENDPOINT = '/api/v1';
 
@@ -20,13 +25,18 @@ class App {
                 'raw': [],
                 'normalized': []
             },
+            'active-data': 'raw',
             'headers': {
                 'from_sdks': [],
                 'to_sdks': []
             }
         });
 
-        this.matrixTable = new Table('compmatrix', this.compmatrixValues);
+        this.matrixTable = new CompMatrix('compmatrix', this.compmatrixValues);
+        this.matrixTableDataToggler = new CompMatrixDataToggler(
+            'compmatrix-data-toggle',
+            this.compmatrixValues
+        )
 
         this.fromSDKComboBox = new SDKSelect(
             'from-sdk-selectables',

@@ -49,6 +49,26 @@ export class Button extends Widget {
     }
 }
 
+export class CompMatrixDataToggler extends StatefulWidget {
+    constructor(rootNode, state) {
+        super(rootNode, state);
+
+        this.rootNode.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                // Data should be presented as normalized.
+                this.state.setValue((s) => {
+                    s['active-data'] = 'normalized';
+                });
+            } else {
+                // Data should be presented as raw.
+                this.state.setValue((s) => {
+                    s['active-data'] = 'raw';
+                });
+            }
+        });
+    }
+}
+
 export class SDKSelect extends StatefulWidget {
     constructor(rootNode, state) {
         super(rootNode, state);
@@ -111,34 +131,44 @@ export class SDKSelect extends StatefulWidget {
     }
 }
 
-export class Table extends StatefulWidget {
+export class CompMatrix extends StatefulWidget {
     constructor(rootNode, state) {
         super(rootNode, state);
     }
 
     createNodes(state) {
         const headers = state['headers'];
+        const from_sdks = headers['from_sdks'];
+        const to_sdks = headers['to_sdks'];
+        const num_from_sdks = headers['from_sdks'].length;
+        const num_to_sdks = headers['to_sdks'].length;
 
         let html = '';
-        html += '<tbody>'
-        html += '<tr><th></th>';
-        for (let i = 0; i < headers['to_sdks'].length; i++) {
-            html += `<th>${headers['to_sdks'][i]}</th>`;
+        html += '<tr>';
+        html += '<th></th>';
+        html += `<th colspan="${num_to_sdks + 1}">To SDK</th>`;
+        html += '</tr>';
+        html += '<tr>';
+        html += `<th rowspan="${num_from_sdks + 2}">From SDK</th>`;
+        html += '</tr>';
+        html += '<tr>';
+        html += '<th></th>';
+        for (let i = 0; i < num_to_sdks; i++) {
+            html += `<th>${to_sdks[i]}</th>`;
         }
         html += '</tr>';
 
-        const presentedData = state['data']['raw'];
+        const activeData = state['active-data'];
+        const presentedData = state['data'][activeData];
         for (let i = 0; i < presentedData.length; i++) {
             const rowData = presentedData[i];
             html += '<tr>';
-            html += `<th>${headers['from_sdks'][i]}</th>`;
+            html += `<th>${from_sdks[i]}</th>`;
             for (let j = 0; j < rowData.length; j++) {
                 html += `<td>${rowData[j]}</td>`
             }
             html += '</tr>';
         }
-
-        html += '</tbody>';
 
         return htmlToNodes(html);
     }
