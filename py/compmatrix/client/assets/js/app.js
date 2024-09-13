@@ -1,7 +1,7 @@
 import { DataState } from './fetching.js';
 import * as interactivity from './interactivity.js';
 import { State } from './state.js';
-import { Button, SDKSelect } from './widgets.js';
+import { Button, SDKSelect, Table } from './widgets.js';
 
 const BASE_API_ENDPOINT = '/api/v1';
 
@@ -16,12 +16,17 @@ class App {
         this.activeToSDKs = new State([]);
 
         this.compmatrixValues = new State({
-            'status': DataState.EMPTY,
             'data': {
                 'raw': [],
                 'normalized': []
+            },
+            'headers': {
+                'from_sdks': [],
+                'to_sdks': []
             }
         });
+
+        this.matrixTable = new Table('compmatrix', this.compmatrixValues);
 
         this.fromSDKComboBox = new SDKSelect(
             'from-sdk-selectables',
@@ -141,26 +146,55 @@ class App {
 
         let rawParamPairs = [];
         if (fromSDKs.length !== 0) {
-            rawParamPairs.push(...fromSDKs.map((s) => ['from_sdks', s.id]));
+            rawParamPairs.push(...fromSDKs.map((s) => ['from_sdks', s]));
         } else {
             rawParamPairs.push(['from_sdks', '']);
         }
 
         if (toSDKs.length !== 0) {
-            rawParamPairs.push(...toSDKs.map((s) => ['to_sdks', s.id]));
+            rawParamPairs.push(...toSDKs.map((s) => ['to_sdks', s]));
         } else {
             rawParamPairs.push(['to_sdks', '']);
         }
 
         const params = new URLSearchParams(rawParamPairs);
         const paramString = params.toString();
+        let numbersJSON;
         try {
             const response = await fetch(`${url}?${paramString}`);
-            const numbersJSON = await response.json();
-            console.log(numbersJSON);
+            numbersJSON = await response.json();
         } catch (error) {
             console.error(error.message);
         }
+
+        const rawValues = numbersJSON.data.numbers;
+        let normalizedValues = [];
+        for (let i = 0; i < numbersJSON.data.numbers.length; i++) {
+            let row = numbersJSON.data.numbers[i];
+            const sum = row.reduce((partialSum, n) => partialSum + n, 0);
+
+            let normalized = []
+            for (let j = 0; j < row.length; j++) {
+                normalized.push(row[j] / sum);
+            }
+
+            normalizedValues.push(normalized);
+        }
+
+        const from_header = this.activeFromSDKs.getValue().map((s) => s.name);
+        const to_header = this.activeToSDKs.getValue().map((s) => s.name);
+
+        from_header.push('(none)');
+        to_header.push('(none)');
+        
+        this.compmatrixValues.setValue((v) => {
+            v['data']['raw'] = rawValues;
+            v['data']['normalized'] = normalizedValues;
+            v['headers'] = {
+                'from_sdks': from_header,
+                'to_sdks': to_header
+            }
+        });
     }
 }
 

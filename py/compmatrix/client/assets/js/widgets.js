@@ -110,3 +110,36 @@ export class SDKSelect extends StatefulWidget {
         this.selectedIndex = newIndex;
     }
 }
+
+export class Table extends StatefulWidget {
+    constructor(rootNode, state) {
+        super(rootNode, state);
+    }
+
+    createNodes(state) {
+        const headers = state['headers'];
+
+        let html = '';
+        html += '<tbody>'
+        html += '<tr><th></th>';
+        for (let i = 0; i < headers['to_sdks'].length; i++) {
+            html += `<th>${headers['to_sdks'][i]}</th>`;
+        }
+        html += '</tr>';
+
+        const presentedData = state['data']['raw'];
+        for (let i = 0; i < presentedData.length; i++) {
+            const rowData = presentedData[i];
+            html += '<tr>';
+            html += `<th>${headers['from_sdks'][i]}</th>`;
+            for (let j = 0; j < rowData.length; j++) {
+                html += `<td>${rowData[j]}</td>`
+            }
+            html += '</tr>';
+        }
+
+        html += '</tbody>';
+
+        return htmlToNodes(html);
+    }
+}
