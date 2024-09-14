@@ -32,6 +32,12 @@ class App {
             }
         });
 
+        this.appList = new State({
+            'apps': [],
+            'start-cursor': null,
+            'end-cursor': null
+        });
+
         this.matrixTable = new CompMatrix('compmatrix');
         this.matrixTable.batchSubscribe([
             {'refName': 'data', 'state': this.compmatrixData},
@@ -128,7 +134,11 @@ class App {
     }
 
     async init() {
-        // Get the SDK IDs.
+        this.#fetchSDKs();
+        this.#fetchInitialAppList();
+    }
+
+    async #fetchSDKs() {
         const url = `${BASE_API_ENDPOINT}/sdks`
         try {
             const response = await fetch(url);
@@ -195,6 +205,101 @@ class App {
             v['data']['raw'] = rawValues;
             v['data']['normalized'] = normalizedValues;
         });
+    }
+
+    async #fetchInitialAppList() {
+        const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
+
+        const compmatrixData = this.compmatrixData.getValue();
+        const fromSDK = compmatrixData['selected-cell']['from-sdk'];
+        const toSDK = compmatrixData['selected-cell']['to-sdk'];
+
+        const activeFromSDKs = this.activeFromSDKs.getValue();
+        const activeToSDKs = this.activeToSDKs.getValue();
+
+        const otherFromSDKs = activeFromSDKs.filter((s) => {
+            if (fromSDK !== null) {
+                return s.id != fromSDK.id;
+            }
+
+            return true;
+        });
+        const otherToSDKs = activeToSDKs.filter((s) => {
+            if (toSDK !== null) {
+                return s.id != toSDK.id;
+            }
+
+            return true;
+        });
+
+        let rawParamPairs = [];
+        if (fromSDK !== null) {
+            rawParamPairs.push(['from_sdk', fromSDK.id])
+        }
+
+        if (toSDK !== null) {
+            rawParamPairs.push(['to_sdk', toSDK.id])
+        }
+
+        if (otherFromSDKs.length !== 0) {
+            rawParamPairs.push(
+                ...otherFromSDKs.map((s) => ['other_from_sdks', s.id])
+            );
+        }
+
+        if (otherToSDKs.length !== 0) {
+            rawParamPairs.push(
+                ...otherToSDKs.map((s) => ['other_to_sdks', s.id])
+            );
+        }
+
+        rawParamPairs.push(['count', 50]);
+
+        const params = new URLSearchParams(rawParamPairs);
+        const paramString = params.toString();
+        let appsJSON;
+        try {
+            const response = await fetch(`${url}?${paramString}`);
+            appsJSON = await response.json();
+            this.appList.setValue((v) => {
+                for (let i = 0; i < appsJSON['data']['apps'].length; i++) {
+                    const app = appsJSON['data']['apps'][i];
+
+                    let companyURL = null;
+                    if (app['company_url'] != '') {
+                        companyURL = app['company_url'];
+                    }
+
+                    let totalRatings = app['five_star_ratings'];
+                    totalRatings += app['four_star_ratings'];
+                    totalRatings += app['three_star_ratings'];
+                    totalRatings += app['two_star_ratings'];
+                    totalRatings += app['one_star_ratings'];
+
+                    let rating = 0;
+                    rating += (app['five_star_ratings'] * 5);
+                    rating += (app['four_star_ratings'] * 4);
+                    rating += (app['three_star_ratings'] * 3);
+                    rating += (app['two_star_ratings'] * 2);
+                    rating += (app['one_star_ratings'] * 1);
+                    rating /= totalRatings;
+
+                    v['apps'].push({
+                        'name': app['name'],
+                        'seller_name': app['seller_name'],
+                        'company_url': companyURL,
+                        'artwork_large_url': app['artwork_large_url'],
+                        'rating': rating
+                    })
+                }
+
+                v['start-cursor'] = appsJSON['data']['start_cursor'];
+                v['end-cursor'] = appsJSON['data']['end_cursor'];
+            });
+            console.log(this.appList);
+        } catch (error) {
+            console.error(error.message);
+        }
     }
 }
 
