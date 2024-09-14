@@ -20,41 +20,41 @@ class App {
         this.selectableToSDKs = new State([]);
         this.activeToSDKs = new State([]);
 
-        this.compmatrixValues = new State({
+        this.compmatrixData = new State({
             'data': {
                 'raw': [],
                 'normalized': []
             },
             'active-data': 'raw',
-            'headers': {
-                'from_sdks': [],
-                'to_sdks': []
+            'selected-cell': {
+                'from-sdk': null,
+                'to-sdk': null
             }
         });
 
-        this.matrixTable = new CompMatrix('compmatrix', this.compmatrixValues);
+        this.matrixTable = new CompMatrix('compmatrix');
+        this.matrixTable.batchSubscribe([
+            {'refName': 'data', 'state': this.compmatrixData},
+            {'refName': 'from-sdks', 'state': this.activeFromSDKs},
+            {'refName': 'to-sdks', 'state': this.activeToSDKs}
+        ]);
+
         this.matrixTableDataToggler = new CompMatrixDataToggler(
-            'compmatrix-data-toggle',
-            this.compmatrixValues
-        )
+            'compmatrix-data-toggle'
+        );
+        this.matrixTableDataToggler.subscribeTo('data', this.compmatrixData);
 
-        this.fromSDKComboBox = new SDKSelect(
-            'from-sdk-selectables',
-            this.selectableFromSDKs
-        );
-        this.activeFromSDKsList = new SDKSelect(
-            'from-sdk-selected',
-            this.activeFromSDKs
-        );
+        this.fromSDKComboBox = new SDKSelect('from-sdk-selectables');
+        this.fromSDKComboBox.subscribeTo('sdks', this.selectableFromSDKs);
 
-        this.toSDKComboBox = new SDKSelect(
-            'to-sdk-selectables',
-            this.selectableToSDKs
-        );
-        this.activeToSDKsList = new SDKSelect(
-            'to-sdk-selected',
-            this.activeToSDKs
-        );
+        this.activeFromSDKsList = new SDKSelect('from-sdk-selected');
+        this.activeFromSDKsList.subscribeTo('sdks', this.activeFromSDKs);
+
+        this.toSDKComboBox = new SDKSelect('to-sdk-selectables');
+        this.toSDKComboBox.subscribeTo('sdks', this.selectableToSDKs);
+
+        this.activeToSDKsList = new SDKSelect('to-sdk-selected');
+        this.activeToSDKsList.subscribeTo('sdks', this.activeToSDKs);
 
         this.fromSDKAddBtn = new Button('from-sdk-config-list-add-btn');
         this.selectedFromSDKRemoveBtn = new Button(
@@ -190,20 +190,10 @@ class App {
 
             normalizedValues.push(normalized);
         }
-
-        const from_header = this.activeFromSDKs.getValue().map((s) => s.name);
-        const to_header = this.activeToSDKs.getValue().map((s) => s.name);
-
-        from_header.push('(none)');
-        to_header.push('(none)');
         
-        this.compmatrixValues.setValue((v) => {
+        this.compmatrixData.setValue((v) => {
             v['data']['raw'] = rawValues;
             v['data']['normalized'] = normalizedValues;
-            v['headers'] = {
-                'from_sdks': from_header,
-                'to_sdks': to_header
-            }
         });
     }
 }
