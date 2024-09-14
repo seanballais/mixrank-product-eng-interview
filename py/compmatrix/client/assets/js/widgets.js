@@ -200,7 +200,34 @@ export class AppList extends Widget {
         super(rootNode);
     }
 
+    // TODO: Find a way to load the next batch of apps when a certain div
+    //       becomes visible.
+
     createNodes() {
-        
+        const appList = this.states['appList'].getValue();
+
+        let html = '';
+        for (let i = 0; i < appList['apps'].length; i++) {
+            const app = appList['apps'][i];
+            html += '<div>';
+            html += '  <div>';
+            html += `    <img src=${app['artwork_large_url']}/>`
+            html += '  </div>';
+            html += '  <div>';
+            html += `    <h1>${app['name']}</h1>`;
+            html += '    <p>'
+            html += `      <a href=${app['company_url']}">`
+            html += `      ${app['seller_name']}`;
+            html += '      </a>'
+            html += '    </p>';
+            html += '    <p>';
+            html += '      <span class="fa-solid fa-star"></span>';
+            html += `      ${app['rating']}`
+            html += '    </p>';
+            html += '  </div>';
+            html += '</div>';
+        }
+
+        return htmlToNodes(html);
     }
 }

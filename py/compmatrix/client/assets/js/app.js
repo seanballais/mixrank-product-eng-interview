@@ -2,6 +2,7 @@ import { DataState } from './fetching.js';
 import * as interactivity from './interactivity.js';
 import { State } from './state.js';
 import {
+    AppList,
     Button,
     CompMatrix,
     CompMatrixDataToggler,
@@ -32,7 +33,7 @@ class App {
             }
         });
 
-        this.appList = new State({
+        this.appListData = new State({
             'apps': [],
             'start-cursor': null,
             'end-cursor': null
@@ -79,6 +80,9 @@ class App {
         this.selectedToSDKDownBtn = new Button(
             'to-sdk-selected-move-down-btn'
         );
+
+        this.appList = new AppList('apps-list');
+        this.appList.subscribeTo('appList', this.appListData);
 
         this.fromSDKAddBtn.setOnClick(() => {
             interactivity.moveSDKFromComboBoxToList(
@@ -261,7 +265,7 @@ class App {
         try {
             const response = await fetch(`${url}?${paramString}`);
             appsJSON = await response.json();
-            this.appList.setValue((v) => {
+            this.appListData.setValue((v) => {
                 for (let i = 0; i < appsJSON['data']['apps'].length; i++) {
                     const app = appsJSON['data']['apps'][i];
 
@@ -296,7 +300,6 @@ class App {
                 v['start-cursor'] = appsJSON['data']['start_cursor'];
                 v['end-cursor'] = appsJSON['data']['end_cursor'];
             });
-            console.log(this.appList);
         } catch (error) {
             console.error(error.message);
         }
