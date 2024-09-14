@@ -7,7 +7,7 @@ class App(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
     company_url = db.Column(db.Text)
-    release_date = db.Column(db.Date)
+    release_date = db.Column(db.DateTime)
     genre_id = db.Column(db.Integer)
     artwork_large_url = db.Column(db.Text)
     seller_name = db.Column(db.Text)
