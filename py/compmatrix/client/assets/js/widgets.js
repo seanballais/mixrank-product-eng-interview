@@ -141,6 +141,22 @@ export class SDKSelect extends Widget {
 export class CompMatrix extends Widget {
     constructor(rootNode) {
         super(rootNode);
+
+        this.cellToSDKIDs = {};
+    }
+
+    update() {
+        super.update();
+
+        for (const [key, sdks] of Object.entries(this.cellToSDKIDs)) {
+            const cell = document.getElementById(key);
+            cell.addEventListener('click', () => {
+                this.states['data'].setValue((v) => {
+                    v['selected-cell']['from-sdk'] = sdks['from-sdk'];
+                    v['selected-cell']['to-sdk'] = sdks['to-sdk'];
+                });
+            });
+        }
     }
 
     createNodes() {
@@ -156,8 +172,6 @@ export class CompMatrix extends Widget {
 
         const numFromSDKsHeaders = fromSDKHeaders.length;
         const numToSDKsHeaders = toSDKHeaders.length;
-
-        let idToSDKs = {};
 
         let html = '';
         html += '<tr>';
@@ -186,7 +200,14 @@ export class CompMatrix extends Widget {
                     cellData = `${(cellData * 100).toFixed(0)}%`;
                 }
 
-                html += `<td>${cellData}</td>`
+                const id = `cmc-${i}${j}`;
+
+                html += `<td id=${id}>${cellData}</td>`
+
+                this.cellToSDKIDs[id] = {
+                    'from-sdk': fromSDKHeaders[i]['id'],
+                    'to-sdk': toSDKHeaders[j]['id']
+                };
             }
             html += '</tr>';
         }
@@ -200,8 +221,10 @@ export class AppList extends Widget {
         super(rootNode);
     }
 
-    // TODO: Find a way to load the next batch of apps when a certain div
-    //       becomes visible.
+    // TODO: - Find a way to load the next batch of apps when a certain div
+    //         becomes visible.
+    //       - Allow updating the app list when a cell in the matrix is
+    //         clicked.
 
     createNodes() {
         const appList = this.states['appList'].getValue();

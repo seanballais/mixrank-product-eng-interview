@@ -128,6 +128,10 @@ class App {
             this.activeToSDKsList.moveSelectedOptionDown();
         });
 
+        this.compmatrixData.addReactor(() => {
+            this.#fetchAppList();
+        });
+
         this.activeFromSDKs.addReactor(() => {
             this.#fetchCompMatrixValues();
         });
@@ -139,7 +143,7 @@ class App {
 
     async init() {
         this.#fetchSDKs();
-        this.#fetchInitialAppList();
+        this.#fetchAppList();
     }
 
     async #fetchSDKs() {
@@ -211,49 +215,48 @@ class App {
         });
     }
 
-    async #fetchInitialAppList() {
+    async #fetchAppList() {
         const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
 
         const compmatrixData = this.compmatrixData.getValue();
-        const fromSDK = compmatrixData['selected-cell']['from-sdk'];
-        const toSDK = compmatrixData['selected-cell']['to-sdk'];
+        const fromSDKID = compmatrixData['selected-cell']['from-sdk'];
+        const toSDKID = compmatrixData['selected-cell']['to-sdk'];
 
         const activeFromSDKs = this.activeFromSDKs.getValue();
         const activeToSDKs = this.activeToSDKs.getValue();
 
-        const otherFromSDKs = activeFromSDKs.filter((s) => {
-            if (fromSDK !== null) {
-                return s.id != fromSDK.id;
+        const otherFromSDKIDs = activeFromSDKs.filter((s) => {
+            if (fromSDKID !== null) {
+                return s.id != fromSDKID.id;
             }
 
             return true;
         });
-        const otherToSDKs = activeToSDKs.filter((s) => {
-            if (toSDK !== null) {
-                return s.id != toSDK.id;
+        const otherToSDKIDs = activeToSDKs.filter((s) => {
+            if (toSDKID !== null) {
+                return s.id != toSDKID.id;
             }
 
             return true;
         });
 
         let rawParamPairs = [];
-        if (fromSDK !== null) {
-            rawParamPairs.push(['from_sdk', fromSDK.id])
-        }
-
-        if (toSDK !== null) {
-            rawParamPairs.push(['to_sdk', toSDK.id])
-        }
-
-        if (otherFromSDKs.length !== 0) {
+        if (fromSDKID !== null) {
+            rawParamPairs.push(['from_sdk', fromSDKID]);
+        } else if (otherFromSDKIDs.length !== 0) {
+            // We can only specify `other_from_sdks` if `from_sdk` is
+            // unspecified.
             rawParamPairs.push(
-                ...otherFromSDKs.map((s) => ['other_from_sdks', s.id])
+                ...otherFromSDKIDs.map((s) => ['other_from_sdks', s['id']])
             );
         }
 
-        if (otherToSDKs.length !== 0) {
+        if (toSDKID !== null) {
+            rawParamPairs.push(['to_sdk', toSDKID]);
+        } else if (otherToSDKIDs.length !== 0) {
+            // We can only specify `other_to_sdks` if `to_sdk` is unspecified.
             rawParamPairs.push(
-                ...otherToSDKs.map((s) => ['other_to_sdks', s.id])
+                ...otherToSDKIDs.map((s) => ['other_to_sdks', s['id']])
             );
         }
 
@@ -265,44 +268,50 @@ class App {
         try {
             const response = await fetch(`${url}?${paramString}`);
             appsJSON = await response.json();
-            this.appListData.setValue((v) => {
-                for (let i = 0; i < appsJSON['data']['apps'].length; i++) {
-                    const app = appsJSON['data']['apps'][i];
-
-                    let companyURL = null;
-                    if (app['company_url'] != '') {
-                        companyURL = app['company_url'];
-                    }
-
-                    let totalRatings = app['five_star_ratings'];
-                    totalRatings += app['four_star_ratings'];
-                    totalRatings += app['three_star_ratings'];
-                    totalRatings += app['two_star_ratings'];
-                    totalRatings += app['one_star_ratings'];
-
-                    let rating = 0;
-                    rating += (app['five_star_ratings'] * 5);
-                    rating += (app['four_star_ratings'] * 4);
-                    rating += (app['three_star_ratings'] * 3);
-                    rating += (app['two_star_ratings'] * 2);
-                    rating += (app['one_star_ratings'] * 1);
-                    rating /= totalRatings;
-
-                    v['apps'].push({
-                        'name': app['name'],
-                        'seller_name': app['seller_name'],
-                        'company_url': companyURL,
-                        'artwork_large_url': app['artwork_large_url'],
-                        'rating': rating
-                    })
-                }
-
-                v['start-cursor'] = appsJSON['data']['start_cursor'];
-                v['end-cursor'] = appsJSON['data']['end_cursor'];
-            });
         } catch (error) {
             console.error(error.message);
         }
+
+        this.appListData.setValue((v) => {
+            // TODO: - Figure out a way to know whether we should clear the
+            //         app list or just prepend/append it.
+            //       - Fix bug when clicking a cell with 0 value for backend.
+            v['apps'] = [];
+
+            for (let i = 0; i < appsJSON['data']['apps'].length; i++) {
+                const app = appsJSON['data']['apps'][i];
+
+                let companyURL = null;
+                if (app['company_url'] != '') {
+                    companyURL = app['company_url'];
+                }
+
+                let totalRatings = app['five_star_ratings'];
+                totalRatings += app['four_star_ratings'];
+                totalRatings += app['three_star_ratings'];
+                totalRatings += app['two_star_ratings'];
+                totalRatings += app['one_star_ratings'];
+
+                let rating = 0;
+                rating += (app['five_star_ratings'] * 5);
+                rating += (app['four_star_ratings'] * 4);
+                rating += (app['three_star_ratings'] * 3);
+                rating += (app['two_star_ratings'] * 2);
+                rating += (app['one_star_ratings'] * 1);
+                rating /= totalRatings;
+
+                v['apps'].push({
+                    'name': app['name'],
+                    'seller_name': app['seller_name'],
+                    'company_url': companyURL,
+                    'artwork_large_url': app['artwork_large_url'],
+                    'rating': rating
+                })
+            }
+
+            v['start-cursor'] = appsJSON['data']['start_cursor'];
+            v['end-cursor'] = appsJSON['data']['end_cursor'];
+        });
     }
 }
 
