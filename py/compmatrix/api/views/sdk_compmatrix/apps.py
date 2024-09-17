@@ -193,12 +193,19 @@ def index():
     for app in apps:
         resp_apps.append(view_encoders.encode_app_model_object(app))
 
+    start_cursor: str | None = None
+    end_cursor: str | None = None
+
+    if num_apps > 0:
+        start_cursor = _create_cursor_from_app(apps[0])
+        end_cursor = _create_cursor_from_app(apps[-1])
+
     return {
         'data': {
             'apps': resp_apps,
             'total_count': num_apps,
-            'start_cursor': _create_cursor_from_app(apps[0]),
-            'end_cursor': _create_cursor_from_app(apps[-1])
+            'start_cursor': start_cursor,
+            'end_cursor': end_cursor
         }
     }
 

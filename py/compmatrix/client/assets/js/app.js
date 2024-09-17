@@ -276,6 +276,11 @@ class App {
             // TODO: - Figure out a way to know whether we should clear the
             //         app list or just prepend/append it.
             //       - Fix bug when clicking a cell with 0 value for backend.
+            //       - Use Intersection Observer to load more apps. Use a div
+            //         as a trigger. However, if we reached the max number of
+            //         apps, we don't load the trigger. If we reached a certain
+            //         threshold of apps, we put a div trigger at the start of
+            //         the list after removing excess apps.
             v['apps'] = [];
 
             for (let i = 0; i < appsJSON['data']['apps'].length; i++) {
