@@ -129,7 +129,7 @@ class App {
         });
 
         this.compmatrixData.addReactor(() => {
-            this.#fetchAppList();
+            this.#fetchNewAppList();
         });
 
         this.activeFromSDKs.addReactor(() => {
@@ -143,7 +143,7 @@ class App {
 
     async init() {
         this.#fetchSDKs();
-        this.#fetchAppList();
+        this.#fetchNewAppList();
     }
 
     async #fetchSDKs() {
@@ -215,7 +215,7 @@ class App {
         });
     }
 
-    async #fetchAppList() {
+    async #fetchNewAppList() {
         const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
 
         const compmatrixData = this.compmatrixData.getValue();
@@ -275,7 +275,6 @@ class App {
         this.appListData.setValue((v) => {
             // TODO: - Figure out a way to know whether we should clear the
             //         app list or just prepend/append it.
-            //       - Fix bug when clicking a cell with 0 value for backend.
             //       - Use Intersection Observer to load more apps. Use a div
             //         as a trigger. However, if we reached the max number of
             //         apps, we don't load the trigger. If we reached a certain

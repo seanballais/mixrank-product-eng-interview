@@ -19,8 +19,12 @@ in pkgs.mkShell rec {
                 flask
                 flask-sqlalchemy
                 pytest
+                rcssmin
                 sqlalchemy
+                watchdog
             ];
         })
+        esbuild
+        sass
     ]);
 }
