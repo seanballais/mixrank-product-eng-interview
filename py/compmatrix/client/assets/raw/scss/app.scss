@@ -1,5 +1,88 @@
 @import '_colours.scss';
 
+$matrix-cell-size: 75px;
+
 body {
     background-color: $bg-colour;
+    color: $main-text-colour;
+
+    main#container {
+        h1 {
+            text-align: center;
+        }
+
+        article#dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+
+            div {
+                &#matrix {
+                    div#matrix-display {
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: center;
+
+                        margin-bottom: 1rem;
+
+                        table {
+                            th {
+                                text-align: center;
+
+                                width: $matrix-cell-size;
+                                height: $matrix-cell-size;
+                            }
+
+                            td {
+                                width: $matrix-cell-size;
+                                height: $matrix-cell-size;
+
+                                text-align: center;
+
+                                -webkit-user-select: none;
+                                user-select: none;
+                                
+                                cursor: pointer;
+                            }
+                        }
+                    }
+        
+                    div#matrix-config {
+                        margin-bottom: 1rem;
+
+                        div {
+                            &#compmatrix-toggles {
+                                display: flex;
+                                flex-direction: row;
+                                justify-content: center;
+
+                                margin-bottom: 1rem;
+                            }
+
+                            &#compmatrix-selectables {
+                                display: flex;
+                                flex-direction: row;
+                                justify-content: center;
+                                align-items: stretch;
+
+                                div {
+                                    flex-grow: 1;
+
+                                    &#compmatrix-from-selectables {
+                                    
+                                    }
+        
+                                    &#compmatrix-to-selectables {
+        
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                &#apps {
+                }
+            }
+        }
+    }
 }

@@ -3,71 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <title>SDK Competitive Matrix</title>
+    <link rel="stylesheet" href="/assets/app.css">
     <script type="module" src="/assets/app.js"></script>
     <script src="https://kit.fontawesome.com/d69cc82c51.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <h1>SDK Competitive Matrix</h1>
-    <div id="matrix">
-        <div id="matrix-display">
-            <table id="compmatrix"></table>
-        </div>
-        <div id="matrix-config">
-            <div>
-                <div>
-                    <input id="compmatrix-data-toggle" type="checkbox" />
-                    <label for="compmatrix-data-toggle">Normalize Values</label>
+    <main id="container">
+        <h1>SDK Competitive Matrix</h1>
+        <article id="dashboard">
+            <div id="matrix">
+                <div id="matrix-display">
+                    <table id="compmatrix"></table>
                 </div>
-                <div>
-                    <select id="from-sdk-selectables"></select>
-                    <button id="from-sdk-config-list-add-btn">
-                        <span class="fa-solid fa-plus"></span>
-                    </button>
-                </div>
-                <div>
+                <div id="matrix-config">
                     <div>
-                        <select id="from-sdk-selected" size="20"></select>
-                    </div>
-                    <div>
-                        <button id="from-sdk-selected-move-up-btn">
-                            <span class="fa-solid fa-arrow-up-long"></span>
-                        </button>
-                        <button id="from-sdk-selected-move-down-btn">
-                            <span class="fa-solid fa-arrow-down-long"></span>
-                        </button>
-                        <button id="from-sdk-selected-remove-btn">
-                            <span class="fa-solid fa-minus"></span>
-                        </button>
+                        <div id="compmatrix-toggles">
+                            <input id="compmatrix-data-toggle" type="checkbox" />
+                            <label for="compmatrix-data-toggle">Normalize Values</label>
+                        </div>
+                        <div id="compmatrix-selectables">
+                            <div id="compmatrix-from-selectables">
+                                <div>
+                                    <select id="from-sdk-selectables"></select>
+                                    <button id="from-sdk-config-list-add-btn">
+                                        <span class="fa-solid fa-plus"></span>
+                                    </button>
+                                </div>
+                                <div>
+                                    <div>
+                                        <select id="from-sdk-selected" size="20"></select>
+                                    </div>
+                                    <div>
+                                        <button id="from-sdk-selected-move-up-btn">
+                                            <span class="fa-solid fa-arrow-up-long"></span>
+                                        </button>
+                                        <button id="from-sdk-selected-move-down-btn">
+                                            <span class="fa-solid fa-arrow-down-long"></span>
+                                        </button>
+                                        <button id="from-sdk-selected-remove-btn">
+                                            <span class="fa-solid fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="compmatrix-to-selectables">
+                                <div>
+                                    <select id="to-sdk-selectables"></select>
+                                    <button id="to-sdk-config-list-add-btn"><span class="fa-solid fa-plus"></span></button>
+                                </div>
+                                <div>
+                                    <div>
+                                        <select id="to-sdk-selected" size="20"></select>
+                                    </div>
+                                    <div>
+                                        <button id="to-sdk-selected-move-up-btn">
+                                            <span class="fa-solid fa-arrow-up-long"></span>
+                                        </button>
+                                        <button id="to-sdk-selected-move-down-btn">
+                                            <span class="fa-solid fa-arrow-down-long"></span>
+                                        </button>
+                                        <button id="to-sdk-selected-remove-btn">
+                                            <span class="fa-solid fa-minus"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div>
-                <div>
-                    <select id="to-sdk-selectables"></select>
-                    <button id="to-sdk-config-list-add-btn"><span class="fa-solid fa-plus"></span></button>
-                </div>
-                <div>
-                    <div>
-                        <select id="to-sdk-selected" size="20"></select>
-                    </div>
-                    <div>
-                        <button id="to-sdk-selected-move-up-btn">
-                            <span class="fa-solid fa-arrow-up-long"></span>
-                        </button>
-                        <button id="to-sdk-selected-move-down-btn">
-                            <span class="fa-solid fa-arrow-down-long"></span>
-                        </button>
-                        <button id="to-sdk-selected-remove-btn">
-                            <span class="fa-solid fa-minus"></span>
-                        </button>
-                    </div>
-                </div>
+            <div id="apps">
+                <h1>Apps</h1>
+                <p></p>
+                <div id="apps-list"></div>
             </div>
-        </div>
-    </div>
-    <div id="apps">
-        <p></p>
-        <div id="apps-list"></div>
-    </div>
+        </article>
+    </main>
 </body>
 </html>
