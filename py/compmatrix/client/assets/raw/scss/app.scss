@@ -25,8 +25,17 @@ body {
             max-width: 1200px;
             margin: 0 auto;
 
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 1.5rem;
+
             div {
                 &#matrix {
+                    flex-grow: 2;
+                    flex-shrink: 0;
+                    flex-basis: 60%;
+
                     div#matrix-display {
                         display: flex;
                         flex-direction: row;
@@ -35,9 +44,21 @@ body {
                         margin-bottom: 1rem;
 
                         div#compmatrix-container {
-                            max-width: 100%;
+                            width: 600px;
+                            height: 600px;
+                            max-width: 600px;
+                            max-height: 600px;
+
+                            overflow: scroll;
+
+                            display: flex;
+                            justify-content: safe center;
+                            align-items: safe center;
 
                             table {
+                                min-width: 100px;
+                                min-height: 100px;
+
                                 tr {
                                     text-align: center;
 
@@ -96,6 +117,9 @@ body {
                 }
 
                 &#apps {
+                    flex-grow: 1;
+                    flex-shrink: 0;
+                    flex-basis: 40%;
                 }
             }
         }
