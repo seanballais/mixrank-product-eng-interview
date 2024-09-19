@@ -1,0 +1,44 @@
+div {
+    &.sdk-activator-control {
+        display: flex;
+        align-content: stretch;
+    
+        margin-bottom: 1rem;
+    
+        select {
+            flex-grow: 1;
+            flex-shrink: 0;
+            flex-basis: auto;
+            gap: 1rem;
+    
+            padding: 0.5rem;
+        }
+    
+        button {
+            padding: 0.5rem;
+        }
+    }
+
+    &.active-sdk-list-control {
+        div {
+            &.active-sdk-list {
+                margin-bottom: 1rem;
+
+                select {
+                    width: 100%;
+                }
+            }
+
+            &.active-sdk-list-control-buttons {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                gap: 0.5rem;
+                
+                button {
+                    padding: 0.5rem;
+                }
+            }
+        }
+    }
+}

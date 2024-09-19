@@ -1,10 +1,20 @@
 @import '_colours.scss';
+@import '_controls.scss';
+@import '_fonts.scss';
 
 $matrix-cell-size: 75px;
+
+
 
 body {
     background-color: $bg-colour;
     color: $main-text-colour;
+
+    font-family: 'Fivo Sans', Arial, Helvetica, sans-serif;
+
+    button {
+        cursor: pointer;
+    }
 
     main#container {
         h1 {
@@ -24,24 +34,30 @@ body {
 
                         margin-bottom: 1rem;
 
-                        table {
-                            th {
-                                text-align: center;
+                        div#compmatrix-container {
+                            max-width: 100%;
 
-                                width: $matrix-cell-size;
-                                height: $matrix-cell-size;
-                            }
+                            table {
+                                tr {
+                                    text-align: center;
 
-                            td {
-                                width: $matrix-cell-size;
-                                height: $matrix-cell-size;
-
-                                text-align: center;
-
-                                -webkit-user-select: none;
-                                user-select: none;
-                                
-                                cursor: pointer;
+                                    &:nth-child(n + 3) {
+                                        th {
+                                            width: $matrix-cell-size;
+                                            height: $matrix-cell-size;
+                                        }
+    
+                                        td {
+                                            width: $matrix-cell-size;
+                                            height: $matrix-cell-size;
+            
+                                            -webkit-user-select: none;
+                                            user-select: none;
+                                            
+                                            cursor: pointer;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -63,16 +79,15 @@ body {
                                 flex-direction: row;
                                 justify-content: center;
                                 align-items: stretch;
+                                gap: 1.5rem;
 
                                 div {
                                     flex-grow: 1;
 
                                     &#compmatrix-from-selectables {
-                                    
                                     }
         
                                     &#compmatrix-to-selectables {
-        
                                     }
                                 }
                             }

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SDK Competitive Matrix</title>
     <link rel="stylesheet" href="/assets/app.css">
     <script type="module" src="/assets/app.js"></script>
@@ -13,7 +14,9 @@
         <article id="dashboard">
             <div id="matrix">
                 <div id="matrix-display">
-                    <table id="compmatrix"></table>
+                    <div id="compmatrix-container">
+                        <table id="compmatrix"></table>
+                    </div>
                 </div>
                 <div id="matrix-config">
                     <div>
@@ -23,48 +26,54 @@
                         </div>
                         <div id="compmatrix-selectables">
                             <div id="compmatrix-from-selectables">
+                                <h1>From SDK</h1>
                                 <div>
-                                    <select id="from-sdk-selectables"></select>
-                                    <button id="from-sdk-config-list-add-btn">
-                                        <span class="fa-solid fa-plus"></span>
-                                    </button>
-                                </div>
-                                <div>
-                                    <div>
-                                        <select id="from-sdk-selected" size="20"></select>
+                                    <div class="sdk-activator-control">
+                                        <select id="from-sdk-selectables"></select>
+                                        <button id="from-sdk-config-list-add-btn">
+                                            <span class="fa-solid fa-plus"></span>
+                                        </button>
                                     </div>
-                                    <div>
-                                        <button id="from-sdk-selected-move-up-btn">
-                                            <span class="fa-solid fa-arrow-up-long"></span>
-                                        </button>
-                                        <button id="from-sdk-selected-move-down-btn">
-                                            <span class="fa-solid fa-arrow-down-long"></span>
-                                        </button>
-                                        <button id="from-sdk-selected-remove-btn">
-                                            <span class="fa-solid fa-minus"></span>
-                                        </button>
+                                    <div class="active-sdk-list-control">
+                                        <div class="active-sdk-list">
+                                            <select id="from-sdk-selected" size="10"></select>
+                                        </div>
+                                        <div class="active-sdk-list-control-buttons">
+                                            <button id="from-sdk-selected-move-up-btn">
+                                                <span class="fa-solid fa-arrow-up-long"></span>
+                                            </button>
+                                            <button id="from-sdk-selected-move-down-btn">
+                                                <span class="fa-solid fa-arrow-down-long"></span>
+                                            </button>
+                                            <button id="from-sdk-selected-remove-btn">
+                                                <span class="fa-solid fa-minus"></span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div id="compmatrix-to-selectables">
+                                <h1>To SDK</h1>
                                 <div>
-                                    <select id="to-sdk-selectables"></select>
-                                    <button id="to-sdk-config-list-add-btn"><span class="fa-solid fa-plus"></span></button>
-                                </div>
-                                <div>
-                                    <div>
-                                        <select id="to-sdk-selected" size="20"></select>
+                                    <div class="sdk-activator-control">
+                                        <select id="to-sdk-selectables"></select>
+                                        <button id="to-sdk-config-list-add-btn"><span class="fa-solid fa-plus"></span></button>
                                     </div>
-                                    <div>
-                                        <button id="to-sdk-selected-move-up-btn">
-                                            <span class="fa-solid fa-arrow-up-long"></span>
-                                        </button>
-                                        <button id="to-sdk-selected-move-down-btn">
-                                            <span class="fa-solid fa-arrow-down-long"></span>
-                                        </button>
-                                        <button id="to-sdk-selected-remove-btn">
-                                            <span class="fa-solid fa-minus"></span>
-                                        </button>
+                                    <div class="active-sdk-list-control">
+                                        <div class="active-sdk-list">
+                                            <select id="to-sdk-selected" size="10"></select>
+                                        </div>
+                                        <div class="active-sdk-list-control-buttons">
+                                            <button id="to-sdk-selected-move-up-btn">
+                                                <span class="fa-solid fa-arrow-up-long"></span>
+                                            </button>
+                                            <button id="to-sdk-selected-move-down-btn">
+                                                <span class="fa-solid fa-arrow-down-long"></span>
+                                            </button>
+                                            <button id="to-sdk-selected-remove-btn">
+                                                <span class="fa-solid fa-minus"></span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
