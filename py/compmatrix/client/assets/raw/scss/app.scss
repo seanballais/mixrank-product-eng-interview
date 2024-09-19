@@ -44,12 +44,12 @@ body {
                         margin-bottom: 1rem;
 
                         div#compmatrix-container {
-                            width: 600px;
-                            height: 600px;
-                            max-width: 600px;
-                            max-height: 600px;
+                            width: 700px;
+                            height: 700px;
+                            max-width: 700px;
+                            max-height: 700px;
 
-                            overflow: scroll;
+                            overflow: auto;
 
                             display: flex;
                             justify-content: safe center;
