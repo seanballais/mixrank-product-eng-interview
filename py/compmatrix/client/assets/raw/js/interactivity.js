@@ -26,27 +26,38 @@ export function moveSDKFromListToComboBox(
     activeSDKs
 ) {
     const actives = activeSDKs.getValue();
+    const selectables = selectableSDKs.getValue();
     if (actives.length > 0) {
         const activeSelectedIndex = activeSDKsList.selectedIndex;
         const comboBoxSelectedIndex = comboBox.selectedIndex;
-        let comboBoxIndexOffset = 0;
-        const comboBoxSDKName = selectableSDKs
-                                    .getValue()[comboBoxSelectedIndex]
-                                    .name;
-        const activeSDKName = activeSDKs.getValue()[activeSelectedIndex].name;
-        if (
-            comboBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase()
-            && comboBoxSDKName > activeSDKName
-        ) {
-            // The SDK removed from the active list of From SDKs will be
-            // placed behind the currently selected SDK in the From SDK
-            // combo box. So, we need to offset the new combo box index
-            // by 1. Second condition handles the edge case where two SDKs
-            // have the same names in lowercase, but are technically
-            // different when their original cases.
-            comboBoxIndexOffset = 1;
+        
+        let cBoxIdxOffset = 0;
+
+        // We need to do these now before we modify the combo box options and
+        // list options.
+        if (selectables.length > 0) {
+            // Only makes sense to check for an offset if the combo box has
+            // existing options.
+            const cBoxSDKName = selectableSDKs
+                                        .getValue()[comboBoxSelectedIndex]
+                                        .name
+                                        .toLowerCase();
+            const activeSDKName = activeSDKs
+                                    .getValue()[activeSelectedIndex]
+                                    .name
+                                    .toLowerCase();
+            if (cBoxSDKName >= activeSDKName && cBoxSDKName > activeSDKName) {
+                // The SDK removed from the active list of From SDKs will be
+                // placed behind the currently selected SDK in the From SDK
+                // combo box. So, we need to offset the new combo box index
+                // by 1. Second condition handles the edge case where two SDKs
+                // have the same names in lowercase, but are technically
+                // different when their original cases.
+                cBoxIdxOffset = 1;
+            }
         }
         
+        // Modify the combo box and list, which will update the HTML.
         selectableSDKs.setValue((v) => {
             v.push(activeSDKs.getValue()[activeSelectedIndex]);
             v.sort((a, b) => {
@@ -63,8 +74,16 @@ export function moveSDKFromListToComboBox(
             v.splice(activeSelectedIndex, 1);
         });
 
-        const newCBSelIndex = comboBoxSelectedIndex + comboBoxIndexOffset;
-        comboBox.selectedIndex = newCBSelIndex;
+        // And then set the new selected options.
+        if (selectables.length > 0) {
+            // We might need an offset if the combo box has existing options.
+            comboBox.selectedIndex = comboBoxSelectedIndex + cBoxIdxOffset;
+        } else {
+            // But it doesn't make sense to compute the offset if there are no
+            // elements. Just set the selected index to the first one. At this
+            // point, `comboBoxSelectedIndex` would be undefined.
+            comboBox.selectedIndex = 0;
+        }
 
         const newListSelectedIndex = Math.min(
             activeSelectedIndex,

@@ -40,14 +40,17 @@
   }
   function moveSDKFromListToComboBox(comboBox, activeSDKsList, selectableSDKs, activeSDKs) {
     const actives = activeSDKs.getValue();
+    const selectables = selectableSDKs.getValue();
     if (actives.length > 0) {
       const activeSelectedIndex = activeSDKsList.selectedIndex;
       const comboBoxSelectedIndex = comboBox.selectedIndex;
-      let comboBoxIndexOffset = 0;
-      const comboBoxSDKName = selectableSDKs.getValue()[comboBoxSelectedIndex].name;
-      const activeSDKName = activeSDKs.getValue()[activeSelectedIndex].name;
-      if (comboBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase() && comboBoxSDKName > activeSDKName) {
-        comboBoxIndexOffset = 1;
+      let cBoxIdxOffset = 0;
+      if (selectables.length > 0) {
+        const cBoxSDKName = selectableSDKs.getValue()[comboBoxSelectedIndex].name.toLowerCase();
+        const activeSDKName = activeSDKs.getValue()[activeSelectedIndex].name.toLowerCase();
+        if (cBoxSDKName >= activeSDKName && cBoxSDKName > activeSDKName) {
+          cBoxIdxOffset = 1;
+        }
       }
       selectableSDKs.setValue((v) => {
         v.push(activeSDKs.getValue()[activeSelectedIndex]);
@@ -64,8 +67,11 @@
       activeSDKs.setValue((v) => {
         v.splice(activeSelectedIndex, 1);
       });
-      const newCBSelIndex = comboBoxSelectedIndex + comboBoxIndexOffset;
-      comboBox.selectedIndex = newCBSelIndex;
+      if (selectables.length > 0) {
+        comboBox.selectedIndex = comboBoxSelectedIndex + cBoxIdxOffset;
+      } else {
+        comboBox.selectedIndex = 0;
+      }
       const newListSelectedIndex = Math.min(
         activeSelectedIndex,
         activeSDKsList.options.length - 1
@@ -263,7 +269,12 @@
       return Number(this.rootNode.value);
     }
     get selectedIndex() {
-      return this.idToIndexMap.get(this.value);
+      const index = this.idToIndexMap.get(this.value);
+      if (index === void 0) {
+        return null;
+      } else {
+        return index;
+      }
     }
     get options() {
       return this.rootNode.options;

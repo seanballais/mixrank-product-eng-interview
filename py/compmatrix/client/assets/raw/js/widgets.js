@@ -85,7 +85,12 @@ export class SDKSelect extends Widget {
     }
 
     get selectedIndex() {
-        return this.idToIndexMap.get(this.value);
+        const index = this.idToIndexMap.get(this.value);
+        if (index === undefined) {
+            return null;
+        } else {
+            return index;
+        }
     }
 
     get options() {
