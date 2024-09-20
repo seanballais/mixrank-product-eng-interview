@@ -6,6 +6,8 @@
 }
 
 select {
+    box-sizing: border-box;
+
     background-color: $bg-colour;
     color: $primary-text-colour;
 
@@ -21,25 +23,19 @@ select {
 
         cursor: pointer;
 
-        @include base-transition-rules;
-
         &:hover, &:checked {
-            background-color: $primary-colour;
+            background-color: $primary-colour-darker;
             color: $primary-text-colour;
 
             // Seems like grey (at least in Edge) is the default background
             // colour for options inside a select input that is focus-visible.
-            box-shadow: 0 0 1px 100px $primary-colour inset;
-
-            @include base-transition-rules;
+            box-shadow: 0 0 1px 100px $primary-colour-darker inset;
         }
     }
 
     &:focus-visible {
-        border: solid 3px $primary-colour;
+        border-color: $primary-colour-darker;
         outline: none;
-
-        @include base-transition-rules;
     }
 }
 
@@ -54,11 +50,7 @@ button {
 
     cursor: pointer;
 
-    @include base-transition-rules;
-
     &:hover {
-        background-color: lighten($primary-colour, 10%);
-
-        @include base-transition-rules;
+        background-color: $primary-colour-darker;
     }
 }
