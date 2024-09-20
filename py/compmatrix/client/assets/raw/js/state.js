@@ -33,8 +33,14 @@ export class State {
         }
     }
 
-    addReactor(f, runOnAdd = true) {
-        this.subscriptions.push(f);
+    addReactor(f, runOnAdd = true, prioritize = false) {
+        // Setting prioritize to true makes the passed function more likely
+        // to be called first when this state changes.
+        if (prioritize) {
+            this.subscriptions.unshift(f);
+        } else {
+            this.subscriptions.push(f);
+        }
 
         if (runOnAdd) {
             f(this.value);

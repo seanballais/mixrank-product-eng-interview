@@ -1,3 +1,4 @@
+import { DataState } from './fetching.js';
 import { htmlToNodes } from './html.js';
 import udomdiff from './udomdiff.js';
 
@@ -17,7 +18,7 @@ export class Widget {
         for (let i = 0; i < states.length; i++) {
             const state = states[i];
             this.states[state['refName']] = state['state'];
-            state.state.addReactor(() => { this.update(); }, false);
+            state.state.addReactor(() => { this.update(); }, false, false);
         }
 
         this.update();
@@ -146,21 +147,32 @@ export class CompMatrix extends Widget {
     }
 
     update() {
+        // Reset. An update may result in some cells being removed.
+        this.cellToSDKIDs = {};
+
         super.update();
 
-        for (const [key, sdks] of Object.entries(this.cellToSDKIDs)) {
-            const cell = document.getElementById(key);
-            cell.addEventListener('click', () => {
-                this.states['data'].setValue((v) => {
-                    v['selected-cell']['from-sdk'] = sdks['from-sdk'];
-                    v['selected-cell']['to-sdk'] = sdks['to-sdk'];
+        const data = this.states['data'].getValue();
+        const dataState = data['state'];
+
+        if (dataState == DataState.LOADED) {
+            for (const [key, sdks] of Object.entries(this.cellToSDKIDs)) {
+                const cell = document.getElementById(key);
+                cell.addEventListener('click', () => {
+                    this.states['data'].setValue((v) => {
+                        v['selected-cell']['from-sdk'] = sdks['from-sdk'];
+                        v['selected-cell']['to-sdk'] = sdks['to-sdk'];
+                    });
                 });
-            });
+            }
         }
     }
 
     createNodes() {
         const data = this.states['data'].getValue();
+        const dataState = data['state'];
+
+        let html = '';
         const fromSDKData = this.states['from-sdks'].getValue();
         const toSDKData = this.states['to-sdks'].getValue();
 
@@ -173,7 +185,6 @@ export class CompMatrix extends Widget {
         const numFromSDKsHeaders = fromSDKHeaders.length;
         const numToSDKsHeaders = toSDKHeaders.length;
 
-        let html = '';
         html += '<tr>';
         html += '<th></th>';
         html += `<th colspan="${numToSDKsHeaders + 1}">To SDK</th>`;
@@ -181,34 +192,43 @@ export class CompMatrix extends Widget {
         html += '<tr>';
         html += `<th rowspan="${numFromSDKsHeaders + 2}">From SDK</th>`;
         html += '</tr>';
-        html += '<tr>';
-        html += '<th></th>';
-        for (let i = 0; i < numToSDKsHeaders; i++) {
-            html += `<th>${toSDKHeaders[i]['name']}</th>`;
-        }
-        html += '</tr>';
 
-        const activeData = data['active-data'];
-        const presentedData = data['data'][activeData];
-        for (let i = 0; i < presentedData.length; i++) {
-            const rowData = presentedData[i];
+        if (dataState == DataState.LOADED) {
             html += '<tr>';
-            html += `<th>${fromSDKHeaders[i]['name']}</th>`;
-            for (let j = 0; j < rowData.length; j++) {
-                let cellData = rowData[j];
-                if (activeData == 'normalized') {
-                    cellData = `${(cellData * 100).toFixed(0)}%`;
-                }
-
-                const id = `cmc-${i}${j}`;
-
-                html += `<td id=${id}>${cellData}</td>`
-
-                this.cellToSDKIDs[id] = {
-                    'from-sdk': fromSDKHeaders[i]['id'],
-                    'to-sdk': toSDKHeaders[j]['id']
-                };
+            html += '<th></th>';
+            for (let i = 0; i < numToSDKsHeaders; i++) {
+                html += `<th>${toSDKHeaders[i]['name']}</th>`;
             }
+            html += '</tr>';
+
+            const activeData = data['active-data'];
+            const presentedData = data['data'][activeData];
+            for (let i = 0; i < presentedData.length; i++) {
+                const rowData = presentedData[i];
+                html += '<tr>';
+                html += `<th>${fromSDKHeaders[i]['name']}</th>`;
+                for (let j = 0; j < rowData.length; j++) {
+                    let cellData = rowData[j];
+                    if (activeData == 'normalized') {
+                        cellData = `${(cellData * 100).toFixed(0)}%`;
+                    }
+
+                    const id = `cmc-${i}${j}`;
+
+                    html += `<td id=${id}>${cellData}</td>`
+
+                    this.cellToSDKIDs[id] = {
+                        'from-sdk': fromSDKHeaders[i]['id'],
+                        'to-sdk': toSDKHeaders[j]['id']
+                    };
+                }
+                html += '</tr>';
+            }
+        } else if (dataState == DataState.LOADING) {
+            html += '<tr>';
+            html += '<td>';
+            html += '<span class="fas fa-circle-notch fa-spin"></span>'
+            html += '</td>';
             html += '</tr>';
         }
 

@@ -1,1 +1,682 @@
-(()=>{function _(d,t,e){let s=d.selectedIndex;e.setValue(m=>{m.push(t.getValue()[s])}),t.setValue(m=>{m.splice(s,1)});let a=Math.min(s,d.options.length-1);d.selectedIndex=a}function L(d,t,e,s){let a=t.selectedIndex,m=d.selectedIndex,h=0,c=e.getValue()[m].name,o=s.getValue()[a].name;c.toLowerCase()>=o.toLowerCase()&&c>o&&(h=1),e.setValue(i=>{i.push(s.getValue()[a]),i.sort((p,l)=>p.name.toLowerCase()<l.name.toLowerCase()?-1:p.name.toLowerCase()>l.name.toLowerCase()?1:0)}),s.setValue(i=>{i.splice(a,1)});let r=m+h;d.selectedIndex=r;let n=Math.min(a,t.options.length-1);t.selectedIndex=n}var S=class{constructor(t){this.value=t,this.subscriptions=[]}getValue(){return this.value}setValue(t){typeof t=="function"?t(this.value):this.value=t;for(let e of this.subscriptions)e(this.value)}addReactor(t,e=!0){this.subscriptions.push(t),e&&t(this.value)}};function k(d){let t=document.createElement("template");return t.innerHTML=d,t.content.childNodes}var F=(d,t,e,s,a)=>{let m=e.length,h=t.length,c=m,o=0,r=0,n=null;for(;o<h||r<c;)if(h===o){let i=c<m?r?s(e[r-1],-0).nextSibling:s(e[c-r],0):a;for(;r<c;)d.insertBefore(s(e[r++],1),i)}else if(c===r)for(;o<h;)(!n||!n.has(t[o]))&&d.removeChild(s(t[o],-1)),o++;else if(t[o]===e[r])o++,r++;else if(t[h-1]===e[c-1])h--,c--;else if(t[o]===e[c-1]&&e[r]===t[h-1]){let i=s(t[--h],-1).nextSibling;d.insertBefore(s(e[r++],1),s(t[o++],-1).nextSibling),d.insertBefore(s(e[--c],1),i),t[h]=e[c]}else{if(!n){n=new Map;let i=r;for(;i<c;)n.set(e[i],i++)}if(n.has(t[o])){let i=n.get(t[o]);if(r<i&&i<c){let p=o,l=1;for(;++p<h&&p<c&&n.get(t[p])===i+l;)l++;if(l>i-r){let D=s(t[o],0);for(;r<i;)d.insertBefore(s(e[r++],1),D)}else d.replaceChild(s(e[r++],1),s(t[o++],-1))}else o++}else d.removeChild(s(t[o++],-1))}return e};var x=class{constructor(t){this.rootNode=document.getElementById(t),this.nodes=[],this.states={}}subscribeTo(t,e){this.states[t]=e,e.addReactor(()=>{this.update()})}batchSubscribe(t){for(let e=0;e<t.length;e++){let s=t[e];this.states[s.refName]=s.state,s.state.addReactor(()=>{this.update()},!1)}this.update()}update(){this.nodes=this.createNodes(),this.render()}createNodes(){return[]}render(){F(this.rootNode,[...this.rootNode.childNodes],[...this.nodes],t=>t)}},f=class extends x{constructor(t){super(t)}setOnClick(t){this.rootNode.addEventListener("click",t)}},v=class extends x{constructor(t){super(t),this.rootNode.addEventListener("change",e=>{e.target.checked?this.states.data.setValue(s=>{s["active-data"]="normalized"}):this.states.data.setValue(s=>{s["active-data"]="raw"})})}},g=class extends x{constructor(t){super(t),this.idToIndexMap=new Map}get value(){return Number(this.rootNode.value)}get selectedIndex(){return this.idToIndexMap.get(this.value)}get options(){return this.rootNode.options}set selectedIndex(t){this.rootNode.selectedIndex=t}update(){let t=this.states.sdks.getValue();for(let e=0;e<t.length;e++)this.idToIndexMap.set(t[e].id,e);super.update()}createNodes(){let t=this.states.sdks.getValue(),e="";for(let s=0;s<t.length;s++){let a=t[s];e+=`<option value="${a.id}">${a.name}</option>`}return k(e)}moveSelectedOptionUp(){let t=this.selectedIndex,e=Math.max(t-1,0);this.states.sdks.setValue(s=>{[s[e],s[t]]=[s[t],s[e]]}),this.selectedIndex=e}moveSelectedOptionDown(){let t=this.selectedIndex,e=Math.min(t+1,this.options.length-1);this.states.sdks.setValue(s=>{[s[e],s[t]]=[s[t],s[e]]}),this.selectedIndex=e}},T=class extends x{constructor(t){super(t),this.cellToSDKIDs={}}update(){super.update();for(let[t,e]of Object.entries(this.cellToSDKIDs))document.getElementById(t).addEventListener("click",()=>{this.states.data.setValue(a=>{a["selected-cell"]["from-sdk"]=e["from-sdk"],a["selected-cell"]["to-sdk"]=e["to-sdk"]})})}createNodes(){let t=this.states.data.getValue(),e=this.states["from-sdks"].getValue(),s=this.states["to-sdks"].getValue(),a=[...e],m=[...s];a.push({id:null,name:"(none)"}),m.push({id:null,name:"(none)"});let h=a.length,c=m.length,o="";o+="<tr>",o+="<th></th>",o+=`<th colspan="${c+1}">To SDK</th>`,o+="</tr>",o+="<tr>",o+=`<th rowspan="${h+2}">From SDK</th>`,o+="</tr>",o+="<tr>",o+="<th></th>";for(let i=0;i<c;i++)o+=`<th>${m[i].name}</th>`;o+="</tr>";let r=t["active-data"],n=t.data[r];for(let i=0;i<n.length;i++){let p=n[i];o+="<tr>",o+=`<th>${a[i].name}</th>`;for(let l=0;l<p.length;l++){let D=p[l];r=="normalized"&&(D=`${(D*100).toFixed(0)}%`);let u=`cmc-${i}${l}`;o+=`<td id=${u}>${D}</td>`,this.cellToSDKIDs[u]={"from-sdk":a[i].id,"to-sdk":m[l].id}}o+="</tr>"}return k(o)}},b=class extends x{constructor(t){super(t)}createNodes(){let t=this.states.appList.getValue(),e="";for(let s=0;s<t.apps.length;s++){let a=t.apps[s];e+="<div>",e+="  <div>",e+=`    <img src=${a.artwork_large_url}/>`,e+="  </div>",e+="  <div>",e+=`    <h1>${a.name}</h1>`,e+="    <p>",e+=`      <a href=${a.company_url}">`,e+=`      ${a.seller_name}`,e+="      </a>",e+="    </p>",e+="    <p>",e+='      <span class="fa-solid fa-star"></span>',e+=`      ${a.rating}`,e+="    </p>",e+="  </div>",e+="</div>"}return k(e)}};var I="/api/v1";document.addEventListener("DOMContentLoaded",N,!1);var B=class{constructor(){this.selectableFromSDKs=new S([]),this.activeFromSDKs=new S([]),this.selectableToSDKs=new S([]),this.activeToSDKs=new S([]),this.compmatrixData=new S({data:{raw:[],normalized:[]},"active-data":"raw","selected-cell":{"from-sdk":null,"to-sdk":null}}),this.appListData=new S({apps:[],"start-cursor":null,"end-cursor":null}),this.matrixTable=new T("compmatrix"),this.matrixTable.batchSubscribe([{refName:"data",state:this.compmatrixData},{refName:"from-sdks",state:this.activeFromSDKs},{refName:"to-sdks",state:this.activeToSDKs}]),this.matrixTableDataToggler=new v("compmatrix-data-toggle"),this.matrixTableDataToggler.subscribeTo("data",this.compmatrixData),this.fromSDKComboBox=new g("from-sdk-selectables"),this.fromSDKComboBox.subscribeTo("sdks",this.selectableFromSDKs),this.activeFromSDKsList=new g("from-sdk-selected"),this.activeFromSDKsList.subscribeTo("sdks",this.activeFromSDKs),this.toSDKComboBox=new g("to-sdk-selectables"),this.toSDKComboBox.subscribeTo("sdks",this.selectableToSDKs),this.activeToSDKsList=new g("to-sdk-selected"),this.activeToSDKsList.subscribeTo("sdks",this.activeToSDKs),this.fromSDKAddBtn=new f("from-sdk-config-list-add-btn"),this.selectedFromSDKRemoveBtn=new f("from-sdk-selected-remove-btn"),this.selectedFromSDKUpBtn=new f("from-sdk-selected-move-up-btn"),this.selectedFromSDKDownBtn=new f("from-sdk-selected-move-down-btn"),this.toSDKAddBtn=new f("to-sdk-config-list-add-btn"),this.selectedToSDKRemoveBtn=new f("to-sdk-selected-remove-btn"),this.selectedToSDKUpBtn=new f("to-sdk-selected-move-up-btn"),this.selectedToSDKDownBtn=new f("to-sdk-selected-move-down-btn"),this.appList=new b("apps-list"),this.appList.subscribeTo("appList",this.appListData),this.fromSDKAddBtn.setOnClick(()=>{_(this.fromSDKComboBox,this.selectableFromSDKs,this.activeFromSDKs)}),this.selectedFromSDKRemoveBtn.setOnClick(()=>{L(this.fromSDKComboBox,this.activeFromSDKsList,this.selectableFromSDKs,this.activeFromSDKs)}),this.selectedFromSDKUpBtn.setOnClick(()=>{this.activeFromSDKsList.moveSelectedOptionUp()}),this.selectedFromSDKDownBtn.setOnClick(()=>{this.activeFromSDKsList.moveSelectedOptionDown()}),this.toSDKAddBtn.setOnClick(()=>{_(this.toSDKComboBox,this.selectableToSDKs,this.activeToSDKs)}),this.selectedToSDKRemoveBtn.setOnClick(()=>{L(this.toSDKComboBox,this.activeToSDKsList,this.selectableToSDKs,this.activeToSDKs)}),this.selectedToSDKUpBtn.setOnClick(()=>{this.activeToSDKsList.moveSelectedOptionUp()}),this.selectedToSDKDownBtn.setOnClick(()=>{this.activeToSDKsList.moveSelectedOptionDown()}),this.compmatrixData.addReactor(()=>{this.#e()}),this.activeFromSDKs.addReactor(()=>{this.#t()}),this.activeToSDKs.addReactor(()=>{this.#t()})}async init(){this.#s(),this.#e()}async#s(){let t=`${I}/sdks`;try{let a=(await(await fetch(t)).json()).data.sdks,m=[];for(let h=0;h<a.length;h++)m.push({id:a[h].id,name:a[h].name});this.selectableFromSDKs.setValue(structuredClone(m)),this.selectableToSDKs.setValue(structuredClone(m))}catch(e){console.error(e.message)}}async#t(){let t=`${I}/sdk-compmatrix/numbers`,e=this.activeFromSDKs.getValue().map(n=>n.id),s=this.activeToSDKs.getValue().map(n=>n.id),a=[];e.length!==0?a.push(...e.map(n=>["from_sdks",n])):a.push(["from_sdks",""]),s.length!==0?a.push(...s.map(n=>["to_sdks",n])):a.push(["to_sdks",""]);let h=new URLSearchParams(a).toString(),c;try{c=await(await fetch(`${t}?${h}`)).json()}catch(n){console.error(n.message)}let o=c.data.numbers,r=[];for(let n=0;n<c.data.numbers.length;n++){let i=c.data.numbers[n],p=i.reduce((D,u)=>D+u,0),l=[];for(let D=0;D<i.length;D++)l.push(i[D]/p);r.push(l)}this.compmatrixData.setValue(n=>{n.data.raw=o,n.data.normalized=r})}async#e(){let t=`${I}/sdk-compmatrix/apps`,e=this.compmatrixData.getValue(),s=e["selected-cell"]["from-sdk"],a=e["selected-cell"]["to-sdk"],m=this.activeFromSDKs.getValue(),h=this.activeToSDKs.getValue(),c=m.filter(l=>s!==null?l.id!=s.id:!0),o=h.filter(l=>a!==null?l.id!=a.id:!0),r=[];s!==null?r.push(["from_sdk",s]):c.length!==0&&r.push(...c.map(l=>["other_from_sdks",l.id])),a!==null?r.push(["to_sdk",a]):o.length!==0&&r.push(...o.map(l=>["other_to_sdks",l.id])),r.push(["count",50]);let i=new URLSearchParams(r).toString(),p;try{p=await(await fetch(`${t}?${i}`)).json()}catch(l){console.error(l.message)}this.appListData.setValue(l=>{l.apps=[];for(let D=0;D<p.data.apps.length;D++){let u=p.data.apps[D],C=null;u.company_url!=""&&(C=u.company_url);let w=u.five_star_ratings;w+=u.four_star_ratings,w+=u.three_star_ratings,w+=u.two_star_ratings,w+=u.one_star_ratings;let K=0;K+=u.five_star_ratings*5,K+=u.four_star_ratings*4,K+=u.three_star_ratings*3,K+=u.two_star_ratings*2,K+=u.one_star_ratings*1,K/=w,l.apps.push({name:u.name,seller_name:u.seller_name,company_url:C,artwork_large_url:u.artwork_large_url,rating:K})}l["start-cursor"]=p.data.start_cursor,l["end-cursor"]=p.data.end_cursor})}};function N(){new B().init()}})();
+(() => {
+  // py/compmatrix/client/assets/raw/js/fetching.js
+  var DataState = class {
+    static #_EMPTY = 0;
+    // Data was just initialized.
+    static #_LOADING = 1;
+    static #_ERRORED = 2;
+    static #_LOADED = 3;
+    static get EMPTY() {
+      return this.#_EMPTY;
+    }
+    static get LOADING() {
+      return this.#_LOADING;
+    }
+    static get ERRORED() {
+      return this.#_ERRORED;
+    }
+    static get LOADED() {
+      return this.#_LOADED;
+    }
+  };
+
+  // py/compmatrix/client/assets/raw/js/interactivity.js
+  function moveSDKFromComboBoxToList(comboBox, selectableSDKs, activeSDKs) {
+    const selectedIndex = comboBox.selectedIndex;
+    activeSDKs.setValue((v) => {
+      v.push(selectableSDKs.getValue()[selectedIndex]);
+    });
+    selectableSDKs.setValue((v) => {
+      v.splice(selectedIndex, 1);
+    });
+    const newSelectedIndex = Math.min(
+      selectedIndex,
+      comboBox.options.length - 1
+    );
+    comboBox.selectedIndex = newSelectedIndex;
+  }
+  function moveSDKFromListToComboBox(comboBox, activeSDKsList, selectableSDKs, activeSDKs) {
+    const activeSelectedIndex = activeSDKsList.selectedIndex;
+    const comboBoxSelectedIndex = comboBox.selectedIndex;
+    let comboBoxIndexOffset = 0;
+    const comboBoxSDKName = selectableSDKs.getValue()[comboBoxSelectedIndex].name;
+    const activeSDKName = activeSDKs.getValue()[activeSelectedIndex].name;
+    if (comboBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase() && comboBoxSDKName > activeSDKName) {
+      comboBoxIndexOffset = 1;
+    }
+    selectableSDKs.setValue((v) => {
+      v.push(activeSDKs.getValue()[activeSelectedIndex]);
+      v.sort((a, b) => {
+        if (a.name.toLowerCase() < b.name.toLowerCase()) {
+          return -1;
+        } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
+    });
+    activeSDKs.setValue((v) => {
+      v.splice(activeSelectedIndex, 1);
+    });
+    const newCBSelIndex = comboBoxSelectedIndex + comboBoxIndexOffset;
+    comboBox.selectedIndex = newCBSelIndex;
+    const newListSelectedIndex = Math.min(
+      activeSelectedIndex,
+      activeSDKsList.options.length - 1
+    );
+    activeSDKsList.selectedIndex = newListSelectedIndex;
+  }
+
+  // py/compmatrix/client/assets/raw/js/state.js
+  var State = class {
+    // Note: We're not using the get and set property syntax since the usage
+    //       will be awkward when passing a function to the setter (which we
+    //       allow so that modification of the internal value can be modified
+    //       more easily). For example:
+    //
+    //         s.value = (v) => { v.push('Come inside of my heart'); };
+    //
+    //       feels like I'm setting the value of state `s` to a function.
+    //       On the contrary:
+    //
+    //         s.setValue((v) => { v.push('If you\'re looking for answers'); }
+    //
+    //       feels more natural.
+    constructor(initialValue) {
+      this.value = initialValue;
+      this.subscriptions = [];
+    }
+    getValue() {
+      return this.value;
+    }
+    setValue(v) {
+      if (typeof v === "function") {
+        v(this.value);
+      } else {
+        this.value = v;
+      }
+      for (const f of this.subscriptions) {
+        f(this.value);
+      }
+    }
+    addReactor(f, runOnAdd = true, prioritize = false) {
+      if (prioritize) {
+        this.subscriptions.unshift(f);
+      } else {
+        this.subscriptions.push(f);
+      }
+      if (runOnAdd) {
+        f(this.value);
+      }
+    }
+  };
+
+  // py/compmatrix/client/assets/raw/js/html.js
+  function htmlToNodes(html) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    return template.content.childNodes;
+  }
+
+  // py/compmatrix/client/assets/raw/js/udomdiff.js
+  var udomdiff_default = (parentNode, a, b, get, before) => {
+    const bLength = b.length;
+    let aEnd = a.length;
+    let bEnd = bLength;
+    let aStart = 0;
+    let bStart = 0;
+    let map = null;
+    while (aStart < aEnd || bStart < bEnd) {
+      if (aEnd === aStart) {
+        const node = bEnd < bLength ? bStart ? get(b[bStart - 1], -0).nextSibling : get(b[bEnd - bStart], 0) : before;
+        while (bStart < bEnd)
+          parentNode.insertBefore(get(b[bStart++], 1), node);
+      } else if (bEnd === bStart) {
+        while (aStart < aEnd) {
+          if (!map || !map.has(a[aStart]))
+            parentNode.removeChild(get(a[aStart], -1));
+          aStart++;
+        }
+      } else if (a[aStart] === b[bStart]) {
+        aStart++;
+        bStart++;
+      } else if (a[aEnd - 1] === b[bEnd - 1]) {
+        aEnd--;
+        bEnd--;
+      } else if (a[aStart] === b[bEnd - 1] && b[bStart] === a[aEnd - 1]) {
+        const node = get(a[--aEnd], -1).nextSibling;
+        parentNode.insertBefore(
+          get(b[bStart++], 1),
+          get(a[aStart++], -1).nextSibling
+        );
+        parentNode.insertBefore(get(b[--bEnd], 1), node);
+        a[aEnd] = b[bEnd];
+      } else {
+        if (!map) {
+          map = /* @__PURE__ */ new Map();
+          let i = bStart;
+          while (i < bEnd)
+            map.set(b[i], i++);
+        }
+        if (map.has(a[aStart])) {
+          const index = map.get(a[aStart]);
+          if (bStart < index && index < bEnd) {
+            let i = aStart;
+            let sequence = 1;
+            while (++i < aEnd && i < bEnd && map.get(a[i]) === index + sequence)
+              sequence++;
+            if (sequence > index - bStart) {
+              const node = get(a[aStart], 0);
+              while (bStart < index)
+                parentNode.insertBefore(get(b[bStart++], 1), node);
+            } else {
+              parentNode.replaceChild(
+                get(b[bStart++], 1),
+                get(a[aStart++], -1)
+              );
+            }
+          } else
+            aStart++;
+        } else
+          parentNode.removeChild(get(a[aStart++], -1));
+      }
+    }
+    return b;
+  };
+
+  // py/compmatrix/client/assets/raw/js/widgets.js
+  var Widget = class {
+    constructor(rootNodeID) {
+      this.rootNode = document.getElementById(rootNodeID);
+      this.nodes = [];
+      this.states = {};
+    }
+    subscribeTo(refName, state) {
+      this.states[refName] = state;
+      state.addReactor(() => {
+        this.update();
+      });
+    }
+    batchSubscribe(states) {
+      for (let i = 0; i < states.length; i++) {
+        const state = states[i];
+        this.states[state["refName"]] = state["state"];
+        state.state.addReactor(() => {
+          this.update();
+        }, false, false);
+      }
+      this.update();
+    }
+    update() {
+      this.nodes = this.createNodes();
+      this.render();
+    }
+    createNodes() {
+      return [];
+    }
+    render() {
+      udomdiff_default(
+        this.rootNode,
+        [...this.rootNode.childNodes],
+        [...this.nodes],
+        (o) => o
+      );
+    }
+  };
+  var Button = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+    }
+    setOnClick(f) {
+      this.rootNode.addEventListener("click", f);
+    }
+  };
+  var CompMatrixDataToggler = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+      this.rootNode.addEventListener("change", (e) => {
+        if (e.target.checked) {
+          this.states["data"].setValue((s) => {
+            s["active-data"] = "normalized";
+          });
+        } else {
+          this.states["data"].setValue((s) => {
+            s["active-data"] = "raw";
+          });
+        }
+      });
+    }
+  };
+  var SDKSelect = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+      this.idToIndexMap = /* @__PURE__ */ new Map();
+    }
+    get value() {
+      return Number(this.rootNode.value);
+    }
+    get selectedIndex() {
+      return this.idToIndexMap.get(this.value);
+    }
+    get options() {
+      return this.rootNode.options;
+    }
+    set selectedIndex(newIndex) {
+      this.rootNode.selectedIndex = newIndex;
+    }
+    update() {
+      const sdks = this.states["sdks"].getValue();
+      for (let i = 0; i < sdks.length; i++) {
+        this.idToIndexMap.set(sdks[i].id, i);
+      }
+      super.update();
+    }
+    createNodes() {
+      const sdks = this.states["sdks"].getValue();
+      let html = "";
+      for (let i = 0; i < sdks.length; i++) {
+        const sdk = sdks[i];
+        html += `<option value="${sdk.id}">${sdk.name}</option>`;
+      }
+      return htmlToNodes(html);
+    }
+    moveSelectedOptionUp() {
+      const selectedID = this.selectedIndex;
+      const newIndex = Math.max(selectedID - 1, 0);
+      this.states["sdks"].setValue((v) => {
+        [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
+      });
+      this.selectedIndex = newIndex;
+    }
+    moveSelectedOptionDown() {
+      const selectedID = this.selectedIndex;
+      const newIndex = Math.min(
+        selectedID + 1,
+        this.options.length - 1
+      );
+      this.states["sdks"].setValue((v) => {
+        [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
+      });
+      this.selectedIndex = newIndex;
+    }
+  };
+  var CompMatrix = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+      this.cellToSDKIDs = {};
+    }
+    update() {
+      this.cellToSDKIDs = {};
+      super.update();
+      const data = this.states["data"].getValue();
+      const dataState = data["state"];
+      if (dataState == DataState.LOADED) {
+        for (const [key, sdks] of Object.entries(this.cellToSDKIDs)) {
+          const cell = document.getElementById(key);
+          cell.addEventListener("click", () => {
+            this.states["data"].setValue((v) => {
+              v["selected-cell"]["from-sdk"] = sdks["from-sdk"];
+              v["selected-cell"]["to-sdk"] = sdks["to-sdk"];
+            });
+          });
+        }
+      }
+    }
+    createNodes() {
+      const data = this.states["data"].getValue();
+      const dataState = data["state"];
+      let html = "";
+      const fromSDKData = this.states["from-sdks"].getValue();
+      const toSDKData = this.states["to-sdks"].getValue();
+      const fromSDKHeaders = [...fromSDKData];
+      const toSDKHeaders = [...toSDKData];
+      fromSDKHeaders.push({ "id": null, "name": "(none)" });
+      toSDKHeaders.push({ "id": null, "name": "(none)" });
+      const numFromSDKsHeaders = fromSDKHeaders.length;
+      const numToSDKsHeaders = toSDKHeaders.length;
+      html += "<tr>";
+      html += "<th></th>";
+      html += `<th colspan="${numToSDKsHeaders + 1}">To SDK</th>`;
+      html += "</tr>";
+      html += "<tr>";
+      html += `<th rowspan="${numFromSDKsHeaders + 2}">From SDK</th>`;
+      html += "</tr>";
+      if (dataState == DataState.LOADED) {
+        html += "<tr>";
+        html += "<th></th>";
+        for (let i = 0; i < numToSDKsHeaders; i++) {
+          html += `<th>${toSDKHeaders[i]["name"]}</th>`;
+        }
+        html += "</tr>";
+        const activeData = data["active-data"];
+        const presentedData = data["data"][activeData];
+        for (let i = 0; i < presentedData.length; i++) {
+          const rowData = presentedData[i];
+          html += "<tr>";
+          html += `<th>${fromSDKHeaders[i]["name"]}</th>`;
+          for (let j = 0; j < rowData.length; j++) {
+            let cellData = rowData[j];
+            if (activeData == "normalized") {
+              cellData = `${(cellData * 100).toFixed(0)}%`;
+            }
+            const id = `cmc-${i}${j}`;
+            html += `<td id=${id}>${cellData}</td>`;
+            this.cellToSDKIDs[id] = {
+              "from-sdk": fromSDKHeaders[i]["id"],
+              "to-sdk": toSDKHeaders[j]["id"]
+            };
+          }
+          html += "</tr>";
+        }
+      } else if (dataState == DataState.LOADING) {
+        html += "<tr>";
+        html += "<td>";
+        html += '<span class="fas fa-circle-notch fa-spin"></span>';
+        html += "</td>";
+        html += "</tr>";
+      }
+      return htmlToNodes(html);
+    }
+  };
+  var AppList = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+    }
+    // TODO: - Find a way to load the next batch of apps when a certain div
+    //         becomes visible.
+    //       - Allow updating the app list when a cell in the matrix is
+    //         clicked.
+    createNodes() {
+      const appList = this.states["appList"].getValue();
+      let html = "";
+      for (let i = 0; i < appList["apps"].length; i++) {
+        const app = appList["apps"][i];
+        html += "<div>";
+        html += "  <div>";
+        html += `    <img src=${app["artwork_large_url"]}/>`;
+        html += "  </div>";
+        html += "  <div>";
+        html += `    <h1>${app["name"]}</h1>`;
+        html += "    <p>";
+        html += `      <a href=${app["company_url"]}">`;
+        html += `      ${app["seller_name"]}`;
+        html += "      </a>";
+        html += "    </p>";
+        html += "    <p>";
+        html += '      <span class="fa-solid fa-star"></span>';
+        html += `      ${app["rating"]}`;
+        html += "    </p>";
+        html += "  </div>";
+        html += "</div>";
+      }
+      return htmlToNodes(html);
+    }
+  };
+
+  // py/compmatrix/client/assets/raw/js/app.js
+  var BASE_API_ENDPOINT = "/api/v1";
+  document.addEventListener("DOMContentLoaded", onDocumentLoad, false);
+  var App = class {
+    constructor() {
+      this.selectableFromSDKs = new State([]);
+      this.activeFromSDKs = new State([]);
+      this.selectableToSDKs = new State([]);
+      this.activeToSDKs = new State([]);
+      this.compmatrixData = new State({
+        "data": {
+          "raw": [],
+          "normalized": []
+        },
+        "state": DataState.EMPTY,
+        "active-data": "raw",
+        "selected-cell": {
+          "from-sdk": null,
+          "to-sdk": null
+        }
+      });
+      this.appListData = new State({
+        "apps": [],
+        "start-cursor": null,
+        "end-cursor": null
+      });
+      this.matrixTable = new CompMatrix("compmatrix");
+      this.matrixTable.batchSubscribe([
+        { "refName": "data", "state": this.compmatrixData },
+        { "refName": "from-sdks", "state": this.activeFromSDKs },
+        { "refName": "to-sdks", "state": this.activeToSDKs }
+      ]);
+      this.matrixTableDataToggler = new CompMatrixDataToggler(
+        "compmatrix-data-toggle"
+      );
+      this.matrixTableDataToggler.subscribeTo("data", this.compmatrixData);
+      this.fromSDKComboBox = new SDKSelect("from-sdk-selectables");
+      this.fromSDKComboBox.subscribeTo("sdks", this.selectableFromSDKs);
+      this.activeFromSDKsList = new SDKSelect("from-sdk-selected");
+      this.activeFromSDKsList.subscribeTo("sdks", this.activeFromSDKs);
+      this.toSDKComboBox = new SDKSelect("to-sdk-selectables");
+      this.toSDKComboBox.subscribeTo("sdks", this.selectableToSDKs);
+      this.activeToSDKsList = new SDKSelect("to-sdk-selected");
+      this.activeToSDKsList.subscribeTo("sdks", this.activeToSDKs);
+      this.fromSDKAddBtn = new Button("from-sdk-config-list-add-btn");
+      this.selectedFromSDKRemoveBtn = new Button(
+        "from-sdk-selected-remove-btn"
+      );
+      this.selectedFromSDKUpBtn = new Button(
+        "from-sdk-selected-move-up-btn"
+      );
+      this.selectedFromSDKDownBtn = new Button(
+        "from-sdk-selected-move-down-btn"
+      );
+      this.toSDKAddBtn = new Button("to-sdk-config-list-add-btn");
+      this.selectedToSDKRemoveBtn = new Button("to-sdk-selected-remove-btn");
+      this.selectedToSDKUpBtn = new Button("to-sdk-selected-move-up-btn");
+      this.selectedToSDKDownBtn = new Button(
+        "to-sdk-selected-move-down-btn"
+      );
+      this.appList = new AppList("apps-list");
+      this.appList.subscribeTo("appList", this.appListData);
+      this.fromSDKAddBtn.setOnClick(() => {
+        moveSDKFromComboBoxToList(
+          this.fromSDKComboBox,
+          this.selectableFromSDKs,
+          this.activeFromSDKs
+        );
+      });
+      this.selectedFromSDKRemoveBtn.setOnClick(() => {
+        moveSDKFromListToComboBox(
+          this.fromSDKComboBox,
+          this.activeFromSDKsList,
+          this.selectableFromSDKs,
+          this.activeFromSDKs
+        );
+      });
+      this.selectedFromSDKUpBtn.setOnClick(() => {
+        this.activeFromSDKsList.moveSelectedOptionUp();
+      });
+      this.selectedFromSDKDownBtn.setOnClick(() => {
+        this.activeFromSDKsList.moveSelectedOptionDown();
+      });
+      this.toSDKAddBtn.setOnClick(() => {
+        moveSDKFromComboBoxToList(
+          this.toSDKComboBox,
+          this.selectableToSDKs,
+          this.activeToSDKs
+        );
+      });
+      this.selectedToSDKRemoveBtn.setOnClick(() => {
+        moveSDKFromListToComboBox(
+          this.toSDKComboBox,
+          this.activeToSDKsList,
+          this.selectableToSDKs,
+          this.activeToSDKs
+        );
+      });
+      this.selectedToSDKUpBtn.setOnClick(() => {
+        this.activeToSDKsList.moveSelectedOptionUp();
+      });
+      this.selectedToSDKDownBtn.setOnClick(() => {
+        this.activeToSDKsList.moveSelectedOptionDown();
+      });
+      this.compmatrixData.addReactor(() => {
+        this.#fetchNewAppList();
+      });
+      this.activeFromSDKs.addReactor(() => {
+        this.#fetchCompMatrixValues();
+      }, true, true);
+      this.activeToSDKs.addReactor(() => {
+        this.#fetchCompMatrixValues();
+      }, true, true);
+    }
+    async init() {
+      this.#fetchSDKs();
+      this.#fetchNewAppList();
+    }
+    async #fetchSDKs() {
+      const url = `${BASE_API_ENDPOINT}/sdks`;
+      try {
+        const response = await fetch(url);
+        const sdks_json = await response.json();
+        const sdks_data = sdks_json.data.sdks;
+        let sdks = [];
+        for (let i = 0; i < sdks_data.length; i++) {
+          sdks.push({
+            "id": sdks_data[i].id,
+            "name": sdks_data[i].name
+          });
+        }
+        this.selectableFromSDKs.setValue(structuredClone(sdks));
+        this.selectableToSDKs.setValue(structuredClone(sdks));
+      } catch (error) {
+        console.error(error.message);
+      }
+    }
+    async #fetchCompMatrixValues() {
+      const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/numbers`;
+      const fromSDKs = this.activeFromSDKs.getValue().map((s) => s.id);
+      const toSDKs = this.activeToSDKs.getValue().map((s) => s.id);
+      let rawParamPairs = [];
+      if (fromSDKs.length !== 0) {
+        rawParamPairs.push(...fromSDKs.map((s) => ["from_sdks", s]));
+      } else {
+        rawParamPairs.push(["from_sdks", ""]);
+      }
+      if (toSDKs.length !== 0) {
+        rawParamPairs.push(...toSDKs.map((s) => ["to_sdks", s]));
+      } else {
+        rawParamPairs.push(["to_sdks", ""]);
+      }
+      const params = new URLSearchParams(rawParamPairs);
+      const paramString = params.toString();
+      let numbersJSON;
+      try {
+        this.compmatrixData.setValue((v) => {
+          v["state"] = DataState.LOADING;
+        });
+        const response = await fetch(`${url}?${paramString}`);
+        numbersJSON = await response.json();
+      } catch (error) {
+        console.error(error.message);
+        this.compmatrixData.setValue((v) => {
+          v["state"] = DataState.ERRORED;
+        });
+      }
+      const rawValues = numbersJSON.data.numbers;
+      let normalizedValues = [];
+      for (let i = 0; i < numbersJSON.data.numbers.length; i++) {
+        let row = numbersJSON.data.numbers[i];
+        const sum = row.reduce((partialSum, n) => partialSum + n, 0);
+        let normalized = [];
+        for (let j = 0; j < row.length; j++) {
+          normalized.push(row[j] / sum);
+        }
+        normalizedValues.push(normalized);
+      }
+      this.compmatrixData.setValue((v) => {
+        v["data"]["raw"] = rawValues;
+        v["data"]["normalized"] = normalizedValues;
+        v["state"] = DataState.LOADED;
+      });
+    }
+    async #fetchNewAppList() {
+      const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
+      const compmatrixData = this.compmatrixData.getValue();
+      const fromSDKID = compmatrixData["selected-cell"]["from-sdk"];
+      const toSDKID = compmatrixData["selected-cell"]["to-sdk"];
+      const activeFromSDKs = this.activeFromSDKs.getValue();
+      const activeToSDKs = this.activeToSDKs.getValue();
+      const otherFromSDKIDs = activeFromSDKs.filter((s) => {
+        if (fromSDKID !== null) {
+          return s.id != fromSDKID.id;
+        }
+        return true;
+      });
+      const otherToSDKIDs = activeToSDKs.filter((s) => {
+        if (toSDKID !== null) {
+          return s.id != toSDKID.id;
+        }
+        return true;
+      });
+      let rawParamPairs = [];
+      if (fromSDKID !== null) {
+        rawParamPairs.push(["from_sdk", fromSDKID]);
+      } else if (otherFromSDKIDs.length !== 0) {
+        rawParamPairs.push(
+          ...otherFromSDKIDs.map((s) => ["other_from_sdks", s["id"]])
+        );
+      }
+      if (toSDKID !== null) {
+        rawParamPairs.push(["to_sdk", toSDKID]);
+      } else if (otherToSDKIDs.length !== 0) {
+        rawParamPairs.push(
+          ...otherToSDKIDs.map((s) => ["other_to_sdks", s["id"]])
+        );
+      }
+      rawParamPairs.push(["count", 50]);
+      const params = new URLSearchParams(rawParamPairs);
+      const paramString = params.toString();
+      let appsJSON;
+      try {
+        const response = await fetch(`${url}?${paramString}`);
+        appsJSON = await response.json();
+      } catch (error) {
+        console.error(error.message);
+      }
+      this.appListData.setValue((v) => {
+        v["apps"] = [];
+        for (let i = 0; i < appsJSON["data"]["apps"].length; i++) {
+          const app = appsJSON["data"]["apps"][i];
+          let companyURL = null;
+          if (app["company_url"] != "") {
+            companyURL = app["company_url"];
+          }
+          let totalRatings = app["five_star_ratings"];
+          totalRatings += app["four_star_ratings"];
+          totalRatings += app["three_star_ratings"];
+          totalRatings += app["two_star_ratings"];
+          totalRatings += app["one_star_ratings"];
+          let rating = 0;
+          rating += app["five_star_ratings"] * 5;
+          rating += app["four_star_ratings"] * 4;
+          rating += app["three_star_ratings"] * 3;
+          rating += app["two_star_ratings"] * 2;
+          rating += app["one_star_ratings"] * 1;
+          rating /= totalRatings;
+          v["apps"].push({
+            "name": app["name"],
+            "seller_name": app["seller_name"],
+            "company_url": companyURL,
+            "artwork_large_url": app["artwork_large_url"],
+            "rating": rating
+          });
+        }
+        v["start-cursor"] = appsJSON["data"]["start_cursor"];
+        v["end-cursor"] = appsJSON["data"]["end_cursor"];
+      });
+    }
+  };
+  function onDocumentLoad() {
+    const app = new App();
+    app.init();
+  }
+})();

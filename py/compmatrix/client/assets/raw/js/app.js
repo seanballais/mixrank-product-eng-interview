@@ -26,6 +26,7 @@ class App {
                 'raw': [],
                 'normalized': []
             },
+            'state': DataState.EMPTY,
             'active-data': 'raw',
             'selected-cell': {
                 'from-sdk': null,
@@ -134,11 +135,11 @@ class App {
 
         this.activeFromSDKs.addReactor(() => {
             this.#fetchCompMatrixValues();
-        });
+        }, true, true);
 
         this.activeToSDKs.addReactor(() => {
             this.#fetchCompMatrixValues();
-        });
+        }, true, true);
     }
 
     async init() {
@@ -189,10 +190,16 @@ class App {
         const paramString = params.toString();
         let numbersJSON;
         try {
+            this.compmatrixData.setValue((v) => {
+                v['state'] = DataState.LOADING;
+            });
             const response = await fetch(`${url}?${paramString}`);
             numbersJSON = await response.json();
         } catch (error) {
             console.error(error.message);
+            this.compmatrixData.setValue((v) => {
+                v['state'] = DataState.ERRORED;
+            });
         }
 
         const rawValues = numbersJSON.data.numbers;
@@ -212,6 +219,7 @@ class App {
         this.compmatrixData.setValue((v) => {
             v['data']['raw'] = rawValues;
             v['data']['normalized'] = normalizedValues;
+            v['state'] = DataState.LOADED;
         });
     }
 
