@@ -1,20 +1,15 @@
 @import '_colours.scss';
 @import '_controls.scss';
-@import '_fonts.scss';
+@import '_inputs.scss';
+@import '_text.scss';
 
 $matrix-cell-size: 75px;
 
-
-
 body {
     background-color: $bg-colour;
-    color: $main-text-colour;
+    color: $primary-text-colour;
 
     font-family: 'Fivo Sans', Arial, Helvetica, sans-serif;
-
-    button {
-        cursor: pointer;
-    }
 
     main#container {
         h1 {
@@ -28,13 +23,13 @@ body {
             display: flex;
             flex-direction: row;
             justify-content: center;
-            gap: 1.5rem;
+            gap: 2rem;
 
             div {
                 &#matrix {
                     flex-grow: 2;
-                    flex-shrink: 0;
-                    flex-basis: 60%;
+                    flex-shrink: 1;
+                    flex-basis: 50%;
 
                     div#matrix-display {
                         display: flex;
@@ -100,10 +95,19 @@ body {
                                 flex-direction: row;
                                 justify-content: center;
                                 align-items: stretch;
-                                gap: 1.5rem;
+                                gap: 1.75rem;
 
                                 div {
                                     flex-grow: 1;
+                                    flex-shrink: 1;
+                                    flex-basis: 50%;
+
+                                    h1 {
+                                        font-size: $base-text-size;
+                                        font-weight: normal;
+
+                                        color: $secondary-text-colour;
+                                    }
 
                                     &#compmatrix-from-selectables {
                                     }
@@ -118,8 +122,8 @@ body {
 
                 &#apps {
                     flex-grow: 1;
-                    flex-shrink: 0;
-                    flex-basis: 40%;
+                    flex-shrink: 1;
+                    flex-basis: 50%;
                 }
             }
         }

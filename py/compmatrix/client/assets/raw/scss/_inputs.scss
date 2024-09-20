@@ -1,0 +1,64 @@
+@import '_colours.scss';
+@import '_text.scss';
+
+@mixin base-transition-rules {
+    transition: all ease-in-out 0.1s;
+}
+
+select {
+    background-color: $bg-colour;
+    color: $primary-text-colour;
+
+    border: solid 2px $primary-colour;
+    border-radius: 5px;
+
+    overflow: auto;
+
+    scrollbar-color: $primary-colour $bg-colour;
+
+    option {
+        padding: 0.5rem;
+
+        cursor: pointer;
+
+        @include base-transition-rules;
+
+        &:hover, &:checked {
+            background-color: $primary-colour;
+            color: $primary-text-colour;
+
+            // Seems like grey (at least in Edge) is the default background
+            // colour for options inside a select input that is focus-visible.
+            box-shadow: 0 0 1px 100px $primary-colour inset;
+
+            @include base-transition-rules;
+        }
+    }
+
+    &:focus-visible {
+        border: solid 3px $primary-colour;
+        outline: none;
+
+        @include base-transition-rules;
+    }
+}
+
+button {
+    background-color: $primary-colour;
+    color: $primary-text-colour;
+    border: none;
+    border-radius: 5px;
+
+    font-family: 'Fivo Sans', Arial, Helvetica, sans-serif;
+    font-size: $button-text-size;
+
+    cursor: pointer;
+
+    @include base-transition-rules;
+
+    &:hover {
+        background-color: lighten($primary-colour, 10%);
+
+        @include base-transition-rules;
+    }
+}
