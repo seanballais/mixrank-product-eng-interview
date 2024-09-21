@@ -21,6 +21,9 @@ body {
 
     main#container {
         h1 {
+            font-size: 3rem;
+            font-weight: normal;
+
             text-align: center;
         }
 
@@ -33,6 +36,10 @@ body {
             flex-direction: row;
             justify-content: center;
             gap: 2rem;
+
+            h1 {
+                font-size: 1rem;
+            }
 
             div {
                 &#matrix {
@@ -120,6 +127,10 @@ body {
                         flex-direction: column;
                         justify-content: center;
 
+                        h1 {
+                            font-weight: bold;
+                        }
+
                         div {
                             &#compmatrix-toggles {
                                 display: flex;
@@ -156,6 +167,12 @@ body {
                     flex-grow: 1;
                     flex-shrink: 1;
                     flex-basis: 50%;
+
+                    h1 {
+                        font-weight: bold;
+
+                        text-align: left;
+                    }
                 }
             }
         }
