@@ -318,18 +318,48 @@
       this.selectedIndex = newIndex;
     }
   };
+  var AppListDesc = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+    }
+    createNodes() {
+      const appList = this.states["appList"].getValue();
+      let html = "<p>";
+      if (appList["apps"].length == 0) {
+        html += "No apps loaded in yet.";
+      } else {
+        const fromSDK = appList["sdks"]["from-sdk"];
+        const toSDK = appList["sdks"]["to-sdk"];
+        let fromSDKName = "";
+        if (fromSDK === null) {
+          fromSDKName = "(none)";
+        } else {
+          fromSDKName = fromSDK["name"];
+        }
+        let toSDKName = "";
+        if (toSDK === null) {
+          toSDKName = "(none)";
+        } else {
+          toSDKName = toSDK["name"];
+        }
+        html += `Migrated from ${fromSDKName} to ${toSDKName}.`;
+      }
+      html += "</p>";
+      return htmlToNodes(html);
+    }
+  };
   var CompMatrix = class extends Widget {
     constructor(rootNode) {
       super(rootNode);
-      this.cellToSDKIDs = {};
+      this.cellToSDKs = {};
     }
     update() {
-      this.cellToSDKIDs = {};
+      this.cellToSDKs = {};
       super.update();
       const data = this.states["data"].getValue();
       const dataState = data["state"];
       if (dataState == DataState.LOADED) {
-        for (const [key, sdks] of Object.entries(this.cellToSDKIDs)) {
+        for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
           const cell = document.getElementById(key);
           cell.addEventListener("click", () => {
             this.states["data"].setValue((v) => {
@@ -383,9 +413,9 @@
             const colour = `hsla(0, 80%, 55%, ${opacity * 100}%)`;
             const style = `background-color: ${colour}`;
             html += `<td id="${id}" style="${style}">${cellData}</td>`;
-            this.cellToSDKIDs[id] = {
-              "from-sdk": fromSDKHeaders[i]["id"],
-              "to-sdk": toSDKHeaders[j]["id"]
+            this.cellToSDKs[id] = {
+              "from-sdk": fromSDKHeaders[i],
+              "to-sdk": toSDKHeaders[j]
             };
           }
           html += "</tr>";
@@ -458,6 +488,10 @@
       });
       this.appListData = new State({
         "apps": [],
+        "sdks": {
+          "from-sdk": null,
+          "to-sdk": null
+        },
         "start-cursor": null,
         "end-cursor": null
       });
@@ -497,6 +531,8 @@
       );
       this.appList = new AppList("apps-list");
       this.appList.subscribeTo("appList", this.appListData);
+      this.appListDesc = new AppListDesc("app-list-desc");
+      this.appListDesc.subscribeTo("appList", this.appListData);
       this.fromSDKAddBtn.setOnClick(() => {
         moveSDKFromComboBoxToList(
           this.fromSDKComboBox,
@@ -622,32 +658,32 @@
     async #fetchNewAppList() {
       const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
       const compmatrixData = this.compmatrixData.getValue();
-      const fromSDKID = compmatrixData["selected-cell"]["from-sdk"];
-      const toSDKID = compmatrixData["selected-cell"]["to-sdk"];
+      const fromSDK = compmatrixData["selected-cell"]["from-sdk"];
+      const toSDK = compmatrixData["selected-cell"]["to-sdk"];
       const activeFromSDKs = this.activeFromSDKs.getValue();
       const activeToSDKs = this.activeToSDKs.getValue();
       const otherFromSDKIDs = activeFromSDKs.filter((s) => {
-        if (fromSDKID !== null) {
-          return s.id != fromSDKID.id;
+        if (fromSDK !== null) {
+          return s.id != fromSDK["id"];
         }
         return true;
       });
       const otherToSDKIDs = activeToSDKs.filter((s) => {
-        if (toSDKID !== null) {
-          return s.id != toSDKID.id;
+        if (toSDK !== null) {
+          return s.id != toSDKID["id"];
         }
         return true;
       });
       let rawParamPairs = [];
-      if (fromSDKID !== null) {
-        rawParamPairs.push(["from_sdk", fromSDKID]);
+      if (fromSDK !== null) {
+        rawParamPairs.push(["from_sdk", fromSDK["id"]]);
       } else if (otherFromSDKIDs.length !== 0) {
         rawParamPairs.push(
           ...otherFromSDKIDs.map((s) => ["other_from_sdks", s["id"]])
         );
       }
-      if (toSDKID !== null) {
-        rawParamPairs.push(["to_sdk", toSDKID]);
+      if (toSDK !== null) {
+        rawParamPairs.push(["to_sdk", toSDK["id"]]);
       } else if (otherToSDKIDs.length !== 0) {
         rawParamPairs.push(
           ...otherToSDKIDs.map((s) => ["other_to_sdks", s["id"]])
@@ -691,6 +727,8 @@
             "rating": rating
           });
         }
+        v["sdks"]["from-sdk"] = fromSDK;
+        v["sdks"]["to-sdk"] = toSDK;
         v["start-cursor"] = appsJSON["data"]["start_cursor"];
         v["end-cursor"] = appsJSON["data"]["end_cursor"];
       });

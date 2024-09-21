@@ -3,6 +3,7 @@ import * as interactivity from './interactivity.js';
 import { State } from './state.js';
 import {
     AppList,
+    AppListDesc,
     Button,
     CompMatrix,
     CompMatrixDataToggler,
@@ -36,6 +37,10 @@ class App {
 
         this.appListData = new State({
             'apps': [],
+            'sdks': {
+                'from-sdk': null,
+                'to-sdk': null
+            },
             'start-cursor': null,
             'end-cursor': null
         });
@@ -84,6 +89,9 @@ class App {
 
         this.appList = new AppList('apps-list');
         this.appList.subscribeTo('appList', this.appListData);
+
+        this.appListDesc = new AppListDesc('app-list-desc');
+        this.appListDesc.subscribeTo('appList', this.appListData);
 
         this.fromSDKAddBtn.setOnClick(() => {
             interactivity.moveSDKFromComboBoxToList(
@@ -227,30 +235,30 @@ class App {
         const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
 
         const compmatrixData = this.compmatrixData.getValue();
-        const fromSDKID = compmatrixData['selected-cell']['from-sdk'];
-        const toSDKID = compmatrixData['selected-cell']['to-sdk'];
+        const fromSDK = compmatrixData['selected-cell']['from-sdk'];
+        const toSDK = compmatrixData['selected-cell']['to-sdk'];
 
         const activeFromSDKs = this.activeFromSDKs.getValue();
         const activeToSDKs = this.activeToSDKs.getValue();
 
         const otherFromSDKIDs = activeFromSDKs.filter((s) => {
-            if (fromSDKID !== null) {
-                return s.id != fromSDKID.id;
+            if (fromSDK !== null) {
+                return s.id != fromSDK['id'];
             }
 
             return true;
         });
         const otherToSDKIDs = activeToSDKs.filter((s) => {
-            if (toSDKID !== null) {
-                return s.id != toSDKID.id;
+            if (toSDK !== null) {
+                return s.id != toSDKID['id'];
             }
 
             return true;
         });
 
         let rawParamPairs = [];
-        if (fromSDKID !== null) {
-            rawParamPairs.push(['from_sdk', fromSDKID]);
+        if (fromSDK !== null) {
+            rawParamPairs.push(['from_sdk', fromSDK['id']]);
         } else if (otherFromSDKIDs.length !== 0) {
             // We can only specify `other_from_sdks` if `from_sdk` is
             // unspecified.
@@ -259,8 +267,8 @@ class App {
             );
         }
 
-        if (toSDKID !== null) {
-            rawParamPairs.push(['to_sdk', toSDKID]);
+        if (toSDK !== null) {
+            rawParamPairs.push(['to_sdk', toSDK['id']]);
         } else if (otherToSDKIDs.length !== 0) {
             // We can only specify `other_to_sdks` if `to_sdk` is unspecified.
             rawParamPairs.push(
@@ -321,6 +329,8 @@ class App {
                 })
             }
 
+            v['sdks']['from-sdk'] = fromSDK;
+            v['sdks']['to-sdk'] = toSDK;
             v['start-cursor'] = appsJSON['data']['start_cursor'];
             v['end-cursor'] = appsJSON['data']['end_cursor'];
         });

@@ -144,16 +144,53 @@ export class SDKSelect extends Widget {
     }
 }
 
+export class AppListDesc extends Widget {
+    constructor(rootNode) {
+        super(rootNode);
+    }
+
+    createNodes() {
+        const appList = this.states['appList'].getValue();
+
+        let html = '<p>';
+        if (appList['apps'].length == 0) {
+            html += 'No apps loaded in yet.';
+        } else {
+            const fromSDK = appList['sdks']['from-sdk'];
+            const toSDK = appList['sdks']['to-sdk'];
+
+            let fromSDKName = '';
+            if (fromSDK === null) {
+                fromSDKName = '(none)';
+            } else {
+                fromSDKName = fromSDK['name'];
+            }
+
+            let toSDKName = '';
+            if (toSDK === null) {
+                toSDKName = '(none)';
+            } else {
+                toSDKName = toSDK['name'];
+            }
+
+            html += `Migrated from ${fromSDKName} to ${toSDKName}.`;
+        }
+        html += '</p>'
+
+        return htmlToNodes(html);
+    }
+}
+
 export class CompMatrix extends Widget {
     constructor(rootNode) {
         super(rootNode);
 
-        this.cellToSDKIDs = {};
+        this.cellToSDKs = {};
     }
 
     update() {
         // Reset. An update may result in some cells being removed.
-        this.cellToSDKIDs = {};
+        this.cellToSDKs = {};
 
         super.update();
 
@@ -161,7 +198,7 @@ export class CompMatrix extends Widget {
         const dataState = data['state'];
 
         if (dataState == DataState.LOADED) {
-            for (const [key, sdks] of Object.entries(this.cellToSDKIDs)) {
+            for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
                 const cell = document.getElementById(key);
                 cell.addEventListener('click', () => {
                     this.states['data'].setValue((v) => {
@@ -226,9 +263,9 @@ export class CompMatrix extends Widget {
                     const style = `background-color: ${colour}`;
                     html += `<td id="${id}" style="${style}">${cellData}</td>`;
 
-                    this.cellToSDKIDs[id] = {
-                        'from-sdk': fromSDKHeaders[i]['id'],
-                        'to-sdk': toSDKHeaders[j]['id']
+                    this.cellToSDKs[id] = {
+                        'from-sdk': fromSDKHeaders[i],
+                        'to-sdk': toSDKHeaders[j]
                     };
                 }
                 html += '</tr>';
