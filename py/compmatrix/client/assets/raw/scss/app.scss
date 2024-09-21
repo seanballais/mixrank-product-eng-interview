@@ -5,6 +5,10 @@
 
 $matrix-cell-size: 75px;
 
+h1 {
+    font-size: 1rem;
+}
+
 body {
     background-color: $bg-colour;
     color: $primary-text-colour;
@@ -112,14 +116,16 @@ body {
                     div#matrix-config {
                         margin-bottom: 1rem;
 
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+
                         div {
                             &#compmatrix-toggles {
                                 display: flex;
                                 flex-direction: row;
                                 justify-content: center;
                                 align-items: center;
-
-                                margin-bottom: 1rem;
                             }
 
                             &#compmatrix-selectables {
@@ -139,12 +145,6 @@ body {
                                         font-weight: normal;
 
                                         color: $secondary-text-colour;
-                                    }
-
-                                    &#compmatrix-from-selectables {
-                                    }
-        
-                                    &#compmatrix-to-selectables {
                                     }
                                 }
                             }
