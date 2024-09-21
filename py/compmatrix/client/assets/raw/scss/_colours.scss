@@ -1,5 +1,9 @@
+$white: hsl(0, 0%, 100%);
+
 $primary-colour: hsl(0, 80%, 55%);
 $primary-colour-darker: hsl(355, 74%, 39%);
+$secondary-colour: hsl(0, 0%, 15%);
+$secondary-colour-lighter: lighten($secondary-colour, 15%);
 $bg-colour: hsl(0, 0%, 0%);
-$primary-text-colour: hsl(0, 0%, 100%);
+$primary-text-colour: $white;
 $secondary-text-colour: hsl(0, 0%, 71%);

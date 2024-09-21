@@ -1,8 +1,71 @@
 @import '_colours.scss';
 @import '_text.scss';
 
-@mixin base-transition-rules {
-    transition: all ease-in-out 0.1s;
+// Based on:
+//   https://alvaromontoro.com/blog/68017/creating-a-css-only-toggle-switch
+input:where([type='checkbox'][role='switch']).toggle-switch {
+    box-sizing: content-box;
+    position: relative;
+
+    appearance: none;
+
+    width: 4em;
+    height: 2em;
+
+    margin-right: 0.5rem;
+
+    cursor: pointer;
+
+    background-color: $secondary-colour;
+    color: $primary-text-colour;
+
+    font-size: inherit;
+    border-radius: 1em;
+
+    vertical-align: text-bottom;
+
+    &:hover {
+        background-color: $secondary-colour-lighter;
+    }
+
+    &:checked {
+        background-color: $primary-colour;
+
+        &:hover {
+            background-color: $primary-colour-darker;
+        }
+
+        &::before {
+            left: 2em;
+        }
+    }
+
+    &::before {
+        box-sizing: border-box;
+
+        position: absolute;
+        top: 50%;
+        left: 0.15em;
+
+        width: 1.5em;
+        height: 1.5em;
+
+        margin: 0 0.15em;
+
+        transform: translate(0, -50%);
+
+        background-color: $white;
+
+        border-radius: 50%;
+
+        content: "";
+
+        transition: left ease-in-out 0.2s;
+    }
+
+    &+ label {
+        cursor: pointer;
+    }
 }
 
 select {
