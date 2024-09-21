@@ -14,8 +14,6 @@ body {
     margin: 0 auto;
 
     main#container {
-        max-height: 100vh;
-
         h1 {
             text-align: center;
         }
@@ -36,6 +34,9 @@ body {
                     flex-shrink: 1;
                     flex-basis: 50%;
 
+                    display: flex;
+                    flex-direction: column;
+
                     div#matrix-display {
                         display: flex;
                         flex-direction: row;
@@ -44,12 +45,14 @@ body {
                         margin-bottom: 1rem;
 
                         div#compmatrix-container {
-                            width: 50%;
-                            height: 50%;
-                            max-width: 50%;
-                            max-height: 50%;
+                            width: 600px;
+                            height: 600px;
+                            max-width: 600px;
+                            max-height: 600px;
 
                             overflow: auto;
+
+                            scrollbar-color: $primary-colour $bg-colour;
 
                             display: flex;
                             justify-content: safe center;
