@@ -10,6 +10,8 @@ body {
     color: $primary-text-colour;
 
     font-family: 'Fivo Sans', Arial, Helvetica, sans-serif;
+    font-size: 1rem;
+    font-weight: normal;
 
     margin: 0 auto;
 
@@ -62,8 +64,22 @@ body {
                                 min-width: 100px;
                                 min-height: 100px;
 
+                                font-weight: normal;
+
                                 tr {
                                     text-align: center;
+
+                                    th {
+                                        padding: 1rem;
+
+                                        // Override default `th` font-weight in
+                                        // the user agent stylesheet.
+                                        font-weight: normal;
+                                    }
+
+                                    &:nth-child(-n + 2) {
+                                        color: $secondary-text-colour;
+                                    }
 
                                     &:nth-child(n + 3) {
                                         th {
@@ -74,11 +90,18 @@ body {
                                         td {
                                             width: $matrix-cell-size;
                                             height: $matrix-cell-size;
+
+                                            color: $primary-text-colour;
             
                                             -webkit-user-select: none;
                                             user-select: none;
                                             
                                             cursor: pointer;
+
+                                            &:hover {
+                                                background-color: $primary-colour-darker !important;
+                                                color: $white !important;
+                                            }
                                         }
                                     }
                                 }

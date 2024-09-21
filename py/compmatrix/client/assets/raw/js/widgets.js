@@ -208,6 +208,7 @@ export class CompMatrix extends Widget {
 
             const activeData = data['active-data'];
             const presentedData = data['data'][activeData];
+            const percentageData = data['data']['normalized']
             for (let i = 0; i < presentedData.length; i++) {
                 const rowData = presentedData[i];
                 html += '<tr>';
@@ -218,9 +219,12 @@ export class CompMatrix extends Widget {
                         cellData = `${(cellData * 100).toFixed(0)}%`;
                     }
 
-                    const id = `cmc-${i}${j}`;
+                    const opacity = percentageData[i][j];
 
-                    html += `<td id=${id}>${cellData}</td>`
+                    const id = `cmc-${i}${j}`;
+                    const colour = `hsla(0, 80%, 55%, ${opacity * 100}%)`
+                    const style = `background-color: ${colour}`;
+                    html += `<td id="${id}" style="${style}">${cellData}</td>`;
 
                     this.cellToSDKIDs[id] = {
                         'from-sdk': fromSDKHeaders[i]['id'],

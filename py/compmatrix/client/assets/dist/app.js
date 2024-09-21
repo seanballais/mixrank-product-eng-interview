@@ -368,6 +368,7 @@
         html += "</tr>";
         const activeData = data["active-data"];
         const presentedData = data["data"][activeData];
+        const percentageData = data["data"]["normalized"];
         for (let i = 0; i < presentedData.length; i++) {
           const rowData = presentedData[i];
           html += "<tr>";
@@ -377,8 +378,11 @@
             if (activeData == "normalized") {
               cellData = `${(cellData * 100).toFixed(0)}%`;
             }
+            const opacity = percentageData[i][j];
             const id = `cmc-${i}${j}`;
-            html += `<td id=${id}>${cellData}</td>`;
+            const colour = `hsla(0, 80%, 55%, ${opacity * 100}%)`;
+            const style = `background-color: ${colour}`;
+            html += `<td id="${id}" style="${style}">${cellData}</td>`;
             this.cellToSDKIDs[id] = {
               "from-sdk": fromSDKHeaders[i]["id"],
               "to-sdk": toSDKHeaders[j]["id"]
