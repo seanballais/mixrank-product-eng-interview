@@ -671,7 +671,7 @@
       });
       const otherToSDKIDs = activeToSDKs.filter((s) => {
         if (toSDK !== null) {
-          return s.id != toSDKID["id"];
+          return s.id != toSDK["id"];
         }
         return true;
       });
