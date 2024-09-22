@@ -387,7 +387,9 @@
       html += `<th colspan="${numToSDKsHeaders + 1}">To SDK</th>`;
       html += "</tr>";
       html += "<tr>";
-      html += `<th rowspan="${numFromSDKsHeaders + 2}">From SDK</th>`;
+      html += `<th rowspan="${numFromSDKsHeaders + 2}">`;
+      html += "<span>From SDK</span>";
+      html += "</th>";
       html += "</tr>";
       if (dataState == DataState.LOADED) {
         html += "<tr>";

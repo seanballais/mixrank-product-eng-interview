@@ -48,12 +48,10 @@ body {
                 font-size: 1rem;
             }
 
-            div {
-                &#matrix {
-                    flex-grow: 2;
-                    flex-shrink: 1;
-                    flex-basis: 50%;
+            & > div {
+                flex-basis: 50%;
 
+                &#matrix {
                     display: flex;
                     flex-direction: column;
 
@@ -88,27 +86,41 @@ body {
                                     text-align: center;
 
                                     th {
-                                        padding: 1rem;
+                                        padding: 0.5rem;
 
                                         // Override default `th` font-weight in
                                         // the user agent stylesheet.
                                         font-weight: normal;
                                     }
 
+                                    &:nth-child(1) {
+                                        th {
+                                            height: 0;
+                                        }
+                                    }
+
+                                    &:nth-child(2) {
+                                        th {
+                                            min-width: 0;
+
+                                            span {
+                                                writing-mode: vertical-lr;
+                                                transform: rotate(180deg);
+                                            }
+                                        }
+                                    }
+
                                     &:nth-child(-n + 2) {
                                         color: $secondary-text-colour;
                                     }
 
-                                    &:nth-child(n + 3) {
+                                    &:nth-child(n + 3) {    
                                         th {
-                                            width: $matrix-cell-size;
+                                            min-width: $matrix-cell-size;
                                             height: $matrix-cell-size;
                                         }
-    
-                                        td {
-                                            width: $matrix-cell-size;
-                                            height: $matrix-cell-size;
 
+                                        td {
                                             color: $primary-text-colour;
             
                                             -webkit-user-select: none;
@@ -172,10 +184,6 @@ body {
 
                 &#apps {
                     max-height: 999px;
-
-                    flex-grow: 1;
-                    flex-shrink: 1;
-                    flex-basis: 50%;
 
                     display: flex;
                     flex-direction: column;
