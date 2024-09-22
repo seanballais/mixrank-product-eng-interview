@@ -237,7 +237,37 @@ def test_db_data(app):
                        four_star_ratings=1414778,
                        three_star_ratings=363227,
                        two_star_ratings=95981,
-                       one_star_ratings=145133)
+                       one_star_ratings=145133),
+            models.App(name='Word Collect: Word Games',
+                       company_url='http://superluckycasino.com/',
+                       release_date=_timestamp_to_datetime(
+                           '2017-12-06 00:00:00'),
+                       genre_id=6014,
+                       artwork_large_url='https://is3-ssl.mzstatic.com/image/'
+                                         'thumb/Purple124/v4/b2/c7/40/'
+                                         'b2c7401b-564f-f26d-0e52-'
+                                         '4eb6fd605c67/source/100x100bb.jpg',
+                       seller_name='Super Lucky Games LLC',
+                       five_star_ratings=325947,
+                       four_star_ratings=14640,
+                       three_star_ratings=3010,
+                       two_star_ratings=1384,
+                       one_star_ratings=2250),
+            models.App(name='Airbnb',
+                       company_url='https://airbnb.com',
+                       release_date=_timestamp_to_datetime(
+                           '2010-11-10 00:00:00'),
+                       genre_id=6003,
+                       artwork_large_url='https://is1-ssl.mzstatic.com/image/'
+                                         'thumb/Purple123/v4/d5/e6/79/'
+                                         'd5e67931-1733-791b-ed62-9fab4c6cacab/'
+                                         'source/100x100bb.jpg',
+                       seller_name='Airbnb, Inc.',
+                       five_star_ratings=1483339,
+                       four_star_ratings=202430,
+                       three_star_ratings=38966,
+                       two_star_ratings=11159,
+                       one_star_ratings=30752)
         ]
         # Test data taken from the provided data.db file.
         sdks = [
@@ -298,6 +328,8 @@ def test_db_data(app):
             'sdks': sdks,
             'app_sdks': app_sdks
         }
+
+        db.session.commit()
 
         _delete_model_objects_from_db(app_sdks)
         _delete_model_objects_from_db(sdks)
