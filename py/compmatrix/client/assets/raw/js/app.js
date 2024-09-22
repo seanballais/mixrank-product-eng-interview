@@ -97,14 +97,15 @@ class App {
             interactivity.moveSDKFromComboBoxToList(
                 this.fromSDKComboBox,
                 this.selectableFromSDKs,
+                this.activeFromSDKsList,
                 this.activeFromSDKs
             );
         });
         this.selectedFromSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(
                 this.fromSDKComboBox,
-                this.activeFromSDKsList,
                 this.selectableFromSDKs,
+                this.activeFromSDKsList,
                 this.activeFromSDKs
             );
         });
@@ -119,14 +120,15 @@ class App {
             interactivity.moveSDKFromComboBoxToList(
                 this.toSDKComboBox,
                 this.selectableToSDKs,
+                this.activeToSDKsList,
                 this.activeToSDKs
             )
         });
         this.selectedToSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(
                 this.toSDKComboBox,
-                this.activeToSDKsList,
                 this.selectableToSDKs,
+                this.activeToSDKsList,
                 this.activeToSDKs
             );
         });

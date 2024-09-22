@@ -21,34 +21,39 @@
   };
 
   // py/compmatrix/client/assets/raw/js/interactivity.js
-  function moveSDKFromComboBoxToList(comboBox, selectableSDKs, activeSDKs) {
+  function moveSDKFromComboBoxToList(comboBox, selectableSDKs, activeSDKsList, activeSDKs) {
     const selectables = selectableSDKs.getValue();
+    const actives = activeSDKs.getValue();
     if (selectables.length > 0) {
-      const selectedIndex = comboBox.selectedIndex;
+      const cBoxSelectedIndex = comboBox.selectedIndex;
+      const activeSelectedIndex = activeSDKsList.selectedIndex;
       activeSDKs.setValue((v) => {
-        v.push(selectableSDKs.getValue()[selectedIndex]);
+        v.push(selectableSDKs.getValue()[cBoxSelectedIndex]);
       });
       selectableSDKs.setValue((v) => {
-        v.splice(selectedIndex, 1);
+        v.splice(cBoxSelectedIndex, 1);
       });
       const newSelectedIndex = Math.min(
-        selectedIndex,
+        cBoxSelectedIndex,
         comboBox.options.length - 1
       );
       comboBox.selectedIndex = newSelectedIndex;
+      if (actives.length > 0 && activeSelectedIndex !== null) {
+        activeSDKsList.selectedIndex = activeSelectedIndex;
+      }
     }
   }
-  function moveSDKFromListToComboBox(comboBox, activeSDKsList, selectableSDKs, activeSDKs) {
-    const actives = activeSDKs.getValue();
+  function moveSDKFromListToComboBox(comboBox, selectableSDKs, activeSDKsList, activeSDKs) {
     const selectables = selectableSDKs.getValue();
+    const actives = activeSDKs.getValue();
     if (actives.length > 0) {
-      const activeSelectedIndex = activeSDKsList.selectedIndex;
       const comboBoxSelectedIndex = comboBox.selectedIndex;
+      const activeSelectedIndex = activeSDKsList.selectedIndex;
       let cBoxIdxOffset = 0;
       if (selectables.length > 0) {
-        const cBoxSDKName = selectableSDKs.getValue()[comboBoxSelectedIndex].name.toLowerCase();
-        const activeSDKName = activeSDKs.getValue()[activeSelectedIndex].name.toLowerCase();
-        if (cBoxSDKName >= activeSDKName && cBoxSDKName > activeSDKName) {
+        const cBoxSDKName = selectableSDKs.getValue()[comboBoxSelectedIndex].name;
+        const activeSDKName = activeSDKs.getValue()[activeSelectedIndex].name;
+        if (cBoxSDKName.toLowerCase() >= activeSDKName.toLowerCase() && cBoxSDKName > activeSDKName) {
           cBoxIdxOffset = 1;
         }
       }
@@ -540,14 +545,15 @@
         moveSDKFromComboBoxToList(
           this.fromSDKComboBox,
           this.selectableFromSDKs,
+          this.activeFromSDKsList,
           this.activeFromSDKs
         );
       });
       this.selectedFromSDKRemoveBtn.setOnClick(() => {
         moveSDKFromListToComboBox(
           this.fromSDKComboBox,
-          this.activeFromSDKsList,
           this.selectableFromSDKs,
+          this.activeFromSDKsList,
           this.activeFromSDKs
         );
       });
@@ -561,14 +567,15 @@
         moveSDKFromComboBoxToList(
           this.toSDKComboBox,
           this.selectableToSDKs,
+          this.activeToSDKsList,
           this.activeToSDKs
         );
       });
       this.selectedToSDKRemoveBtn.setOnClick(() => {
         moveSDKFromListToComboBox(
           this.toSDKComboBox,
-          this.activeToSDKsList,
           this.selectableToSDKs,
+          this.activeToSDKsList,
           this.activeToSDKs
         );
       });
