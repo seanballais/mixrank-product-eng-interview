@@ -39,10 +39,11 @@ export function moveSDKFromListToComboBox(
 ) {
     const selectables = selectableSDKs.getValue();
     const actives = activeSDKs.getValue();
-    if (actives.length > 0) {
-        const comboBoxSelectedIndex = comboBox.selectedIndex;
-        const activeSelectedIndex = activeSDKsList.selectedIndex;
-        
+
+    const comboBoxSelectedIndex = comboBox.selectedIndex;
+    const activeSelectedIndex = activeSDKsList.selectedIndex;
+
+    if (actives.length > 0 && activeSelectedIndex !== null) {
         let cBoxIdxOffset = 0;
 
         // We need to do these now before we modify the combo box options and

@@ -46,9 +46,9 @@
   function moveSDKFromListToComboBox(comboBox, selectableSDKs, activeSDKsList, activeSDKs) {
     const selectables = selectableSDKs.getValue();
     const actives = activeSDKs.getValue();
-    if (actives.length > 0) {
-      const comboBoxSelectedIndex = comboBox.selectedIndex;
-      const activeSelectedIndex = activeSDKsList.selectedIndex;
+    const comboBoxSelectedIndex = comboBox.selectedIndex;
+    const activeSelectedIndex = activeSDKsList.selectedIndex;
+    if (actives.length > 0 && activeSelectedIndex !== null) {
       let cBoxIdxOffset = 0;
       if (selectables.length > 0) {
         const cBoxSDKName = selectableSDKs.getValue()[comboBoxSelectedIndex].name;
