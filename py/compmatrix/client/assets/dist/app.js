@@ -678,14 +678,14 @@
         return true;
       });
       let rawParamPairs = [];
-      if (fromSDK !== null) {
+      if (fromSDK !== null && fromSDK["id"] !== null) {
         rawParamPairs.push(["from_sdk", fromSDK["id"]]);
       } else if (otherFromSDKIDs.length !== 0) {
         rawParamPairs.push(
           ...otherFromSDKIDs.map((s) => ["other_from_sdks", s["id"]])
         );
       }
-      if (toSDK !== null) {
+      if (toSDK !== null && toSDK["id"] !== null) {
         rawParamPairs.push(["to_sdk", toSDK["id"]]);
       } else if (otherToSDKIDs.length !== 0) {
         rawParamPairs.push(

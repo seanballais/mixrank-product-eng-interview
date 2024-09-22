@@ -257,7 +257,7 @@ class App {
         });
 
         let rawParamPairs = [];
-        if (fromSDK !== null) {
+        if (fromSDK !== null && fromSDK['id'] !== null) {
             rawParamPairs.push(['from_sdk', fromSDK['id']]);
         } else if (otherFromSDKIDs.length !== 0) {
             // We can only specify `other_from_sdks` if `from_sdk` is
@@ -267,7 +267,7 @@ class App {
             );
         }
 
-        if (toSDK !== null) {
+        if (toSDK !== null && toSDK['id'] !== null) {
             rawParamPairs.push(['to_sdk', toSDK['id']]);
         } else if (otherToSDKIDs.length !== 0) {
             // We can only specify `other_to_sdks` if `to_sdk` is unspecified.
