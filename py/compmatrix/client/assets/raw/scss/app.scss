@@ -193,6 +193,12 @@ body {
                         margin-top: 0.3rem;
                     }
 
+                    div {
+                        &#app-list-desc {
+                            color: $secondary-text-colour;
+                        }
+                    }
+
                     div#apps-list {
                         min-height: 500px;
 
