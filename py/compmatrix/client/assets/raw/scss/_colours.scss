@@ -9,3 +9,4 @@ $bg-colour: $black;
 $primary-text-colour: $white;
 $primary-text-colour-dark: $black;
 $secondary-text-colour: hsl(0, 0%, 71%);
+$secondary-text-colour-lighter: lighten($secondary-text-colour, 15%);

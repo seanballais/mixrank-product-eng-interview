@@ -5,6 +5,10 @@
 
 $matrix-cell-size: 75px;
 
+.app-rating-icon {
+    color: $primary-colour;
+}
+
 h1 {
     font-size: 1rem;
 }
@@ -236,6 +240,10 @@ body {
                                             a {
                                                 color: $secondary-text-colour;
                                                 text-decoration: none;
+
+                                                &:hover {
+                                                    color: $secondary-text-colour-lighter;
+                                                }
                                             }
                                         }
                                     }
