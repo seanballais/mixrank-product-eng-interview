@@ -20,9 +20,11 @@ body {
     margin: 0 auto;
 
     main#container {
+        min-height: 100vh;
+
         h1 {
             font-size: 3rem;
-            font-weight: normal;
+            font-weight: normal !important;
 
             text-align: center;
         }
@@ -31,6 +33,7 @@ body {
             max-width: 1200px;
 
             margin: 0 auto;
+            margin-bottom: 2rem;
 
             display: flex;
             flex-direction: row;
@@ -164,11 +167,17 @@ body {
                 }
 
                 &#apps {
+                    max-height: 999px;
+
                     flex-grow: 1;
                     flex-shrink: 1;
                     flex-basis: 50%;
 
+                    display: flex;
+                    flex-direction: column;
+
                     h1 {
+                        margin-top: 0;
                         margin-bottom: 0.3rem;
 
                         font-weight: bold;
@@ -178,6 +187,61 @@ body {
 
                     p {
                         margin-top: 0.3rem;
+                    }
+
+                    div#apps-list {
+                        min-height: 500px;
+
+                        overflow: auto;
+
+                        display: flex;
+                        flex-direction: row;
+                        flex-wrap: wrap;
+                        gap: 1.5rem;                        
+
+                        @include scrollbar-styling;
+
+                        div.app-card {
+                            flex-grow: 1;
+                            flex-shrink: 1;
+                            flex-basis: 40%;
+
+                            display: flex;
+                            flex-direction: row;
+                            gap: 0.5rem;
+
+                            div {
+                                &.app-card-icon {
+                                    img {
+                                        width: 55px;
+                                        height: 55px;
+
+                                        border-radius: 10px;
+                                    }
+                                }
+
+                                &.app-card-info {
+                                    h1 {
+                                        margin-top: 0.25rem;
+                                        margin-bottom: 0.5rem;
+                                    }
+
+                                    p {
+                                        margin-top: 0.5rem;
+                                        margin-bottom: 0.5rem;
+
+                                        color: $secondary-text-colour;
+
+                                        &.app-card-info-company {
+                                            a {
+                                                color: $secondary-text-colour;
+                                                text-decoration: none;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

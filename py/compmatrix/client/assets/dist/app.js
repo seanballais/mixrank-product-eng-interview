@@ -443,20 +443,21 @@
       let html = "";
       for (let i = 0; i < appList["apps"].length; i++) {
         const app = appList["apps"][i];
-        html += "<div>";
-        html += "  <div>";
+        html += '<div class="app-card">';
+        html += '  <div class="app-card-icon">';
         html += `    <img src=${app["artwork_large_url"]}/>`;
         html += "  </div>";
-        html += "  <div>";
+        html += '  <div class="app-card-info">';
         html += `    <h1>${app["name"]}</h1>`;
-        html += "    <p>";
+        html += '    <p class="app-card-info-company">';
         html += `      <a href=${app["company_url"]}">`;
         html += `      ${app["seller_name"]}`;
         html += "      </a>";
         html += "    </p>";
         html += "    <p>";
-        html += '      <span class="fa-solid fa-star"></span>';
-        html += `      ${app["rating"]}`;
+        html += '      <span class="fa-solid fa-star app-rating-icon">';
+        html += "      </span>";
+        html += `      ${app["rating"].toFixed(2)}`;
         html += "    </p>";
         html += "  </div>";
         html += "</div>";

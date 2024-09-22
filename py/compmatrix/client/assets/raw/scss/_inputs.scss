@@ -1,4 +1,5 @@
 @import '_colours.scss';
+@import '_controls.scss';
 @import '_text.scss';
 
 // Based on:
@@ -79,7 +80,7 @@ select {
 
     overflow: auto;
 
-    scrollbar-color: $primary-colour $bg-colour;
+    @include scrollbar-styling;
 
     option {
         padding: 0.5rem;

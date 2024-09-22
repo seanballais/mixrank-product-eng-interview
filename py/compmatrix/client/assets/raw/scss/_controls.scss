@@ -1,3 +1,7 @@
+@mixin scrollbar-styling {
+    scrollbar-color: $primary-colour $bg-colour;
+}
+
 div {
     &.sdk-activator-control {
         margin-bottom: 1rem;
