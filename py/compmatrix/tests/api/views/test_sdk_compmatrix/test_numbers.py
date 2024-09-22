@@ -22,6 +22,7 @@ def test_all_row_cols(client, test_db_data, sdk_ids):
     # PayPal     |      4 |       3 |          3 |      0 |
     # card.io    |      2 |       5 |          3 |      2 |
     # Chartboost |      3 |       3 |          4 |      0 |
+    # (none)     |      0 |       0 |          0 |      3 |
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': sdk_ids
@@ -34,7 +35,8 @@ def test_all_row_cols(client, test_db_data, sdk_ids):
             'numbers': [
                 [4, 3, 3, 0],
                 [2, 5, 3, 2],
-                [3, 3, 4, 0]
+                [3, 3, 4, 0],
+                [0, 0, 0, 3]
             ]
         }
     }
@@ -52,6 +54,7 @@ def test_all_row_one_cols(client, test_db_data, sdk_ids):
     # PayPal     |      4 |      6 |
     # card.io    |      2 |     10 |
     # Chartboost |      3 |      7 |
+    # (none)     |      0 |      3 |
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': [sdk_ids[0]]
@@ -64,7 +67,8 @@ def test_all_row_one_cols(client, test_db_data, sdk_ids):
             'numbers': [
                 [4, 6],
                 [2, 10],
-                [3, 7]
+                [3, 7],
+                [0, 3]
             ]
         }
     }
@@ -80,7 +84,7 @@ def test_one_row_one_cols(client, test_db_data, sdk_ids):
     #            | PayPal | (none) |
     # -----------+--------+--------|
     # card.io    |      2 |     10 |
-    # (none)     |      4 |      8 |
+    # (none)     |      4 |     11 |
     query_string = {
         'from_sdks': [sdk_ids[1]],
         'to_sdks': [sdk_ids[0]]
@@ -92,7 +96,7 @@ def test_one_row_one_cols(client, test_db_data, sdk_ids):
         'data': {
             'numbers': [
                 [2, 10],
-                [4, 8]
+                [4, 10]
             ]
         }
     }
@@ -108,7 +112,7 @@ def test_one_row_one_cols2(client, test_db_data, sdk_ids):
     #           | PayPal | (none) |
     # ----------+--------+--------|
     # Paypal    |      4 |      6 |
-    # (none)    |      3 |     11 |
+    # (none)    |      3 |     14 |
     query_string = {
         'from_sdks': [sdk_ids[0]],
         'to_sdks': [sdk_ids[0]]
@@ -120,7 +124,7 @@ def test_one_row_one_cols2(client, test_db_data, sdk_ids):
         'data': {
             'numbers': [
                 [4, 6],
-                [3, 11]
+                [3, 13]
             ]
         }
     }
@@ -135,7 +139,7 @@ def test_one_row_all_cols(client, test_db_data, sdk_ids):
     #         | PayPal | card.io | Chartboost | (none) |
     # --------+--------+---------+------------+--------|
     # card.io |      2 |       5 |          3 |      2 |
-    # (none)  |      4 |       4 |          4 |      0 |
+    # (none)  |      4 |       4 |          4 |      3 |
     query_string = {
         'from_sdks': [sdk_ids[1]],
         'to_sdks': sdk_ids
@@ -147,7 +151,7 @@ def test_one_row_all_cols(client, test_db_data, sdk_ids):
         'data': {
             'numbers': [
                 [2, 5, 3, 2],
-                [4, 4, 4, 0]
+                [4, 4, 4, 3]
             ]
         }
     }
@@ -164,6 +168,7 @@ def test_all_row_cols_shuffled1(client, test_db_data, sdk_ids):
     # Chartboost |          4 |       3 |      3 |      0 |
     # card.io    |          3 |       5 |      2 |      2 |
     # PayPal     |          3 |       3 |      4 |      0 |
+    # (none)     |          0 |       0 |      0 |      3 |
     shuffled_sdk_ids: list[int] = [sdk_ids[2], sdk_ids[1], sdk_ids[0]]
     query_string = {
         'from_sdks': shuffled_sdk_ids,
@@ -177,7 +182,8 @@ def test_all_row_cols_shuffled1(client, test_db_data, sdk_ids):
             'numbers': [
                 [4, 3, 3, 0],
                 [3, 5, 2, 2],
-                [3, 3, 4, 0]
+                [3, 3, 4, 0],
+                [0, 0, 0, 3]
             ]
         }
     }
@@ -195,6 +201,7 @@ def test_all_row_shuffled1_one_cols(client, test_db_data, sdk_ids):
     # card.io    |      2 |     10 |
     # Chartboost |      3 |      7 |
     # PayPal     |      4 |      6 |
+    # (none)     |      0 |      3 |
     query_string = {
         'from_sdks': [sdk_ids[1], sdk_ids[2], sdk_ids[0]],
         'to_sdks': [sdk_ids[0]]
@@ -207,7 +214,8 @@ def test_all_row_shuffled1_one_cols(client, test_db_data, sdk_ids):
             'numbers': [
                 [2, 10],
                 [3, 7],
-                [4, 6]
+                [4, 6],
+                [0, 3]
             ]
         }
     }
@@ -222,7 +230,7 @@ def test_one_row_all_cols_shuffled1(client, test_db_data, sdk_ids):
     #         | card.io | Chartboost | PayPal | (none) |
     # --------+---------+------------|--------+--------|
     # card.io |       5 |          3 |      2 |      2 |
-    # (none)  |       4 |          4 |      4 |      0 |
+    # (none)  |       4 |          4 |      4 |      3 |
     query_string = {
         'from_sdks': [sdk_ids[1]],
         'to_sdks': [sdk_ids[1], sdk_ids[2], sdk_ids[0]]
@@ -234,7 +242,7 @@ def test_one_row_all_cols_shuffled1(client, test_db_data, sdk_ids):
         'data': {
             'numbers': [
                 [5, 3, 2, 2],
-                [4, 4, 4, 0]
+                [4, 4, 4, 3]
             ]
         }
     }
@@ -250,7 +258,7 @@ def test_two_rows_all_cols(client, test_db_data, sdk_ids):
     # -----------+--------+---------+------------+--------|
     # PayPal     |      4 |       3 |          3 |      0 |
     # card.io    |      2 |       5 |          3 |      2 |
-    # (none)     |      3 |       3 |          4 |      0 |
+    # (none)     |      3 |       3 |          4 |      3 |
     query_string = {
         'from_sdks': [sdk_ids[0], sdk_ids[1]],
         'to_sdks': sdk_ids
@@ -263,7 +271,7 @@ def test_two_rows_all_cols(client, test_db_data, sdk_ids):
             'numbers': [
                 [4, 3, 3, 0],
                 [2, 5, 3, 2],
-                [3, 3, 4, 0]
+                [3, 3, 4, 3]
             ]
         }
     }
@@ -280,7 +288,7 @@ def test_two_rows_one_cols(client, test_db_data, sdk_ids):
     # -----------+--------+--------|
     # PayPal     |      4 |      6 |
     # card.io    |      2 |     10 |
-    # (none)     |      3 |      7 |
+    # (none)     |      3 |     10 |
     query_string = {
         'from_sdks': sdk_ids,
         'to_sdks': [sdk_ids[0]]
@@ -293,7 +301,7 @@ def test_two_rows_one_cols(client, test_db_data, sdk_ids):
             'numbers': [
                 [4, 6],
                 [2, 10],
-                [3, 7]
+                [3, 10]
             ]
         }
     }
@@ -310,7 +318,7 @@ def test_two_rows_none_col(client, sdk_ids):
     # -----------+--------|
     # PayPal     |     10 |
     # card.io    |     12 |
-    # (none)     |      9 |
+    # (none)     |     12 |
     query_string = {
         'from_sdks': [sdk_ids[0], sdk_ids[1]]
     }
@@ -322,7 +330,7 @@ def test_two_rows_none_col(client, sdk_ids):
             'numbers': [
                 [10],
                 [12],
-                [9]
+                [12]
             ]
         }
     }
@@ -336,7 +344,7 @@ def test_one_row_three_cols(client, sdk_ids):
     #
     #        | PayPal | card.io | Chartboost | (none) |
     # -------+--------+---------+------------+--------|
-    # (none) |      4 |       5 |          4 |      2 |
+    # (none) |      4 |       5 |          4 |      5 |
     query_string = {
         'to_sdks': sdk_ids
     }
@@ -346,7 +354,7 @@ def test_one_row_three_cols(client, sdk_ids):
     expected_resp = {
         'data': {
             'numbers': [
-                [4, 5, 4, 2]
+                [4, 5, 4, 5]
             ]
         }
     }
@@ -362,13 +370,13 @@ def test_no_row_no_col(client, sdk_ids):
     #
     #        | (none) |
     # -------+--------|
-    # (none) |     14 |
+    # (none) |     17 |
     resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT)
 
     expected_resp = {
         'data': {
             'numbers': [
-                [14]
+                [16]
             ]
         }
     }

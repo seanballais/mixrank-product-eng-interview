@@ -210,7 +210,7 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
     #         sdk_id NOT IN (from_sdks_param + to_sdks_param)
     #         AND installed = true
     #     UNION
-    #     SELECT COUNT(*)
+    #     SELECT *
     #     FROM app_sdk, (
     #         SELECT app_id
     #         FROM app_sdk
@@ -219,7 +219,7 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
     #     ) AS filtered_apps
     #     WHERE
     #         app_sdk.app_id = filtered_apps.app_id
-    #         AND app_sdk.sdk_id NOT IN (2)
+    #         AND app_sdk.sdk_id NOT IN (other_from_sdks_param)
     # )
     # GROUP BY app_id -- [^.^]
     #

@@ -96,23 +96,23 @@ def index():
 
         number_values.append(row_numbers)
 
-    if len(from_sdks) < num_sdks:
-        # We're gonna have to add a row for SDKs that were not specified.
-        row_numbers: list = []
-        for to_sdk_id in to_sdks:
-            count: int = db.session.execute(
-                _get_count_query_for_none_to_to_sdk(to_sdk_id, from_sdks)
-            ).scalar_one()
-            row_numbers.append(count)
-
-        # And then make a column for "(none)" again, since the apps that no
-        # longer have SDKs installed are still counted.
+    # We're gonna have to add a row for apps with no SDKs and whose SDKs that
+    # were not specified.
+    row_numbers: list = []
+    for to_sdk_id in to_sdks:
         count: int = db.session.execute(
-            _get_count_query_for_none_to_none(from_sdks, to_sdks)
+            _get_count_query_for_none_to_to_sdk(to_sdk_id, from_sdks)
         ).scalar_one()
         row_numbers.append(count)
 
-        number_values.append(row_numbers)
+    # And then make a column for "(none)" again, since the apps that no
+    # longer have SDKs installed are still counted.
+    count: int = db.session.execute(
+        _get_count_query_for_none_to_none(from_sdks, to_sdks)
+    ).scalar_one()
+    row_numbers.append(count)
+
+    number_values.append(row_numbers)
 
     resp['data'] = {
         'numbers': number_values
