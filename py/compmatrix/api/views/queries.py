@@ -220,6 +220,13 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
     #     WHERE
     #         app_sdk.app_id = filtered_apps.app_id
     #         AND app_sdk.sdk_id NOT IN (other_from_sdks_param)
+    #     UNION
+    #     SELECT id as app_id, NULL as 'sdk_id', NULL as 'installed'
+    #     FROM app
+    #     WHERE id NOT IN (
+    # 	      SELECT app_id
+    # 	      FROM app_sdk
+    #     );
     # )
     # GROUP BY app_id -- [^.^]
     #
@@ -310,8 +317,19 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
             )
         )
     )
+    query4: Select = (
+        db
+        .select(
+            models.App.id.label('app_id'),
+            db.literal_column('NULL').label('sdk_id'),
+            db.literal_column('NULL').label('installed')
+        )
+        .where(
+            models.App.id.not_in(db.select(models.AppSDK.app_id))
+        )
+    )
 
-    query: CompoundSelect = query1.union(query2, query3)
+    query: CompoundSelect = query1.union(query2, query3, query4)
 
     # Merge the rows that share the same app ID with a `GROUP BY`.
     # We're using 'app_id' for the GROUP BY statement instead of

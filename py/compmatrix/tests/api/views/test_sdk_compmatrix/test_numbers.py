@@ -96,7 +96,7 @@ def test_one_row_one_cols(client, test_db_data, sdk_ids):
         'data': {
             'numbers': [
                 [2, 10],
-                [4, 10]
+                [4, 11]
             ]
         }
     }
@@ -124,7 +124,7 @@ def test_one_row_one_cols2(client, test_db_data, sdk_ids):
         'data': {
             'numbers': [
                 [4, 6],
-                [3, 13]
+                [3, 14]
             ]
         }
     }
@@ -290,7 +290,7 @@ def test_two_rows_one_cols(client, test_db_data, sdk_ids):
     # card.io    |      2 |     10 |
     # (none)     |      3 |     10 |
     query_string = {
-        'from_sdks': sdk_ids,
+        'from_sdks': [sdk_ids[0], sdk_ids[1]],
         'to_sdks': [sdk_ids[0]]
     }
     resp = client.get(SDK_COMPMATRIX_NUMBERS_ENDPOINT,
@@ -376,7 +376,7 @@ def test_no_row_no_col(client, sdk_ids):
     expected_resp = {
         'data': {
             'numbers': [
-                [16]
+                [17]
             ]
         }
     }
