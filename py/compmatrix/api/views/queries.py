@@ -229,7 +229,7 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
     #     );
     # )
     # GROUP BY app_id -- [^.^]
-    #
+
     # First, get all the apps that had previous SDKs that are not part
     # of the `other_from_sdks_param` but are now using SDKs that are not part
     # of the `other_to_sdks_param`. This query will not ignore apps that only
@@ -273,6 +273,7 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
     all_sdks_specified: list[int] = list(
         set(other_from_sdks_param + other_to_sdks_param)
     )
+
     # This query will get all apps that have SDKs that are not
     # specified in either `other_from_sdk_params` or `other_to_sdk_params`.
     # This will also capture apps that we already have in the previous
@@ -317,6 +318,8 @@ def get_query_for_none_to_none(other_from_sdks_param: list[int],
             )
         )
     )
+
+    # And then count in the apps with SDKs installed at all.
     query4: Select = (
         db
         .select(
