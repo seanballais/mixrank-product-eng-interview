@@ -23,7 +23,7 @@ SDK_COMPMATRIX_APPS_ENDPOINT = f'{BASE_SDK_COMPMATRIX_ENDPOINT}/apps'
 
 @pytest.fixture(scope='module')
 def expected_apps(apps):
-    app_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12]
+    app_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 14, 15, 16]
     expected_apps = []
     for app_id in app_ids:
         encoded_obj = view_encoders.encode_app_model_object(apps[app_id])
@@ -96,10 +96,10 @@ def test_has_cursor_next_dir2(client, expected_apps, sdk_ids):
 
     expected_resp = {
         'data': {
-            'apps': apps[7:12],
+            'apps': apps[7:14],
             'total_count': len(apps),
             'start_cursor': query_utils.create_cursor_from_app_dict(apps[7]),
-            'end_cursor': query_utils.create_cursor_from_app_dict(apps[10])
+            'end_cursor': query_utils.create_cursor_from_app_dict(apps[13])
         }
     }
 
