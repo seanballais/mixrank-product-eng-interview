@@ -1,4 +1,5 @@
-import { DataState } from './fetching.js';
+import { BASE_API_ENDPOINT } from './constants.js';
+import { DataState, fetchAppListData } from './fetching.js';
 import * as interactivity from './interactivity.js';
 import { State } from './state.js';
 import {
@@ -9,8 +10,6 @@ import {
     CompMatrixDataToggler,
     SDKSelect
 } from './widgets.js';
-
-const BASE_API_ENDPOINT = '/api/v1';
 
 document.addEventListener('DOMContentLoaded', onDocumentLoad, false);
 
@@ -36,13 +35,16 @@ class App {
         });
 
         this.appListData = new State({
-            'apps': [],
+            'displayed-apps': [],
+            'total-app-count': 0,
             'sdks': {
                 'from-sdk': null,
                 'to-sdk': null
             },
             'start-cursor': null,
-            'end-cursor': null
+            'end-cursor': null,
+            'need-prev-batch-trigger': false,
+            'need-next-batch-trigger': false
         });
 
         this.matrixTable = new CompMatrix('compmatrix');
@@ -88,10 +90,15 @@ class App {
         );
 
         this.appList = new AppList('apps-list');
-        this.appList.subscribeTo('appList', this.appListData);
+        this.appList.batchSubscribe([
+            {'refName': 'app-list', 'state': this.appListData},
+            {'refName': 'compmatrix-data', 'state': this.compmatrixData},
+            {'refName': 'from-sdks', 'state': this.activeFromSDKs},
+            {'refName': 'to-sdks', 'state': this.activeToSDKs}
+        ]);
 
         this.appListDesc = new AppListDesc('app-list-desc');
-        this.appListDesc.subscribeTo('appList', this.appListData);
+        this.appListDesc.subscribeTo('app-list', this.appListData);
 
         this.fromSDKAddBtn.setOnClick(() => {
             interactivity.moveSDKFromComboBoxToList(
@@ -140,7 +147,12 @@ class App {
         });
 
         this.compmatrixData.addReactor(() => {
-            this.#fetchNewAppList();
+            fetchAppListData(
+                this.appListData,
+                this.compmatrixData,
+                this.activeFromSDKs,
+                this.activeToSDKs
+            );
         });
 
         this.activeFromSDKs.addReactor(() => {
@@ -154,7 +166,13 @@ class App {
 
     async init() {
         this.#fetchSDKs();
-        this.#fetchNewAppList();
+        
+        fetchAppListData(
+            this.appListData,
+            this.compmatrixData,
+            this.activeFromSDKs,
+            this.activeToSDKs
+        );
     }
 
     async #fetchSDKs() {
@@ -230,111 +248,6 @@ class App {
             v['data']['raw'] = rawValues;
             v['data']['normalized'] = normalizedValues;
             v['state'] = DataState.LOADED;
-        });
-    }
-
-    async #fetchNewAppList() {
-        const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
-
-        const compmatrixData = this.compmatrixData.getValue();
-        const fromSDK = compmatrixData['selected-cell']['from-sdk'];
-        const toSDK = compmatrixData['selected-cell']['to-sdk'];
-
-        const activeFromSDKs = this.activeFromSDKs.getValue();
-        const activeToSDKs = this.activeToSDKs.getValue();
-
-        const otherFromSDKIDs = activeFromSDKs.filter((s) => {
-            if (fromSDK !== null) {
-                return s.id != fromSDK['id'];
-            }
-
-            return true;
-        });
-        const otherToSDKIDs = activeToSDKs.filter((s) => {
-            if (toSDK !== null) {
-                return s.id != toSDK['id'];
-            }
-
-            return true;
-        });
-
-        let rawParamPairs = [];
-        if (fromSDK !== null && fromSDK['id'] !== null) {
-            rawParamPairs.push(['from_sdk', fromSDK['id']]);
-        } else if (otherFromSDKIDs.length !== 0) {
-            // We can only specify `other_from_sdks` if `from_sdk` is
-            // unspecified.
-            rawParamPairs.push(
-                ...otherFromSDKIDs.map((s) => ['other_from_sdks', s['id']])
-            );
-        }
-
-        if (toSDK !== null && toSDK['id'] !== null) {
-            rawParamPairs.push(['to_sdk', toSDK['id']]);
-        } else if (otherToSDKIDs.length !== 0) {
-            // We can only specify `other_to_sdks` if `to_sdk` is unspecified.
-            rawParamPairs.push(
-                ...otherToSDKIDs.map((s) => ['other_to_sdks', s['id']])
-            );
-        }
-
-        rawParamPairs.push(['count', 50]);
-
-        const params = new URLSearchParams(rawParamPairs);
-        const paramString = params.toString();
-        let appsJSON;
-        try {
-            const response = await fetch(`${url}?${paramString}`);
-            appsJSON = await response.json();
-        } catch (error) {
-            console.error(error.message);
-        }
-
-        this.appListData.setValue((v) => {
-            // TODO: - Figure out a way to know whether we should clear the
-            //         app list or just prepend/append it.
-            //       - Use Intersection Observer to load more apps. Use a div
-            //         as a trigger. However, if we reached the max number of
-            //         apps, we don't load the trigger. If we reached a certain
-            //         threshold of apps, we put a div trigger at the start of
-            //         the list after removing excess apps.
-            v['apps'] = [];
-
-            for (let i = 0; i < appsJSON['data']['apps'].length; i++) {
-                const app = appsJSON['data']['apps'][i];
-
-                let companyURL = null;
-                if (app['company_url'] != '') {
-                    companyURL = app['company_url'];
-                }
-
-                let totalRatings = app['five_star_ratings'];
-                totalRatings += app['four_star_ratings'];
-                totalRatings += app['three_star_ratings'];
-                totalRatings += app['two_star_ratings'];
-                totalRatings += app['one_star_ratings'];
-
-                let rating = 0;
-                rating += (app['five_star_ratings'] * 5);
-                rating += (app['four_star_ratings'] * 4);
-                rating += (app['three_star_ratings'] * 3);
-                rating += (app['two_star_ratings'] * 2);
-                rating += (app['one_star_ratings'] * 1);
-                rating /= totalRatings;
-
-                v['apps'].push({
-                    'name': app['name'],
-                    'seller_name': app['seller_name'],
-                    'company_url': companyURL,
-                    'artwork_large_url': app['artwork_large_url'],
-                    'rating': rating
-                })
-            }
-
-            v['sdks']['from-sdk'] = fromSDK;
-            v['sdks']['to-sdk'] = toSDK;
-            v['start-cursor'] = appsJSON['data']['start_cursor'];
-            v['end-cursor'] = appsJSON['data']['end_cursor'];
         });
     }
 }

@@ -1,4 +1,4 @@
-import { DataState } from './fetching.js';
+import { DataState, fetchAppListData, FetchDirection } from './fetching.js';
 import { htmlToNodes } from './html.js';
 import udomdiff from './udomdiff.js';
 
@@ -144,43 +144,6 @@ export class SDKSelect extends Widget {
     }
 }
 
-export class AppListDesc extends Widget {
-    constructor(rootNode) {
-        super(rootNode);
-    }
-
-    createNodes() {
-        const appList = this.states['appList'].getValue();
-
-        let html = '<p>';
-        if (appList['apps'].length == 0) {
-            html += 'No apps loaded in yet.';
-        } else {
-            const fromSDK = appList['sdks']['from-sdk'];
-            const toSDK = appList['sdks']['to-sdk'];
-
-            let fromSDKName = '';
-            if (fromSDK === null) {
-                fromSDKName = '(none)';
-            } else {
-                fromSDKName = fromSDK['name'];
-            }
-
-            let toSDKName = '';
-            if (toSDK === null) {
-                toSDKName = '(none)';
-            } else {
-                toSDKName = toSDK['name'];
-            }
-
-            html += `Migrated from ${fromSDKName} to ${toSDKName}.`;
-        }
-        html += '</p>'
-
-        return htmlToNodes(html);
-    }
-}
-
 export class CompMatrix extends Widget {
     constructor(rootNode) {
         super(rootNode);
@@ -287,19 +250,119 @@ export class CompMatrix extends Widget {
 export class AppList extends Widget {
     constructor(rootNode) {
         super(rootNode);
+
+        this.prevBatchTriggerObserver = null;
+        this.nextBatchTriggerObserver = null;
+
+        this.isBatchLoading = false;
     }
 
-    // TODO: - Find a way to load the next batch of apps when a certain div
-    //         becomes visible.
-    //       - Allow updating the app list when a cell in the matrix is
-    //         clicked.
+    update() {
+        super.update();
+
+        const appList = this.states['app-list'].getValue();
+
+        const observerOptions = {
+            root: this.rootNode,
+        };
+
+        if (appList['need-prev-batch-trigger']) {
+            const callback = () => {
+                entries.forEach((entry) => {
+                    // Guard check to make sure we don't keep on loading a
+                    // batch of apps when we already previously initiated this
+                    // trigger and we're already loading things. Not exactly an
+                    // ideal solution, since this will also block the other
+                    // trigger from calling its callback (which also helps make
+                    // sure we don't screw up the app list if we already
+                    // exceeded the maximum number of apps allowed to be loaded
+                    // in). However, it should work for the time being. This
+                    // might end up being enough, but we might have to change
+                    // if need be depending on feedback.
+                    if (
+                        entry &&
+                        entry.isIntersecting &&
+                        !this.isBatchLoading
+                    ) {
+                        this.isBatchLoading = true;
+
+                        fetchAppListData(
+                            this.states['app-list'],
+                            this.states['compmatrix-data'],
+                            this.states['from-sdks'],
+                            this.states['to-sdks'],
+                            appList['start-cursor'],
+                            FetchDirection.PREVIOUS
+                        );
+
+                        this.isBatchLoading = false;
+                    } 
+                });
+            };
+            this.prevBatchTriggerObserver = new IntersectionObserver(
+                callback,
+                observerOptions
+            );
+
+            const trigger = document.getElementById('app-prev-batch-trigger');
+            this.prevBatchTriggerObserver.observe(trigger);
+        }
+
+        if (appList['need-next-batch-trigger']) {
+            const callback = (entries, observer) => {
+                entries.forEach((entry) => {
+                    // Guard check to make sure we don't keep on loading a
+                    // batch of apps when we already previously initiated this
+                    // trigger and we're already loading things. Not exactly an
+                    // ideal solution, since this will also block the other
+                    // trigger from calling its callback (which also helps make
+                    // sure we don't screw up the app list if we already
+                    // exceeded the maximum number of apps allowed to be loaded
+                    // in). However, it should work for the time being. This
+                    // might end up being enough, but we might have to change
+                    // if need be depending on feedback.
+                    if (
+                        entry &&
+                        entry.isIntersecting &&
+                        !this.isBatchLoading
+                    ) {
+                        this.isBatchLoading = true;
+
+                        fetchAppListData(
+                            this.states['app-list'],
+                            this.states['compmatrix-data'],
+                            this.states['from-sdks'],
+                            this.states['to-sdks'],
+                            appList['end-cursor'],
+                            FetchDirection.NEXT
+                        );
+
+                        this.isBatchLoading = false;
+                    } 
+                });
+            };
+            this.nextBatchTriggerObserver = new IntersectionObserver(
+                callback,
+                observerOptions
+            );
+
+            const trigger = document.getElementById('app-next-batch-trigger');
+            this.nextBatchTriggerObserver.observe(trigger);
+        }
+    }
 
     createNodes() {
-        const appList = this.states['appList'].getValue();
+        const appList = this.states['app-list'].getValue();
 
         let html = '';
-        for (let i = 0; i < appList['apps'].length; i++) {
-            const app = appList['apps'][i];
+        if (appList['need-prev-batch-trigger']) {
+            html += '<div id="app-prev-batch-trigger" class="batch-trigger">';
+            html += '    <span class="fas fa-circle-notch fa-spin"></span>';
+            html += '</div>';
+        }
+
+        for (let i = 0; i < appList['displayed-apps'].length; i++) {
+            const app = appList['displayed-apps'][i];
             html += '<div class="app-card">';
             html += '  <div class="app-card-icon">';
             html += `    <img src=${app['artwork_large_url']}/>`
@@ -319,6 +382,49 @@ export class AppList extends Widget {
             html += '  </div>';
             html += '</div>';
         }
+
+        if (appList['need-next-batch-trigger']) {
+            html += '<div id="app-next-batch-trigger" class="batch-trigger">';
+            html += '    <span class="fas fa-circle-notch fa-spin"></span>';
+            html += '</div>';
+        }
+
+        return htmlToNodes(html);
+    }
+}
+
+export class AppListDesc extends Widget {
+    constructor(rootNode) {
+        super(rootNode);
+    }
+
+    createNodes() {
+        const appList = this.states['app-list'].getValue();
+
+        let html = '<p>';
+        if (appList['displayed-apps'].length == 0) {
+            html += 'No apps loaded in yet.';
+        } else {
+            const fromSDK = appList['sdks']['from-sdk'];
+            const toSDK = appList['sdks']['to-sdk'];
+
+            let fromSDKName = '';
+            if (fromSDK === null) {
+                fromSDKName = '(none)';
+            } else {
+                fromSDKName = fromSDK['name'];
+            }
+
+            let toSDKName = '';
+            if (toSDK === null) {
+                toSDKName = '(none)';
+            } else {
+                toSDKName = toSDK['name'];
+            }
+
+            html += `Migrated from ${fromSDKName} to ${toSDKName}.`;
+        }
+        html += '</p>'
 
         return htmlToNodes(html);
     }

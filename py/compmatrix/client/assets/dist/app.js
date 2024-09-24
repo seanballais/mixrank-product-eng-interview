@@ -1,4 +1,10 @@
 (() => {
+  // py/compmatrix/client/assets/raw/js/constants.js
+  var APP_LIST_BATCH_SIZE = 50;
+  var MAX_APP_LIST_SIZE = 100;
+  var BASE_API_ENDPOINT = "/api/v1";
+  console.assert(APP_LIST_BATCH_SIZE <= MAX_APP_LIST_SIZE);
+
   // py/compmatrix/client/assets/raw/js/fetching.js
   var DataState = class {
     static #_EMPTY = 0;
@@ -19,6 +25,148 @@
       return this.#_LOADED;
     }
   };
+  var FetchDirection = class {
+    static get PREVIOUS() {
+      return "previous";
+    }
+    static get NEXT() {
+      return "next";
+    }
+  };
+  async function fetchAppListData(appListDataState, compmatrixDataState, activeFromSDKsState, activeToSDKsState, cursor = null, direction = null) {
+    const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
+    const compmatrixData = compmatrixDataState.getValue();
+    const fromSDK = compmatrixData["selected-cell"]["from-sdk"];
+    const toSDK = compmatrixData["selected-cell"]["to-sdk"];
+    const activeFromSDKs = activeFromSDKsState.getValue();
+    const activeToSDKs = activeToSDKsState.getValue();
+    const otherFromSDKIDs = activeFromSDKs.filter((s) => {
+      if (fromSDK !== null) {
+        return s.id != fromSDK["id"];
+      }
+      return true;
+    });
+    const otherToSDKIDs = activeToSDKs.filter((s) => {
+      if (toSDK !== null) {
+        return s.id != toSDK["id"];
+      }
+      return true;
+    });
+    let rawParamPairs = [];
+    if (fromSDK !== null && fromSDK["id"] !== null) {
+      rawParamPairs.push(["from_sdk", fromSDK["id"]]);
+    } else if (otherFromSDKIDs.length !== 0) {
+      rawParamPairs.push(
+        ...otherFromSDKIDs.map((s) => ["other_from_sdks", s["id"]])
+      );
+    }
+    if (toSDK !== null && toSDK["id"] !== null) {
+      rawParamPairs.push(["to_sdk", toSDK["id"]]);
+    } else if (otherToSDKIDs.length !== 0) {
+      rawParamPairs.push(
+        ...otherToSDKIDs.map((s) => ["other_to_sdks", s["id"]])
+      );
+    }
+    rawParamPairs.push(["count", APP_LIST_BATCH_SIZE]);
+    if (cursor !== null) {
+      rawParamPairs.push(["cursor", cursor]);
+      rawParamPairs.push(["direction", direction]);
+    }
+    const params = new URLSearchParams(rawParamPairs);
+    const paramString = params.toString();
+    let appsJSON;
+    try {
+      const response = await fetch(`${url}?${paramString}`);
+      appsJSON = await response.json();
+    } catch (error) {
+      console.error(error.message);
+    }
+    appListDataState.setValue((v) => {
+      const numApps = appsJSON["data"]["apps"].length;
+      const totalCount = appsJSON["data"]["total_count"];
+      v["total-app-count"] = totalCount;
+      if (cursor === null) {
+        v["displayed-apps"] = [];
+      }
+      for (let i = 0; i < numApps; i++) {
+        const app = appsJSON["data"]["apps"][i];
+        let companyURL = null;
+        if (app["company_url"] != "") {
+          companyURL = app["company_url"];
+        }
+        let totalRatings = app["five_star_ratings"];
+        totalRatings += app["four_star_ratings"];
+        totalRatings += app["three_star_ratings"];
+        totalRatings += app["two_star_ratings"];
+        totalRatings += app["one_star_ratings"];
+        let rating = 0;
+        rating += app["five_star_ratings"] * 5;
+        rating += app["four_star_ratings"] * 4;
+        rating += app["three_star_ratings"] * 3;
+        rating += app["two_star_ratings"] * 2;
+        rating += app["one_star_ratings"] * 1;
+        rating /= totalRatings;
+        const newApp = {
+          "name": app["name"],
+          "seller_name": app["seller_name"],
+          "company_url": companyURL,
+          "artwork_large_url": app["artwork_large_url"],
+          "rating": rating
+        };
+        if (cursor !== null && direction === FetchDirection.PREVIOUS) {
+          v["displayed-apps"].unshift(newApp);
+        } else {
+          v["displayed-apps"].push(newApp);
+        }
+      }
+      v["sdks"]["from-sdk"] = fromSDK;
+      v["sdks"]["to-sdk"] = toSDK;
+      v["start-cursor"] = appsJSON["data"]["start_cursor"];
+      v["end-cursor"] = appsJSON["data"]["end_cursor"];
+      let wasLeftPruned = false;
+      let wasRightPruned = false;
+      const numDisplayedApps = v["displayed-apps"].length;
+      if (numDisplayedApps > MAX_APP_LIST_SIZE) {
+        const numExtraApps = numDisplayedApps - MAX_APP_LIST_SIZE;
+        if (direction === FetchDirection.PREVIOUS) {
+          wasLeftPruned = true;
+          v["displayed-apps"].splice(-numExtraApps);
+          const startApp = v["displayed-apps"][0];
+          v["start-cursor"] = createCursorFromDisplayedApp(startApp);
+        } else {
+          wasRightPruned = true;
+          v["displayed-apps"].splice(0, numExtraApps);
+          const numDisplayedApps2 = v["displayed-apps"].length;
+          const endApp = v["displayed-apps"][numDisplayedApps2 - 1];
+          v["end-cursor"] = createCursorFromDisplayedApp(endApp);
+        }
+      }
+      if (numApps == totalCount) {
+        v["need-prev-batch-trigger"] = false;
+        v["need-next-batch-trigger"] = false;
+      } else if (numApps == 0) {
+        if (direction === FetchDirection.PREVIOUS) {
+          v["need-prev-batch-trigger"] = false;
+        } else {
+          v["need-next-batch-trigger"] = false;
+        }
+      } else {
+        if (direction === FetchDirection.PREVIOUS) {
+          v["need-prev-batch-trigger"] = true;
+        } else {
+          v["need-next-batch-trigger"] = true;
+        }
+      }
+      if (wasLeftPruned) {
+        v["need-prev-batch-trigger"] = true;
+      } else if (wasRightPruned) {
+        v["need-next-batch-trigger"] = true;
+      }
+    });
+  }
+  function createCursorFromDisplayedApp(app) {
+    return `${app["name"]};${app["seller_name"]}`;
+  }
 
   // py/compmatrix/client/assets/raw/js/interactivity.js
   function moveSDKFromComboBoxToList(comboBox, selectableSDKs, activeSDKsList, activeSDKs) {
@@ -323,36 +471,6 @@
       this.selectedIndex = newIndex;
     }
   };
-  var AppListDesc = class extends Widget {
-    constructor(rootNode) {
-      super(rootNode);
-    }
-    createNodes() {
-      const appList = this.states["appList"].getValue();
-      let html = "<p>";
-      if (appList["apps"].length == 0) {
-        html += "No apps loaded in yet.";
-      } else {
-        const fromSDK = appList["sdks"]["from-sdk"];
-        const toSDK = appList["sdks"]["to-sdk"];
-        let fromSDKName = "";
-        if (fromSDK === null) {
-          fromSDKName = "(none)";
-        } else {
-          fromSDKName = fromSDK["name"];
-        }
-        let toSDKName = "";
-        if (toSDK === null) {
-          toSDKName = "(none)";
-        } else {
-          toSDKName = toSDK["name"];
-        }
-        html += `Migrated from ${fromSDKName} to ${toSDKName}.`;
-      }
-      html += "</p>";
-      return htmlToNodes(html);
-    }
-  };
   var CompMatrix = class extends Widget {
     constructor(rootNode) {
       super(rootNode);
@@ -440,16 +558,75 @@
   var AppList = class extends Widget {
     constructor(rootNode) {
       super(rootNode);
+      this.prevBatchTriggerObserver = null;
+      this.nextBatchTriggerObserver = null;
+      this.isBatchLoading = false;
     }
-    // TODO: - Find a way to load the next batch of apps when a certain div
-    //         becomes visible.
-    //       - Allow updating the app list when a cell in the matrix is
-    //         clicked.
+    update() {
+      super.update();
+      const appList = this.states["app-list"].getValue();
+      const observerOptions = {
+        root: this.rootNode
+      };
+      if (appList["need-prev-batch-trigger"]) {
+        const callback = () => {
+          entries.forEach((entry) => {
+            if (entry && entry.isIntersecting && !this.isBatchLoading) {
+              this.isBatchLoading = true;
+              fetchAppListData(
+                this.states["app-list"],
+                this.states["compmatrix-data"],
+                this.states["from-sdks"],
+                this.states["to-sdks"],
+                appList["start-cursor"],
+                FetchDirection.PREVIOUS
+              );
+              this.isBatchLoading = false;
+            }
+          });
+        };
+        this.prevBatchTriggerObserver = new IntersectionObserver(
+          callback,
+          observerOptions
+        );
+        const trigger = document.getElementById("app-prev-batch-trigger");
+        this.prevBatchTriggerObserver.observe(trigger);
+      }
+      if (appList["need-next-batch-trigger"]) {
+        const callback = (entries2, observer) => {
+          entries2.forEach((entry) => {
+            if (entry && entry.isIntersecting && !this.isBatchLoading) {
+              this.isBatchLoading = true;
+              fetchAppListData(
+                this.states["app-list"],
+                this.states["compmatrix-data"],
+                this.states["from-sdks"],
+                this.states["to-sdks"],
+                appList["end-cursor"],
+                FetchDirection.NEXT
+              );
+              this.isBatchLoading = false;
+            }
+          });
+        };
+        this.nextBatchTriggerObserver = new IntersectionObserver(
+          callback,
+          observerOptions
+        );
+        const trigger = document.getElementById("app-next-batch-trigger");
+        this.nextBatchTriggerObserver.observe(trigger);
+      }
+    }
     createNodes() {
-      const appList = this.states["appList"].getValue();
+      const appList = this.states["app-list"].getValue();
       let html = "";
-      for (let i = 0; i < appList["apps"].length; i++) {
-        const app = appList["apps"][i];
+      if (appList["need-prev-batch-trigger"]) {
+        html += '<div id="app-prev-batch-trigger" class="batch-trigger">';
+        html += '    <span class="fas fa-circle-notch fa-spin"></span>';
+        html += "</div>";
+      }
+      for (let i = 0; i < appList["displayed-apps"].length; i++) {
+        const app = appList["displayed-apps"][i];
         html += '<div class="app-card">';
         html += '  <div class="app-card-icon">';
         html += `    <img src=${app["artwork_large_url"]}/>`;
@@ -469,12 +646,46 @@
         html += "  </div>";
         html += "</div>";
       }
+      if (appList["need-next-batch-trigger"]) {
+        html += '<div id="app-next-batch-trigger" class="batch-trigger">';
+        html += '    <span class="fas fa-circle-notch fa-spin"></span>';
+        html += "</div>";
+      }
+      return htmlToNodes(html);
+    }
+  };
+  var AppListDesc = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+    }
+    createNodes() {
+      const appList = this.states["app-list"].getValue();
+      let html = "<p>";
+      if (appList["displayed-apps"].length == 0) {
+        html += "No apps loaded in yet.";
+      } else {
+        const fromSDK = appList["sdks"]["from-sdk"];
+        const toSDK = appList["sdks"]["to-sdk"];
+        let fromSDKName = "";
+        if (fromSDK === null) {
+          fromSDKName = "(none)";
+        } else {
+          fromSDKName = fromSDK["name"];
+        }
+        let toSDKName = "";
+        if (toSDK === null) {
+          toSDKName = "(none)";
+        } else {
+          toSDKName = toSDK["name"];
+        }
+        html += `Migrated from ${fromSDKName} to ${toSDKName}.`;
+      }
+      html += "</p>";
       return htmlToNodes(html);
     }
   };
 
   // py/compmatrix/client/assets/raw/js/app.js
-  var BASE_API_ENDPOINT = "/api/v1";
   document.addEventListener("DOMContentLoaded", onDocumentLoad, false);
   var App = class {
     constructor() {
@@ -495,13 +706,16 @@
         }
       });
       this.appListData = new State({
-        "apps": [],
+        "displayed-apps": [],
+        "total-app-count": 0,
         "sdks": {
           "from-sdk": null,
           "to-sdk": null
         },
         "start-cursor": null,
-        "end-cursor": null
+        "end-cursor": null,
+        "need-prev-batch-trigger": false,
+        "need-next-batch-trigger": false
       });
       this.matrixTable = new CompMatrix("compmatrix");
       this.matrixTable.batchSubscribe([
@@ -538,9 +752,14 @@
         "to-sdk-selected-move-down-btn"
       );
       this.appList = new AppList("apps-list");
-      this.appList.subscribeTo("appList", this.appListData);
+      this.appList.batchSubscribe([
+        { "refName": "app-list", "state": this.appListData },
+        { "refName": "compmatrix-data", "state": this.compmatrixData },
+        { "refName": "from-sdks", "state": this.activeFromSDKs },
+        { "refName": "to-sdks", "state": this.activeToSDKs }
+      ]);
       this.appListDesc = new AppListDesc("app-list-desc");
-      this.appListDesc.subscribeTo("appList", this.appListData);
+      this.appListDesc.subscribeTo("app-list", this.appListData);
       this.fromSDKAddBtn.setOnClick(() => {
         moveSDKFromComboBoxToList(
           this.fromSDKComboBox,
@@ -586,7 +805,12 @@
         this.activeToSDKsList.moveSelectedOptionDown();
       });
       this.compmatrixData.addReactor(() => {
-        this.#fetchNewAppList();
+        fetchAppListData(
+          this.appListData,
+          this.compmatrixData,
+          this.activeFromSDKs,
+          this.activeToSDKs
+        );
       });
       this.activeFromSDKs.addReactor(() => {
         this.#fetchCompMatrixValues();
@@ -597,7 +821,12 @@
     }
     async init() {
       this.#fetchSDKs();
-      this.#fetchNewAppList();
+      fetchAppListData(
+        this.appListData,
+        this.compmatrixData,
+        this.activeFromSDKs,
+        this.activeToSDKs
+      );
     }
     async #fetchSDKs() {
       const url = `${BASE_API_ENDPOINT}/sdks`;
@@ -663,84 +892,6 @@
         v["data"]["raw"] = rawValues;
         v["data"]["normalized"] = normalizedValues;
         v["state"] = DataState.LOADED;
-      });
-    }
-    async #fetchNewAppList() {
-      const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/apps`;
-      const compmatrixData = this.compmatrixData.getValue();
-      const fromSDK = compmatrixData["selected-cell"]["from-sdk"];
-      const toSDK = compmatrixData["selected-cell"]["to-sdk"];
-      const activeFromSDKs = this.activeFromSDKs.getValue();
-      const activeToSDKs = this.activeToSDKs.getValue();
-      const otherFromSDKIDs = activeFromSDKs.filter((s) => {
-        if (fromSDK !== null) {
-          return s.id != fromSDK["id"];
-        }
-        return true;
-      });
-      const otherToSDKIDs = activeToSDKs.filter((s) => {
-        if (toSDK !== null) {
-          return s.id != toSDK["id"];
-        }
-        return true;
-      });
-      let rawParamPairs = [];
-      if (fromSDK !== null && fromSDK["id"] !== null) {
-        rawParamPairs.push(["from_sdk", fromSDK["id"]]);
-      } else if (otherFromSDKIDs.length !== 0) {
-        rawParamPairs.push(
-          ...otherFromSDKIDs.map((s) => ["other_from_sdks", s["id"]])
-        );
-      }
-      if (toSDK !== null && toSDK["id"] !== null) {
-        rawParamPairs.push(["to_sdk", toSDK["id"]]);
-      } else if (otherToSDKIDs.length !== 0) {
-        rawParamPairs.push(
-          ...otherToSDKIDs.map((s) => ["other_to_sdks", s["id"]])
-        );
-      }
-      rawParamPairs.push(["count", 50]);
-      const params = new URLSearchParams(rawParamPairs);
-      const paramString = params.toString();
-      let appsJSON;
-      try {
-        const response = await fetch(`${url}?${paramString}`);
-        appsJSON = await response.json();
-      } catch (error) {
-        console.error(error.message);
-      }
-      this.appListData.setValue((v) => {
-        v["apps"] = [];
-        for (let i = 0; i < appsJSON["data"]["apps"].length; i++) {
-          const app = appsJSON["data"]["apps"][i];
-          let companyURL = null;
-          if (app["company_url"] != "") {
-            companyURL = app["company_url"];
-          }
-          let totalRatings = app["five_star_ratings"];
-          totalRatings += app["four_star_ratings"];
-          totalRatings += app["three_star_ratings"];
-          totalRatings += app["two_star_ratings"];
-          totalRatings += app["one_star_ratings"];
-          let rating = 0;
-          rating += app["five_star_ratings"] * 5;
-          rating += app["four_star_ratings"] * 4;
-          rating += app["three_star_ratings"] * 3;
-          rating += app["two_star_ratings"] * 2;
-          rating += app["one_star_ratings"] * 1;
-          rating /= totalRatings;
-          v["apps"].push({
-            "name": app["name"],
-            "seller_name": app["seller_name"],
-            "company_url": companyURL,
-            "artwork_large_url": app["artwork_large_url"],
-            "rating": rating
-          });
-        }
-        v["sdks"]["from-sdk"] = fromSDK;
-        v["sdks"]["to-sdk"] = toSDK;
-        v["start-cursor"] = appsJSON["data"]["start_cursor"];
-        v["end-cursor"] = appsJSON["data"]["end_cursor"];
       });
     }
   };
