@@ -1,3 +1,4 @@
+import { MAX_APP_LIST_SIZE } from './constants.js';
 import { DataState, fetchAppListData, FetchDirection } from './fetching.js';
 import { htmlToNodes } from './html.js';
 import udomdiff from './udomdiff.js';
@@ -261,14 +262,13 @@ export class AppList extends Widget {
         super.update();
 
         const appList = this.states['app-list'].getValue();
-
         const observerOptions = {
             root: this.rootNode,
         };
 
         if (appList['need-prev-batch-trigger']) {
-            const callback = () => {
-                entries.forEach((entry) => {
+            const callback = (entries, observer) => {
+                entries.forEach(async (entry) => {
                     // Guard check to make sure we don't keep on loading a
                     // batch of apps when we already previously initiated this
                     // trigger and we're already loading things. Not exactly an
@@ -286,7 +286,7 @@ export class AppList extends Widget {
                     ) {
                         this.isBatchLoading = true;
 
-                        fetchAppListData(
+                        await fetchAppListData(
                             this.states['app-list'],
                             this.states['compmatrix-data'],
                             this.states['from-sdks'],
@@ -294,6 +294,16 @@ export class AppList extends Widget {
                             appList['start-cursor'],
                             FetchDirection.PREVIOUS
                         );
+
+                        // If we pruned our current displayed apps, then we
+                        // need to scroll down to where our view was before we
+                        // loaded in a new batch of apps.
+                        if (appList['pruned'] && recentBatchSize !== 0) {
+                            this.rootNode.scrollBy(
+                                0,
+                                baseScrollAmount + prevTriggerHeight
+                            );
+                        }
 
                         this.isBatchLoading = false;
                     } 
@@ -303,14 +313,14 @@ export class AppList extends Widget {
                 callback,
                 observerOptions
             );
-
             const trigger = document.getElementById('app-prev-batch-trigger');
             this.prevBatchTriggerObserver.observe(trigger);
         }
 
         if (appList['need-next-batch-trigger']) {
             const callback = (entries, observer) => {
-                entries.forEach((entry) => {
+                for (let i = 0; i < entries.length; i++) {
+                    const e = entries[i];
                     // Guard check to make sure we don't keep on loading a
                     // batch of apps when we already previously initiated this
                     // trigger and we're already loading things. Not exactly an
@@ -321,31 +331,18 @@ export class AppList extends Widget {
                     // in). However, it should work for the time being. This
                     // might end up being enough, but we might have to change
                     // if need be depending on feedback.
-                    if (
-                        entry &&
-                        entry.isIntersecting &&
-                        !this.isBatchLoading
-                    ) {
-                        this.isBatchLoading = true;
-
-                        fetchAppListData(
-                            this.states['app-list'],
-                            this.states['compmatrix-data'],
-                            this.states['from-sdks'],
-                            this.states['to-sdks'],
+                    if (e && e.isIntersecting && !this.isBatchLoading) {
+                        this.#runBatchTriggerEvent(
                             appList['end-cursor'],
                             FetchDirection.NEXT
                         );
-
-                        this.isBatchLoading = false;
-                    } 
-                });
+                    }
+                }
             };
             this.nextBatchTriggerObserver = new IntersectionObserver(
                 callback,
                 observerOptions
             );
-
             const trigger = document.getElementById('app-next-batch-trigger');
             this.nextBatchTriggerObserver.observe(trigger);
         }
@@ -355,15 +352,18 @@ export class AppList extends Widget {
         const appList = this.states['app-list'].getValue();
 
         let html = '';
+
+        html += '<ol id="apps-list-items">';
+
         if (appList['need-prev-batch-trigger']) {
-            html += '<div id="app-prev-batch-trigger" class="batch-trigger">';
+            html += '<li id="app-prev-batch-trigger" class="batch-trigger">';
             html += '    <span class="fas fa-circle-notch fa-spin"></span>';
-            html += '</div>';
+            html += '</li>';
         }
 
         for (let i = 0; i < appList['displayed-apps'].length; i++) {
             const app = appList['displayed-apps'][i];
-            html += '<div class="app-card">';
+            html += '<li class="app-card">';
             html += '  <div class="app-card-icon">';
             html += `    <img src=${app['artwork_large_url']}/>`
             html += '  </div>';
@@ -380,16 +380,113 @@ export class AppList extends Widget {
             html += `      ${app['rating'].toFixed(2)}`
             html += '    </p>';
             html += '  </div>';
-            html += '</div>';
+            html += '</li>';
         }
 
         if (appList['need-next-batch-trigger']) {
-            html += '<div id="app-next-batch-trigger" class="batch-trigger">';
+            html += '<li id="app-next-batch-trigger" class="batch-trigger">';
             html += '    <span class="fas fa-circle-notch fa-spin"></span>';
-            html += '</div>';
+            html += '</li>';
         }
+        
+        html += '</ol>';
 
         return htmlToNodes(html);
+    }
+
+    async #runBatchTriggerEvent(cursor, fetchDirection) {
+        const appList = this.states['app-list'].getValue();
+        const recentBatchSize = appList['recent-batch-size'];
+        
+        this.isBatchLoading = true;
+
+        await fetchAppListData(
+            this.states['app-list'],
+            this.states['compmatrix-data'],
+            this.states['from-sdks'],
+            this.states['to-sdks'],
+            cursor,
+            fetchDirection
+        );
+
+        // If we pruned our current displayed apps, then we need to scroll up
+        // or down to where our view was before we loaded in a new batch of
+        // apps. Note that, prior to scrolling, we're at the either ends of
+        // the app list, before we initially scrolled towards the triggers.
+        if (appList['pruned'] && recentBatchSize !== 0) {
+            // To compute the amount of scrolling needed, we just need to get
+            // the total height of occupied by the new batch of apps in the app
+            // list.
+            const list = document.getElementById('apps-list-items');
+            const loadedApps = [...list.children];
+            const newApps = (
+                fetchDirection == FetchDirection.PREVIOUS
+                ? loadedApps.slice(0, recentBatchSize + 1)
+                : loadedApps.slice(-recentBatchSize - 1)
+            );
+            const listStyle = window.getComputedStyle(list);
+            
+            let scrollHeight = 0;
+
+            // Get the total height occupied by just the app cards first.
+            if (newApps.length > 0) {
+                // We should only be adding in the height of each row that only
+                // contains the new apps (note that some rows might include
+                // apps that are not part of the new batch) since they make
+                // new rows, and not by each card.
+                //
+                // NOTE: At the moment, we won't be considering margins and
+                //       paddings in the computations since the app cards
+                //       don't set those yet. Maybe at a later time, we might
+                //       have to include them. However, for now, YAGNI.
+                const listBounds = list.getBoundingClientRect();
+                const rowStartXPos = listBounds['x'];
+                
+                let numRows = 0;
+
+                for (let i = 0; i < newApps.length; i++) {
+                    const cardBounds = newApps[i].getBoundingClientRect();
+                    if (cardBounds['x'] == rowStartXPos) {
+                        // This indicates that a new row has started.
+                        scrollHeight += cardBounds['height'];
+                        numRows++;
+                    }
+                }
+
+                // And let's add in the heights occupied by the row gaps of the
+                // new batch of apps. This does not include the gap between
+                // the app cards and triggers.
+                const rowGap = listStyle.getPropertyValue('row-gap');
+                const rowGapSize = parseInt(rowGap);
+                scrollHeight += rowGapSize * (numRows - 1);
+
+                // Let's reduce the offset just a bit more. This handles the
+                // case where the first pruning may result in the former
+                // topmost or bottommost row in the app list from being
+                // partially covered after scrolling. This is a temporary hack,
+                // and the ideal fix may involve computing the original scroll
+                // position. However, in the interest of time, we'll use this
+                // hack for now.
+                scrollHeight -= rowGapSize * 3.5;
+            }
+
+            // We have to negate the scroll height since we have to scroll up
+            // if we loaded in a new batch of apps at the end of the list.
+            if (fetchDirection === FetchDirection.NEXT) {
+                scrollHeight = -scrollHeight;
+            }
+
+            // We're using scrollBy() instead of scrollTo() (which would also
+            // change our scroll computations) because the latter resets the
+            // scrollbar to the top before scrolling down to the location we
+            // want to scroll to, which wrongfully triggers the topmost batch
+            // trigger. Using the former is not exactly ideal and is arguably
+            // less precise, but it does not result in the aforementioned
+            // issues and the effect are still within acceptable thresholds.
+            this.rootNode.scrollBy(0, scrollHeight);
+        }
+
+        this.isBatchLoading = false;
     }
 }
 

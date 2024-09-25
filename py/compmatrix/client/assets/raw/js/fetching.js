@@ -144,10 +144,24 @@ export async function fetchAppListData(
 
         v['sdks']['from-sdk'] = fromSDK;
         v['sdks']['to-sdk'] = toSDK;
-        v['start-cursor'] = appsJSON['data']['start_cursor'];
-        v['end-cursor'] = appsJSON['data']['end_cursor'];
 
-        // Prune apps here if we go over the batch limit.
+        if (cursor === null) {
+            // We're getting the initial batch, so we can set the cursors to
+            // the ones we receive from the API.
+            v['start-cursor'] = appsJSON['data']['start_cursor'];
+            v['end-cursor'] = appsJSON['data']['end_cursor'];
+        } else {
+            // Only update one cursor depending on the fetch direction.
+            // The other cursor would not be the correct cursor for the entire
+            // app.
+            if (direction === FetchDirection.PREVIOUS) {
+                v['start-cursor'] = appsJSON['data']['start_cursor'];
+            } else {
+                v['end-cursor'] = appsJSON['data']['end_cursor'];
+            }
+        }
+
+        // Prune apps here if we go over the maximum size limit.
         let wasLeftPruned = false;
         let wasRightPruned = false;
         const numDisplayedApps = v['displayed-apps'].length;
@@ -156,22 +170,30 @@ export async function fetchAppListData(
 
             // The cursor should have been specified at this point.
             if (direction === FetchDirection.PREVIOUS) {
-                // Prune out the apps at the start.
-                wasLeftPruned = true;
+                // Prune out the apps at the end to make space for the new apps
+                // added at the start of the list of displayed apps.
                 v['displayed-apps'].splice(-numExtraApps);
-
-                const startApp = v['displayed-apps'][0];
-                v['start-cursor'] = createCursorFromDisplayedApp(startApp);
-            } else {
-                // Prune out the apps at the end.
-                wasRightPruned = true;
-                v['displayed-apps'].splice(0, numExtraApps);
 
                 const numDisplayedApps = v['displayed-apps'].length;
                 const endApp = v['displayed-apps'][numDisplayedApps - 1];
                 v['end-cursor'] = createCursorFromDisplayedApp(endApp);
+
+                wasRightPruned = true;
+                v['pruned'] = true;
+            } else {
+                // Prune out the apps at the start to make space for the new
+                // apps added at the end of the list of displayed apps.
+                v['displayed-apps'].splice(0, numExtraApps);
+
+                const startApp = v['displayed-apps'][0];
+                v['start-cursor'] = createCursorFromDisplayedApp(startApp);
+
+                wasLeftPruned = true;
+                v['pruned'] = true;
             }
         }
+
+        v['recent-batch-size'] = numApps;
 
         if (numApps == totalCount) {
             v['need-prev-batch-trigger'] = false;

@@ -1,7 +1,7 @@
 (() => {
   // py/compmatrix/client/assets/raw/js/constants.js
   var APP_LIST_BATCH_SIZE = 50;
-  var MAX_APP_LIST_SIZE = 100;
+  var MAX_APP_LIST_SIZE = 150;
   var BASE_API_ENDPOINT = "/api/v1";
   console.assert(APP_LIST_BATCH_SIZE <= MAX_APP_LIST_SIZE);
 
@@ -121,26 +121,37 @@
       }
       v["sdks"]["from-sdk"] = fromSDK;
       v["sdks"]["to-sdk"] = toSDK;
-      v["start-cursor"] = appsJSON["data"]["start_cursor"];
-      v["end-cursor"] = appsJSON["data"]["end_cursor"];
+      if (cursor === null) {
+        v["start-cursor"] = appsJSON["data"]["start_cursor"];
+        v["end-cursor"] = appsJSON["data"]["end_cursor"];
+      } else {
+        if (direction === FetchDirection.PREVIOUS) {
+          v["start-cursor"] = appsJSON["data"]["start_cursor"];
+        } else {
+          v["end-cursor"] = appsJSON["data"]["end_cursor"];
+        }
+      }
       let wasLeftPruned = false;
       let wasRightPruned = false;
       const numDisplayedApps = v["displayed-apps"].length;
       if (numDisplayedApps > MAX_APP_LIST_SIZE) {
         const numExtraApps = numDisplayedApps - MAX_APP_LIST_SIZE;
         if (direction === FetchDirection.PREVIOUS) {
-          wasLeftPruned = true;
           v["displayed-apps"].splice(-numExtraApps);
-          const startApp = v["displayed-apps"][0];
-          v["start-cursor"] = createCursorFromDisplayedApp(startApp);
-        } else {
-          wasRightPruned = true;
-          v["displayed-apps"].splice(0, numExtraApps);
           const numDisplayedApps2 = v["displayed-apps"].length;
           const endApp = v["displayed-apps"][numDisplayedApps2 - 1];
           v["end-cursor"] = createCursorFromDisplayedApp(endApp);
+          wasRightPruned = true;
+          v["pruned"] = true;
+        } else {
+          v["displayed-apps"].splice(0, numExtraApps);
+          const startApp = v["displayed-apps"][0];
+          v["start-cursor"] = createCursorFromDisplayedApp(startApp);
+          wasLeftPruned = true;
+          v["pruned"] = true;
         }
       }
+      v["recent-batch-size"] = numApps;
       if (numApps == totalCount) {
         v["need-prev-batch-trigger"] = false;
         v["need-next-batch-trigger"] = false;
@@ -569,11 +580,11 @@
         root: this.rootNode
       };
       if (appList["need-prev-batch-trigger"]) {
-        const callback = () => {
-          entries.forEach((entry) => {
+        const callback = (entries, observer) => {
+          entries.forEach(async (entry) => {
             if (entry && entry.isIntersecting && !this.isBatchLoading) {
               this.isBatchLoading = true;
-              fetchAppListData(
+              await fetchAppListData(
                 this.states["app-list"],
                 this.states["compmatrix-data"],
                 this.states["from-sdks"],
@@ -581,6 +592,12 @@
                 appList["start-cursor"],
                 FetchDirection.PREVIOUS
               );
+              if (appList["pruned"] && recentBatchSize !== 0) {
+                this.rootNode.scrollBy(
+                  0,
+                  baseScrollAmount + prevTriggerHeight
+                );
+              }
               this.isBatchLoading = false;
             }
           });
@@ -593,21 +610,16 @@
         this.prevBatchTriggerObserver.observe(trigger);
       }
       if (appList["need-next-batch-trigger"]) {
-        const callback = (entries2, observer) => {
-          entries2.forEach((entry) => {
-            if (entry && entry.isIntersecting && !this.isBatchLoading) {
-              this.isBatchLoading = true;
-              fetchAppListData(
-                this.states["app-list"],
-                this.states["compmatrix-data"],
-                this.states["from-sdks"],
-                this.states["to-sdks"],
+        const callback = (entries, observer) => {
+          for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            if (e && e.isIntersecting && !this.isBatchLoading) {
+              this.#runBatchTriggerEvent(
                 appList["end-cursor"],
                 FetchDirection.NEXT
               );
-              this.isBatchLoading = false;
             }
-          });
+          }
         };
         this.nextBatchTriggerObserver = new IntersectionObserver(
           callback,
@@ -620,14 +632,15 @@
     createNodes() {
       const appList = this.states["app-list"].getValue();
       let html = "";
+      html += '<ol id="apps-list-items">';
       if (appList["need-prev-batch-trigger"]) {
-        html += '<div id="app-prev-batch-trigger" class="batch-trigger">';
+        html += '<li id="app-prev-batch-trigger" class="batch-trigger">';
         html += '    <span class="fas fa-circle-notch fa-spin"></span>';
-        html += "</div>";
+        html += "</li>";
       }
       for (let i = 0; i < appList["displayed-apps"].length; i++) {
         const app = appList["displayed-apps"][i];
-        html += '<div class="app-card">';
+        html += '<li class="app-card">';
         html += '  <div class="app-card-icon">';
         html += `    <img src=${app["artwork_large_url"]}/>`;
         html += "  </div>";
@@ -644,14 +657,56 @@
         html += `      ${app["rating"].toFixed(2)}`;
         html += "    </p>";
         html += "  </div>";
-        html += "</div>";
+        html += "</li>";
       }
       if (appList["need-next-batch-trigger"]) {
-        html += '<div id="app-next-batch-trigger" class="batch-trigger">';
+        html += '<li id="app-next-batch-trigger" class="batch-trigger">';
         html += '    <span class="fas fa-circle-notch fa-spin"></span>';
-        html += "</div>";
+        html += "</li>";
       }
+      html += "</ol>";
       return htmlToNodes(html);
+    }
+    async #runBatchTriggerEvent(cursor, fetchDirection) {
+      const appList = this.states["app-list"].getValue();
+      const recentBatchSize2 = appList["recent-batch-size"];
+      this.isBatchLoading = true;
+      await fetchAppListData(
+        this.states["app-list"],
+        this.states["compmatrix-data"],
+        this.states["from-sdks"],
+        this.states["to-sdks"],
+        cursor,
+        fetchDirection
+      );
+      if (appList["pruned"] && recentBatchSize2 !== 0) {
+        const list = document.getElementById("apps-list-items");
+        const loadedApps = [...list.children];
+        const newApps = fetchDirection == FetchDirection.PREVIOUS ? loadedApps.slice(0, recentBatchSize2 + 1) : loadedApps.slice(-recentBatchSize2 - 1);
+        const listStyle = window.getComputedStyle(list);
+        let scrollHeight = 0;
+        if (newApps.length > 0) {
+          const listBounds = list.getBoundingClientRect();
+          const rowStartXPos = listBounds["x"];
+          let numRows = 0;
+          for (let i = 0; i < newApps.length; i++) {
+            const cardBounds = newApps[i].getBoundingClientRect();
+            if (cardBounds["x"] == rowStartXPos) {
+              scrollHeight += cardBounds["height"];
+              numRows++;
+            }
+          }
+          const rowGap = listStyle.getPropertyValue("row-gap");
+          const rowGapSize = parseInt(rowGap);
+          scrollHeight += rowGapSize * (numRows - 1);
+          scrollHeight -= rowGapSize * 3.5;
+        }
+        if (fetchDirection === FetchDirection.NEXT) {
+          scrollHeight = -scrollHeight;
+        }
+        this.rootNode.scrollBy(0, scrollHeight);
+      }
+      this.isBatchLoading = false;
     }
   };
   var AppListDesc = class extends Widget {
@@ -708,6 +763,8 @@
       this.appListData = new State({
         "displayed-apps": [],
         "total-app-count": 0,
+        "recent-batch-size": 0,
+        "pruned": false,
         "sdks": {
           "from-sdk": null,
           "to-sdk": null

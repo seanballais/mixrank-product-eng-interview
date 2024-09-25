@@ -37,6 +37,8 @@ class App {
         this.appListData = new State({
             'displayed-apps': [],
             'total-app-count': 0,
+            'recent-batch-size': 0,
+            'pruned': false,
             'sdks': {
                 'from-sdk': null,
                 'to-sdk': null
@@ -44,7 +46,7 @@ class App {
             'start-cursor': null,
             'end-cursor': null,
             'need-prev-batch-trigger': false,
-            'need-next-batch-trigger': false
+            'need-next-batch-trigger': false,
         });
 
         this.matrixTable = new CompMatrix('compmatrix');

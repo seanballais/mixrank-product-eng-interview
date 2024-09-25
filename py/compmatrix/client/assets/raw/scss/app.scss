@@ -210,65 +210,73 @@ body {
                     div#apps-list {
                         overflow: auto;
 
-                        display: flex;
-                        flex-direction: row;
-                        flex-wrap: wrap;
-                        gap: 1.5rem;                        
-
                         @include scrollbar-styling;
 
-                        div {
-                            &.batch-trigger {
-                                flex-grow: 1;
-                                flex-shrink: 1;
-                                flex-basis: 100%;
+                        ol {
+                            margin: 0;
+                            padding: 0;
 
-                                display: flex;
-                                flex-direction: row;
-                                justify-content: center;
+                            display: flex;
+                            flex-direction: row;
+                            flex-wrap: wrap;
+                            gap: 1.5rem;
+                            align-items: stretch;
 
-                                padding: 1rem;
-                                padding-top: 0;
-                            }
+                            li {
+                                list-style-type: none;
 
-                            &.app-card {
-                                flex-grow: 1;
-                                flex-shrink: 1;
-                                flex-basis: 40%;
+                                &.batch-trigger {
+                                    flex-grow: 1;
+                                    flex-shrink: 1;
+                                    flex-basis: 100%;
     
-                                display: flex;
-                                flex-direction: row;
-                                gap: 0.5rem;
+                                    display: flex;
+                                    flex-direction: row;
+                                    justify-content: center;
     
-                                div {
-                                    &.app-card-icon {
-                                        img {
-                                            width: 55px;
-                                            height: 55px;
+                                    padding-left: 1rem;
+                                    padding-right: 1rem;                                
+                                }
     
-                                            border-radius: 10px;
+                                &.app-card {
+                                    flex-grow: 1;
+                                    flex-shrink: 1;
+                                    flex-basis: 40%;
+        
+                                    display: flex;
+                                    flex-direction: row;
+                                    gap: 0.5rem;
+        
+                                    div {
+                                        &.app-card-icon {
+                                            img {
+                                                width: 55px;
+                                                height: 55px;
+        
+                                                border-radius: 10px;
+                                            }
                                         }
-                                    }
-    
-                                    &.app-card-info {
-                                        h1 {
-                                            margin-top: 0.25rem;
-                                            margin-bottom: 0.5rem;
-                                        }
-    
-                                        p {
-                                            margin-top: 0.5rem;
-                                            margin-bottom: 0.5rem;
-    
-                                            color: $secondary-text-colour;
-    
-                                            &.app-card-info-company {
-                                                a {
-                                                    color: $secondary-text-colour;
-                                                    text-decoration: none;
-    
-                                                    &:hover {
-                                                        color: $secondary-text-colour-lighter;
+        
+                                        &.app-card-info {
+                                            h1 {
+                                                margin-top: 0.25rem;
+                                                margin-bottom: 0.5rem;
+                                            }
+        
+                                            p {
+                                                margin-top: 0.5rem;
+                                                margin-bottom: 0.5rem;
+        
+                                                color: $secondary-text-colour;
+        
+                                                &.app-card-info-company {
+                                                    a {
+                                                        color: $secondary-text-colour;
+                                                        text-decoration: none;
+        
+                                                        &:hover {
+                                                            color: $secondary-text-colour-lighter;
+                                                        }
                                                     }
                                                 }
                                             }
