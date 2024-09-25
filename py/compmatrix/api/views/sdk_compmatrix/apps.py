@@ -134,7 +134,7 @@ def index():
             from_sdk_param, to_sdk_param
         )
     included_apps_query: Subquery = included_apps_query.subquery()
-    num_apps: int = db.session.execute(
+    num_total_apps: int = db.session.execute(
         db.select(db.func.count('*')).select_from(included_apps_query)
     ).scalar_one()
 
@@ -196,14 +196,14 @@ def index():
     start_cursor: str | None = None
     end_cursor: str | None = None
 
-    if num_apps > 0:
+    if apps:
         start_cursor = _create_cursor_from_app(apps[0])
         end_cursor = _create_cursor_from_app(apps[-1])
 
     return {
         'data': {
             'apps': resp_apps,
-            'total_count': num_apps,
+            'total_count': num_total_apps,
             'start_cursor': start_cursor,
             'end_cursor': end_cursor
         }
