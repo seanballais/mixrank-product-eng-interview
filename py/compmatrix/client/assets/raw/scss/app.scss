@@ -237,6 +237,22 @@ body {
                                     padding-left: 1rem;
                                     padding-right: 1rem;                                
                                 }
+
+                                $trigger-vertical-padding-size: 2rem;
+
+                                &#app-prev-batch-trigger {
+                                    padding-top: $trigger-vertical-padding-size;
+
+                                    // We have a gap in use so no padding at the bottom needed.
+                                    padding-bottom: 0;
+                                }
+
+                                &#app-next-batch-trigger {
+                                    // We have a gap in use so no padding at the bottom needed.
+                                    padding-top: 0;
+
+                                    padding-bottom: $trigger-vertical-padding-size;
+                                }
     
                                 &.app-card {
                                     flex-grow: 1;

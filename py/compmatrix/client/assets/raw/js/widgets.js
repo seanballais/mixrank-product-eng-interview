@@ -268,7 +268,8 @@ export class AppList extends Widget {
 
         if (appList['need-prev-batch-trigger']) {
             const callback = (entries, observer) => {
-                entries.forEach(async (entry) => {
+                for (let i = 0; i < entries.length; i++) {
+                    const e = entries[i];
                     // Guard check to make sure we don't keep on loading a
                     // batch of apps when we already previously initiated this
                     // trigger and we're already loading things. Not exactly an
@@ -279,35 +280,13 @@ export class AppList extends Widget {
                     // in). However, it should work for the time being. This
                     // might end up being enough, but we might have to change
                     // if need be depending on feedback.
-                    if (
-                        entry &&
-                        entry.isIntersecting &&
-                        !this.isBatchLoading
-                    ) {
-                        this.isBatchLoading = true;
-
-                        await fetchAppListData(
-                            this.states['app-list'],
-                            this.states['compmatrix-data'],
-                            this.states['from-sdks'],
-                            this.states['to-sdks'],
+                    if (e && e.isIntersecting && !this.isBatchLoading) {
+                        this.#runBatchTriggerEvent(
                             appList['start-cursor'],
                             FetchDirection.PREVIOUS
                         );
-
-                        // If we pruned our current displayed apps, then we
-                        // need to scroll down to where our view was before we
-                        // loaded in a new batch of apps.
-                        if (appList['pruned'] && recentBatchSize !== 0) {
-                            this.rootNode.scrollBy(
-                                0,
-                                baseScrollAmount + prevTriggerHeight
-                            );
-                        }
-
-                        this.isBatchLoading = false;
-                    } 
-                });
+                    }
+                }
             };
             this.prevBatchTriggerObserver = new IntersectionObserver(
                 callback,
@@ -395,10 +374,9 @@ export class AppList extends Widget {
     }
 
     async #runBatchTriggerEvent(cursor, fetchDirection) {
-        const appList = this.states['app-list'].getValue();
-        const recentBatchSize = appList['recent-batch-size'];
-        
         this.isBatchLoading = true;
+
+        const appList = this.states['app-list'].getValue();
 
         await fetchAppListData(
             this.states['app-list'],
@@ -408,6 +386,8 @@ export class AppList extends Widget {
             cursor,
             fetchDirection
         );
+
+        const recentBatchSize = appList['recent-batch-size'];
 
         // If we pruned our current displayed apps, then we need to scroll up
         // or down to where our view was before we loaded in a new batch of

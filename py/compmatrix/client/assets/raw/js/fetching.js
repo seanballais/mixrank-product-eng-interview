@@ -136,7 +136,7 @@ export async function fetchAppListData(
             };
 
             if (cursor !== null && direction === FetchDirection.PREVIOUS) {
-                v['displayed-apps'].unshift(newApp);
+                v['displayed-apps'].splice(i, 0, newApp);
             } else {
                 v['displayed-apps'].push(newApp);
             }

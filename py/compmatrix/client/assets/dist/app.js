@@ -114,7 +114,7 @@
           "rating": rating
         };
         if (cursor !== null && direction === FetchDirection.PREVIOUS) {
-          v["displayed-apps"].unshift(newApp);
+          v["displayed-apps"].splice(i, 0, newApp);
         } else {
           v["displayed-apps"].push(newApp);
         }
@@ -581,26 +581,15 @@
       };
       if (appList["need-prev-batch-trigger"]) {
         const callback = (entries, observer) => {
-          entries.forEach(async (entry) => {
-            if (entry && entry.isIntersecting && !this.isBatchLoading) {
-              this.isBatchLoading = true;
-              await fetchAppListData(
-                this.states["app-list"],
-                this.states["compmatrix-data"],
-                this.states["from-sdks"],
-                this.states["to-sdks"],
+          for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            if (e && e.isIntersecting && !this.isBatchLoading) {
+              this.#runBatchTriggerEvent(
                 appList["start-cursor"],
                 FetchDirection.PREVIOUS
               );
-              if (appList["pruned"] && recentBatchSize !== 0) {
-                this.rootNode.scrollBy(
-                  0,
-                  baseScrollAmount + prevTriggerHeight
-                );
-              }
-              this.isBatchLoading = false;
             }
-          });
+          }
         };
         this.prevBatchTriggerObserver = new IntersectionObserver(
           callback,
@@ -668,9 +657,8 @@
       return htmlToNodes(html);
     }
     async #runBatchTriggerEvent(cursor, fetchDirection) {
-      const appList = this.states["app-list"].getValue();
-      const recentBatchSize2 = appList["recent-batch-size"];
       this.isBatchLoading = true;
+      const appList = this.states["app-list"].getValue();
       await fetchAppListData(
         this.states["app-list"],
         this.states["compmatrix-data"],
@@ -679,10 +667,11 @@
         cursor,
         fetchDirection
       );
-      if (appList["pruned"] && recentBatchSize2 !== 0) {
+      const recentBatchSize = appList["recent-batch-size"];
+      if (appList["pruned"] && recentBatchSize !== 0) {
         const list = document.getElementById("apps-list-items");
         const loadedApps = [...list.children];
-        const newApps = fetchDirection == FetchDirection.PREVIOUS ? loadedApps.slice(0, recentBatchSize2 + 1) : loadedApps.slice(-recentBatchSize2 - 1);
+        const newApps = fetchDirection == FetchDirection.PREVIOUS ? loadedApps.slice(0, recentBatchSize + 1) : loadedApps.slice(-recentBatchSize - 1);
         const listStyle = window.getComputedStyle(list);
         let scrollHeight = 0;
         if (newApps.length > 0) {
