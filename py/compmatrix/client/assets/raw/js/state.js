@@ -14,6 +14,7 @@ export class State {
     //       feels more natural.
     constructor(initialValue) {
         this.value = initialValue;
+        this.initialValue = initialValue;
         this.subscriptions = [];
     }
 
@@ -31,6 +32,10 @@ export class State {
         for (const f of this.subscriptions) {
             f(this.value);
         }
+    }
+
+    resetToInitialState() {
+        this.setValue(this.initialValue);
     }
 
     addReactor(f, runOnAdd = true, prioritize = false) {

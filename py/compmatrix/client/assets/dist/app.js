@@ -261,6 +261,7 @@
     //       feels more natural.
     constructor(initialValue) {
       this.value = initialValue;
+      this.initialValue = initialValue;
       this.subscriptions = [];
     }
     getValue() {
@@ -275,6 +276,9 @@
       for (const f of this.subscriptions) {
         f(this.value);
       }
+    }
+    resetToInitialState() {
+      this.setValue(this.initialValue);
     }
     addReactor(f, runOnAdd = true, prioritize = false) {
       if (prioritize) {
@@ -813,6 +817,7 @@
           this.activeFromSDKsList,
           this.activeFromSDKs
         );
+        this.appListData.resetToInitialState();
       });
       this.selectedFromSDKRemoveBtn.setOnClick(() => {
         moveSDKFromListToComboBox(
@@ -821,6 +826,7 @@
           this.activeFromSDKsList,
           this.activeFromSDKs
         );
+        this.appListData.resetToInitialState();
       });
       this.selectedFromSDKUpBtn.setOnClick(() => {
         this.activeFromSDKsList.moveSelectedOptionUp();
