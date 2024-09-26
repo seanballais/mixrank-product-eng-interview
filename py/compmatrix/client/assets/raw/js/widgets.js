@@ -1,4 +1,3 @@
-import { MAX_APP_LIST_SIZE } from './constants.js';
 import { DataState, fetchAppListData, FetchDirection } from './fetching.js';
 import { htmlToNodes } from './html.js';
 import udomdiff from './udomdiff.js';
@@ -198,6 +197,13 @@ export class CompMatrix extends Widget {
                                 'to-sdk': sdks['to-sdk']
                             };
                         });
+
+                        fetchAppListData(
+                            this.states['app-list'],
+                            this.states['data'],
+                            this.states['from-sdks'],
+                            this.states['to-sdks']
+                        );
                     }
                 });
             }

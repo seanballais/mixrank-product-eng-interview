@@ -154,17 +154,6 @@ class App {
             this.activeToSDKsList.moveSelectedOptionDown();
         });
 
-        this.compmatrixData.addReactor((v) => {
-            if (v['selected-cell']) {
-                fetchAppListData(
-                    this.appListData,
-                    this.compmatrixData,
-                    this.activeFromSDKs,
-                    this.activeToSDKs
-                );
-            }
-        });
-
         this.activeFromSDKs.addReactor(() => {
             this.#fetchCompMatrixValues();
         }, true, true);

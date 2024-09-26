@@ -518,6 +518,12 @@
                   "to-sdk": sdks["to-sdk"]
                 };
               });
+              fetchAppListData(
+                this.states["app-list"],
+                this.states["data"],
+                this.states["from-sdks"],
+                this.states["to-sdks"]
+              );
             }
           });
         }
@@ -894,16 +900,6 @@
       });
       this.selectedToSDKDownBtn.setOnClick(() => {
         this.activeToSDKsList.moveSelectedOptionDown();
-      });
-      this.compmatrixData.addReactor((v) => {
-        if (v["selected-cell"]) {
-          fetchAppListData(
-            this.appListData,
-            this.compmatrixData,
-            this.activeFromSDKs,
-            this.activeToSDKs
-          );
-        }
       });
       this.activeFromSDKs.addReactor(() => {
         this.#fetchCompMatrixValues();
