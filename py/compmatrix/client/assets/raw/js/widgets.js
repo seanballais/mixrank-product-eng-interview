@@ -301,68 +301,75 @@ export class AppList extends Widget {
         super.update();
 
         const appList = this.states['app-list'].getValue();
-        const observerOptions = {
-            root: this.rootNode,
-        };
 
-        if (appList['need-prev-batch-trigger']) {
-            const callback = (entries, observer) => {
-                for (let i = 0; i < entries.length; i++) {
-                    const e = entries[i];
-                    // Guard check to make sure we don't keep on loading a
-                    // batch of apps when we already previously initiated this
-                    // trigger and we're already loading things. Not exactly an
-                    // ideal solution, since this will also block the other
-                    // trigger from calling its callback (which also helps make
-                    // sure we don't screw up the app list if we already
-                    // exceeded the maximum number of apps allowed to be loaded
-                    // in). However, it should work for the time being. This
-                    // might end up being enough, but we might have to change
-                    // if need be depending on feedback.
-                    if (e && e.isIntersecting && !this.isBatchLoading) {
-                        this.#runBatchTriggerEvent(
-                            appList['start-cursor'],
-                            FetchDirection.PREVIOUS
-                        );
-                    }
-                }
+        if (appList['state'] === DataState.LOADED) {
+            const observerOptions = {
+                root: this.rootNode,
             };
-            this.prevBatchTriggerObserver = new IntersectionObserver(
-                callback,
-                observerOptions
-            );
-            const trigger = document.getElementById('app-prev-batch-trigger');
-            this.prevBatchTriggerObserver.observe(trigger);
-        }
-
-        if (appList['need-next-batch-trigger']) {
-            const callback = (entries, observer) => {
-                for (let i = 0; i < entries.length; i++) {
-                    const e = entries[i];
-                    // Guard check to make sure we don't keep on loading a
-                    // batch of apps when we already previously initiated this
-                    // trigger and we're already loading things. Not exactly an
-                    // ideal solution, since this will also block the other
-                    // trigger from calling its callback (which also helps make
-                    // sure we don't screw up the app list if we already
-                    // exceeded the maximum number of apps allowed to be loaded
-                    // in). However, it should work for the time being. This
-                    // might end up being enough, but we might have to change
-                    // if need be depending on feedback.
-                    if (e && e.isIntersecting && !this.isBatchLoading) {
-                        this.#runBatchTriggerEvent(
-                            appList['end-cursor'],
-                            FetchDirection.NEXT
-                        );
+    
+            if (appList['need-prev-batch-trigger']) {
+                const callback = (entries, observer) => {
+                    for (let i = 0; i < entries.length; i++) {
+                        const e = entries[i];
+                        // Guard check to make sure we don't keep on loading a
+                        // batch of apps when we already previously initiated
+                        // this trigger and we're already loading things. Not
+                        // exactly an ideal solution, since this will also
+                        // block the other trigger from calling its callback
+                        // (which also helps make sure we don't screw up the
+                        // app list if we already exceeded the maximum number
+                        // of apps allowed to be loaded in). However, it should
+                        // work for the time being. This might end up being
+                        // enough, but we might have to change if need be
+                        // depending on feedback.
+                        if (e && e.isIntersecting && !this.isBatchLoading) {
+                            this.#runBatchTriggerEvent(
+                                appList['start-cursor'],
+                                FetchDirection.PREVIOUS
+                            );
+                        }
                     }
-                }
-            };
-            this.nextBatchTriggerObserver = new IntersectionObserver(
-                callback,
-                observerOptions
-            );
-            const trigger = document.getElementById('app-next-batch-trigger');
-            this.nextBatchTriggerObserver.observe(trigger);
+                };
+                this.prevBatchTriggerObserver = new IntersectionObserver(
+                    callback,
+                    observerOptions
+                );
+                const triggerID = 'app-prev-batch-trigger';
+                const trigger = document.getElementById(triggerID);
+                this.prevBatchTriggerObserver.observe(trigger);
+            }
+    
+            if (appList['need-next-batch-trigger']) {
+                const callback = (entries, observer) => {
+                    for (let i = 0; i < entries.length; i++) {
+                        const e = entries[i];
+                        // Guard check to make sure we don't keep on loading a
+                        // batch of apps when we already previously initiated
+                        // this trigger and we're already loading things. Not
+                        // exactly an ideal solution, since this will also
+                        // block the other trigger from calling its callback
+                        // (which also helps make sure we don't screw up the
+                        // app list if we already exceeded the maximum number
+                        // of apps allowed to be loaded in). However, it should
+                        // work for the time being. This might end up being
+                        // enough, but we might have to change if need be
+                        // depending on feedback.
+                        if (e && e.isIntersecting && !this.isBatchLoading) {
+                            this.#runBatchTriggerEvent(
+                                appList['end-cursor'],
+                                FetchDirection.NEXT
+                            );
+                        }
+                    }
+                };
+                this.nextBatchTriggerObserver = new IntersectionObserver(
+                    callback,
+                    observerOptions
+                );
+                const triggerID = 'app-next-batch-trigger';
+                const trigger = document.getElementById(triggerID);
+                this.nextBatchTriggerObserver.observe(trigger);
+            }
         }
     }
 
@@ -371,43 +378,57 @@ export class AppList extends Widget {
 
         let html = '';
 
-        html += '<ol id="apps-list-items">';
+        if (appList['state'] === DataState.LOADED) {
+            html += '<ol id="apps-list-items">';
 
-        if (appList['need-prev-batch-trigger']) {
-            html += '<li id="app-prev-batch-trigger" class="batch-trigger">';
-            html += '    <span class="fas fa-circle-notch fa-spin"></span>';
-            html += '</li>';
-        }
+            if (appList['need-prev-batch-trigger']) {
+                html += `
+                    <li id="app-prev-batch-trigger" class="batch-trigger">
+                        <span class="fas fa-circle-notch fa-spin"></span>
+                    </li>
+                `;
+            }
 
-        for (let i = 0; i < appList['displayed-apps'].length; i++) {
-            const app = appList['displayed-apps'][i];
-            html += '<li class="app-card">';
-            html += '  <div class="app-card-icon">';
-            html += `    <img src=${app['artwork_large_url']}/>`
-            html += '  </div>';
-            html += '  <div class="app-card-info">';
-            html += `    <h1>${app['name']}</h1>`;
-            html += '    <p class="app-card-info-company">'
-            html += `      <a href=${app['company_url']}">`
-            html += `      ${app['seller_name']}`;
-            html += '      </a>'
-            html += '    </p>';
-            html += '    <p>';
-            html += '      <span class="fa-solid fa-star app-rating-icon">';
-            html += '      </span>';
-            html += `      ${app['rating'].toFixed(2)}`
-            html += '    </p>';
-            html += '  </div>';
-            html += '</li>';
-        }
+            for (let i = 0; i < appList['displayed-apps'].length; i++) {
+                const app = appList['displayed-apps'][i];
+                html += `
+                    <li class="app-card">
+                        <div class="app-card-icon">
+                            <img src=${app['artwork_large_url']}/>
+                        </div>
+                        <div class="app-card-info">
+                            <h1>${app['name']}</h1>
+                            <p class="app-card-info-company">
+                                <a href=${app['company_url']}">
+                                ${app['seller_name']}
+                                </a>
+                            </p>
+                            <p>
+                                <span class="fa-solid fa-star app-rating-icon">
+                                </span>
+                                ${app['rating'].toFixed(2)}
+                            </p>
+                        </div>
+                    </li>
+                `
+            }
 
-        if (appList['need-next-batch-trigger']) {
-            html += '<li id="app-next-batch-trigger" class="batch-trigger">';
-            html += '    <span class="fas fa-circle-notch fa-spin"></span>';
-            html += '</li>';
+            if (appList['need-next-batch-trigger']) {
+                html += `
+                    <li id="app-next-batch-trigger" class="batch-trigger">
+                        <span class="fas fa-circle-notch fa-spin"></span>
+                    </li>
+                `;
+            }
+            
+            html += '</ol>';
+        } else if (appList['state'] === DataState.LOADING) {
+            html += `
+                <div id="app-list-loader-icon">
+                    <span class="fas fa-circle-notch fa-spin"></span>
+                </div>
+            `;
         }
-        
-        html += '</ol>';
 
         return htmlToNodes(html);
     }

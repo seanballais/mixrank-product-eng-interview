@@ -35,6 +35,7 @@ class App {
             'displayed-apps': [],
             'total-app-count': 0,
             'recent-batch-size': 0,
+            'state': DataState.EMPTY,
             'pruned': false,
             'start-cursor': null,
             'end-cursor': null,

@@ -80,6 +80,10 @@ export async function fetchAppListData(
     const paramString = params.toString();
     let appsJSON;
     try {
+        appListDataState.setValue((v) => {
+            v['state'] = DataState.LOADING;
+        });
+
         const response = await fetch(`${url}?${paramString}`);
         appsJSON = await response.json();
     } catch (error) {
@@ -87,13 +91,8 @@ export async function fetchAppListData(
     }
 
     appListDataState.setValue((v) => {
-        // TODO: - Figure out a way to know whether we should clear the
-        //         app list or just prepend/append it.
-        //       - Use Intersection Observer to load more apps. Use a div
-        //         as a trigger. However, if we reached the max number of
-        //         apps, we don't load the trigger. If we reached a certain
-        //         threshold of apps, we put a div trigger at the start of
-        //         the list after removing excess apps.
+        v['state'] = DataState.LOADED;
+
         const numApps = appsJSON['data']['apps'].length;
         const totalCount = appsJSON['data']['total_count'];
 

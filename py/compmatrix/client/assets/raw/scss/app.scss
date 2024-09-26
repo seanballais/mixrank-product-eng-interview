@@ -214,9 +214,23 @@ body {
                     }
 
                     div#apps-list {
+                        $loader-vertical-padding-size: 2rem;
+
                         overflow: auto;
 
                         @include scrollbar-styling;
+
+                        div#app-list-loader-icon {
+                            padding-top: 0;
+                            padding-bottom: $loader-vertical-padding-size;
+
+                            display: flex;
+                            justify-content: center;
+                        }
+
+                        &:has(div#app-list-loader-icon) {
+                            overflow: initial;
+                        }
 
                         ol {
                             margin: 0;
@@ -244,10 +258,8 @@ body {
                                     padding-right: 1rem;                                
                                 }
 
-                                $trigger-vertical-padding-size: 2rem;
-
                                 &#app-prev-batch-trigger {
-                                    padding-top: $trigger-vertical-padding-size;
+                                    padding-top: $loader-vertical-padding-size;
 
                                     // We have a gap in use so no padding at the bottom needed.
                                     padding-bottom: 0;
@@ -257,7 +269,7 @@ body {
                                     // We have a gap in use so no padding at the bottom needed.
                                     padding-top: 0;
 
-                                    padding-bottom: $trigger-vertical-padding-size;
+                                    padding-bottom: $loader-vertical-padding-size;
                                 }
     
                                 &.app-card {
