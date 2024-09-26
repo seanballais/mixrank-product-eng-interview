@@ -150,6 +150,7 @@ export class CompMatrix extends Widget {
         super(rootNode);
 
         this.cellToSDKs = {};
+        this.selectedCellID = null;
     }
 
     update() {
@@ -161,14 +162,42 @@ export class CompMatrix extends Widget {
         const data = this.states['data'].getValue();
         const dataState = data['state'];
 
+        const appListState = this.states['app-list'];
+
         if (dataState == DataState.LOADED) {
             for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
                 const cell = document.getElementById(key);
                 cell.addEventListener('click', () => {
-                    this.states['data'].setValue((v) => {
-                        v['selected-cell']['from-sdk'] = sdks['from-sdk'];
-                        v['selected-cell']['to-sdk'] = sdks['to-sdk'];
-                    });
+                    // Clears out the app list.
+                    appListState.resetToInitialState();
+
+                    if (key == this.selectedCellID) {
+                        // Deselect this cell. We need to set the selected
+                        // cell ID as null before setting the value of the
+                        // state so that the deselection is correctly rendered.
+                        this.selectedCellID = null;
+
+                        this.states['data'].setValue((v) => {
+                            v['selected-cell'] = null;
+                        });    
+                    } else {
+                        // The selected cell must be set before we set the
+                        // value of the state so that the new selected cell can
+                        // be rendered correctly. Note that a re-rendering will
+                        // happen after the setValue() below. If we set the
+                        // selected cell ID after the setValue(), we will only
+                        // be rendering the selected renderer for the previous
+                        // selected cell, and not the currently clicked
+                        // selected cell.
+                        this.selectedCellID = key;             
+
+                        this.states['data'].setValue((v) => {
+                            v['selected-cell'] = {
+                                'from-sdk': sdks['from-sdk'],
+                                'to-sdk': sdks['to-sdk']
+                            };
+                        });
+                    }
                 });
             }
         }
@@ -227,7 +256,16 @@ export class CompMatrix extends Widget {
                     const id = `cmc-${i}${j}`;
                     const colour = `hsla(0, 80%, 55%, ${opacity * 100}%)`
                     const style = `background-color: ${colour}`;
-                    html += `<td id="${id}" style="${style}">${cellData}</td>`;
+
+                    if (this.selectedCellID == id) {
+                        html += `<td id="${id}" `
+                        html += `style="${style}"`
+                        html += 'class="selected-cell">';
+                    } else {
+                        html += `<td id="${id}" style="${style}">`;
+                    }
+                    
+                    html += `${cellData}</td>`;
 
                     this.cellToSDKs[id] = {
                         'from-sdk': fromSDKHeaders[i],
@@ -476,11 +514,12 @@ export class AppListDesc extends Widget {
     }
 
     createNodes() {
+        const compmatrixData = this.states['compmatrix-data'].getValue();
         const appList = this.states['app-list'].getValue();
 
         let html = '<p>';
-        if (appList['displayed-apps'].length == 0) {
-            html += 'No apps loaded in yet.';
+        if (compmatrixData['selected-cell'] === null) {
+            html += 'Select a cell in the competitive matrix to get started.';
         } else {
             const fromSDK = appList['sdks']['from-sdk'];
             const toSDK = appList['sdks']['to-sdk'];

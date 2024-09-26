@@ -260,8 +260,8 @@
     //
     //       feels more natural.
     constructor(initialValue) {
-      this.value = initialValue;
-      this.initialValue = initialValue;
+      this.value = structuredClone(initialValue);
+      this.initialValue = structuredClone(initialValue);
       this.subscriptions = [];
     }
     getValue() {
@@ -278,7 +278,7 @@
       }
     }
     resetToInitialState() {
-      this.setValue(this.initialValue);
+      this.setValue(structuredClone(this.initialValue));
     }
     addReactor(f, runOnAdd = true, prioritize = false) {
       if (prioritize) {
@@ -490,20 +490,33 @@
     constructor(rootNode) {
       super(rootNode);
       this.cellToSDKs = {};
+      this.selectedCellID = null;
     }
     update() {
       this.cellToSDKs = {};
       super.update();
       const data = this.states["data"].getValue();
       const dataState = data["state"];
+      const appListState = this.states["app-list"];
       if (dataState == DataState.LOADED) {
         for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
           const cell = document.getElementById(key);
           cell.addEventListener("click", () => {
-            this.states["data"].setValue((v) => {
-              v["selected-cell"]["from-sdk"] = sdks["from-sdk"];
-              v["selected-cell"]["to-sdk"] = sdks["to-sdk"];
-            });
+            appListState.resetToInitialState();
+            if (key == this.selectedCellID) {
+              this.selectedCellID = null;
+              this.states["data"].setValue((v) => {
+                v["selected-cell"] = null;
+              });
+            } else {
+              this.selectedCellID = key;
+              this.states["data"].setValue((v) => {
+                v["selected-cell"] = {
+                  "from-sdk": sdks["from-sdk"],
+                  "to-sdk": sdks["to-sdk"]
+                };
+              });
+            }
           });
         }
       }
@@ -552,7 +565,14 @@
             const id = `cmc-${i}${j}`;
             const colour = `hsla(0, 80%, 55%, ${opacity * 100}%)`;
             const style = `background-color: ${colour}`;
-            html += `<td id="${id}" style="${style}">${cellData}</td>`;
+            if (this.selectedCellID == id) {
+              html += `<td id="${id}" `;
+              html += `style="${style}"`;
+              html += 'class="selected-cell">';
+            } else {
+              html += `<td id="${id}" style="${style}">`;
+            }
+            html += `${cellData}</td>`;
             this.cellToSDKs[id] = {
               "from-sdk": fromSDKHeaders[i],
               "to-sdk": toSDKHeaders[j]
@@ -707,10 +727,11 @@
       super(rootNode);
     }
     createNodes() {
+      const compmatrixData = this.states["compmatrix-data"].getValue();
       const appList = this.states["app-list"].getValue();
       let html = "<p>";
-      if (appList["displayed-apps"].length == 0) {
-        html += "No apps loaded in yet.";
+      if (compmatrixData["selected-cell"] === null) {
+        html += "Select a cell in the competitive matrix to get started.";
       } else {
         const fromSDK = appList["sdks"]["from-sdk"];
         const toSDK = appList["sdks"]["to-sdk"];
@@ -748,10 +769,7 @@
         },
         "state": DataState.EMPTY,
         "active-data": "raw",
-        "selected-cell": {
-          "from-sdk": null,
-          "to-sdk": null
-        }
+        "selected-cell": null
       });
       this.appListData = new State({
         "displayed-apps": [],
@@ -771,7 +789,8 @@
       this.matrixTable.batchSubscribe([
         { "refName": "data", "state": this.compmatrixData },
         { "refName": "from-sdks", "state": this.activeFromSDKs },
-        { "refName": "to-sdks", "state": this.activeToSDKs }
+        { "refName": "to-sdks", "state": this.activeToSDKs },
+        { "refName": "app-list", "state": this.appListData }
       ]);
       this.matrixTableDataToggler = new CompMatrixDataToggler(
         "compmatrix-data-toggle"
@@ -809,7 +828,10 @@
         { "refName": "to-sdks", "state": this.activeToSDKs }
       ]);
       this.appListDesc = new AppListDesc("app-list-desc");
-      this.appListDesc.subscribeTo("app-list", this.appListData);
+      this.appListDesc.batchSubscribe([
+        { "refName": "app-list", "state": this.appListData },
+        { "refName": "compmatrix-data", "state": this.compmatrixData }
+      ]);
       this.fromSDKAddBtn.setOnClick(() => {
         moveSDKFromComboBoxToList(
           this.fromSDKComboBox,
@@ -856,13 +878,15 @@
       this.selectedToSDKDownBtn.setOnClick(() => {
         this.activeToSDKsList.moveSelectedOptionDown();
       });
-      this.compmatrixData.addReactor(() => {
-        fetchAppListData(
-          this.appListData,
-          this.compmatrixData,
-          this.activeFromSDKs,
-          this.activeToSDKs
-        );
+      this.compmatrixData.addReactor((v) => {
+        if (v["selected-cell"]) {
+          fetchAppListData(
+            this.appListData,
+            this.compmatrixData,
+            this.activeFromSDKs,
+            this.activeToSDKs
+          );
+        }
       });
       this.activeFromSDKs.addReactor(() => {
         this.#fetchCompMatrixValues();
@@ -873,12 +897,6 @@
     }
     async init() {
       this.#fetchSDKs();
-      fetchAppListData(
-        this.appListData,
-        this.compmatrixData,
-        this.activeFromSDKs,
-        this.activeToSDKs
-      );
     }
     async #fetchSDKs() {
       const url = `${BASE_API_ENDPOINT}/sdks`;

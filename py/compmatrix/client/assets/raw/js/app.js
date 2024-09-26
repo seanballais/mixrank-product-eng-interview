@@ -28,10 +28,7 @@ class App {
             },
             'state': DataState.EMPTY,
             'active-data': 'raw',
-            'selected-cell': {
-                'from-sdk': null,
-                'to-sdk': null
-            }
+            'selected-cell': null,
         });
 
         this.appListData = new State({
@@ -53,7 +50,8 @@ class App {
         this.matrixTable.batchSubscribe([
             {'refName': 'data', 'state': this.compmatrixData},
             {'refName': 'from-sdks', 'state': this.activeFromSDKs},
-            {'refName': 'to-sdks', 'state': this.activeToSDKs}
+            {'refName': 'to-sdks', 'state': this.activeToSDKs},
+            {'refName': 'app-list', 'state': this.appListData}
         ]);
 
         this.matrixTableDataToggler = new CompMatrixDataToggler(
@@ -100,7 +98,10 @@ class App {
         ]);
 
         this.appListDesc = new AppListDesc('app-list-desc');
-        this.appListDesc.subscribeTo('app-list', this.appListData);
+        this.appListDesc.batchSubscribe([
+            {'refName': 'app-list', 'state': this.appListData},
+            {'refName': 'compmatrix-data', 'state': this.compmatrixData}
+        ]);
 
         this.fromSDKAddBtn.setOnClick(() => {
             interactivity.moveSDKFromComboBoxToList(
@@ -156,13 +157,15 @@ class App {
             this.activeToSDKsList.moveSelectedOptionDown();
         });
 
-        this.compmatrixData.addReactor(() => {
-            fetchAppListData(
-                this.appListData,
-                this.compmatrixData,
-                this.activeFromSDKs,
-                this.activeToSDKs
-            );
+        this.compmatrixData.addReactor((v) => {
+            if (v['selected-cell']) {
+                fetchAppListData(
+                    this.appListData,
+                    this.compmatrixData,
+                    this.activeFromSDKs,
+                    this.activeToSDKs
+                );
+            }
         });
 
         this.activeFromSDKs.addReactor(() => {
@@ -176,13 +179,6 @@ class App {
 
     async init() {
         this.#fetchSDKs();
-        
-        fetchAppListData(
-            this.appListData,
-            this.compmatrixData,
-            this.activeFromSDKs,
-            this.activeToSDKs
-        );
     }
 
     async #fetchSDKs() {

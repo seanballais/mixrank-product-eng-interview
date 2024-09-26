@@ -93,6 +93,12 @@ body {
                                         font-weight: normal;
                                     }
 
+                                    td {
+                                        &.selected-cell {
+                                            border: 0.5rem solid $white;
+                                        }
+                                    }
+
                                     &:nth-child(1) {
                                         th {
                                             height: 0;

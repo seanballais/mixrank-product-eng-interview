@@ -13,8 +13,8 @@ export class State {
     //
     //       feels more natural.
     constructor(initialValue) {
-        this.value = initialValue;
-        this.initialValue = initialValue;
+        this.value = structuredClone(initialValue);
+        this.initialValue = structuredClone(initialValue);
         this.subscriptions = [];
     }
 
@@ -35,7 +35,7 @@ export class State {
     }
 
     resetToInitialState() {
-        this.setValue(this.initialValue);
+        this.setValue(structuredClone(this.initialValue));
     }
 
     addReactor(f, runOnAdd = true, prioritize = false) {
