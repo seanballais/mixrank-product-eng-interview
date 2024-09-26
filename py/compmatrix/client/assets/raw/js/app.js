@@ -36,10 +36,6 @@ class App {
             'total-app-count': 0,
             'recent-batch-size': 0,
             'pruned': false,
-            'sdks': {
-                'from-sdk': null,
-                'to-sdk': null
-            },
             'start-cursor': null,
             'end-cursor': null,
             'need-prev-batch-trigger': false,

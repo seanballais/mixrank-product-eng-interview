@@ -142,9 +142,6 @@ export async function fetchAppListData(
             }
         }
 
-        v['sdks']['from-sdk'] = fromSDK;
-        v['sdks']['to-sdk'] = toSDK;
-
         if (cursor === null) {
             // We're getting the initial batch, so we can set the cursors to
             // the ones we receive from the API.

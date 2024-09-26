@@ -119,8 +119,6 @@
           v["displayed-apps"].push(newApp);
         }
       }
-      v["sdks"]["from-sdk"] = fromSDK;
-      v["sdks"]["to-sdk"] = toSDK;
       if (cursor === null) {
         v["start-cursor"] = appsJSON["data"]["start_cursor"];
         v["end-cursor"] = appsJSON["data"]["end_cursor"];
@@ -733,8 +731,8 @@
       if (compmatrixData["selected-cell"] === null) {
         html += "Select a cell in the competitive matrix to get started.";
       } else {
-        const fromSDK = appList["sdks"]["from-sdk"];
-        const toSDK = appList["sdks"]["to-sdk"];
+        const fromSDK = compmatrixData["selected-cell"]["from-sdk"];
+        const toSDK = compmatrixData["selected-cell"]["to-sdk"];
         let fromSDKName = "";
         if (fromSDK === null) {
           fromSDKName = "(none)";
@@ -776,10 +774,6 @@
         "total-app-count": 0,
         "recent-batch-size": 0,
         "pruned": false,
-        "sdks": {
-          "from-sdk": null,
-          "to-sdk": null
-        },
         "start-cursor": null,
         "end-cursor": null,
         "need-prev-batch-trigger": false,

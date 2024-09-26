@@ -168,7 +168,8 @@ export class CompMatrix extends Widget {
             for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
                 const cell = document.getElementById(key);
                 cell.addEventListener('click', () => {
-                    // Clears out the app list.
+                    // Clears out the app list. We need to change the selected
+                    // cell in the app list too.
                     appListState.resetToInitialState();
 
                     if (key == this.selectedCellID) {
@@ -521,8 +522,8 @@ export class AppListDesc extends Widget {
         if (compmatrixData['selected-cell'] === null) {
             html += 'Select a cell in the competitive matrix to get started.';
         } else {
-            const fromSDK = appList['sdks']['from-sdk'];
-            const toSDK = appList['sdks']['to-sdk'];
+            const fromSDK = compmatrixData['selected-cell']['from-sdk'];
+            const toSDK = compmatrixData['selected-cell']['to-sdk'];
 
             let fromSDKName = '';
             if (fromSDK === null) {
