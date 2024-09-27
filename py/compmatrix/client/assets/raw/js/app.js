@@ -107,6 +107,8 @@ class App {
                 this.activeFromSDKsList,
                 this.activeFromSDKs
             );
+
+            this.#refetchAppListIfNeeded();
         });
         this.selectedFromSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(
@@ -130,6 +132,8 @@ class App {
                 this.activeToSDKsList,
                 this.activeToSDKs
             )
+
+            this.#refetchAppListIfNeeded();
         });
         this.selectedToSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(
@@ -233,6 +237,26 @@ class App {
             v['data']['normalized'] = normalizedValues;
             v['state'] = DataState.LOADED;
         });
+    }
+
+    #refetchAppListIfNeeded() {
+        const compmatrixData = this.compmatrixData.getValue();
+        const selectedCell = compmatrixData['selected-cell'];
+        if (selectedCell) {
+            const fromSDK = selectedCell['from-sdk'];
+            const toSDK = selectedCell['to-sdk'];
+            if (fromSDK['id'] === null || toSDK['id'] === null) {
+                // Refetch app list in case the newly-added SDK causes a
+                // change in numbers to the cell. This only happens in
+                // cells with a (none) SDK.
+                fetchAppListData(
+                    this.appListData,
+                    this.compmatrixData,
+                    this.activeFromSDKs,
+                    this.activeToSDKs
+                );
+            }
+        }
     }
 }
 

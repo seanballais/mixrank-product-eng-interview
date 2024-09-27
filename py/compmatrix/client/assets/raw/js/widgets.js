@@ -381,11 +381,10 @@ export class AppList extends Widget {
             appListState.resetToInitialState();
         }
 
-        // Refresh appListData.
-        appListData = appListState.getValue();
-
         super.update();
 
+        // Refresh appListData.
+        appListData = appListState.getValue();
         if (appListData['state'] === DataState.LOADED) {
             const observerOptions = {
                 root: this.rootNode,

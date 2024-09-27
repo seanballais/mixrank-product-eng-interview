@@ -685,8 +685,8 @@
       if (compmatrixData["selected-cell"] === null && appListData["displayed-apps"].length > 0) {
         appListState.resetToInitialState();
       }
-      appListData = appListState.getValue();
       super.update();
+      appListData = appListState.getValue();
       if (appListData["state"] === DataState.LOADED) {
         const observerOptions = {
           root: this.rootNode
@@ -942,6 +942,7 @@
           this.activeFromSDKsList,
           this.activeFromSDKs
         );
+        this.#refetchAppListIfNeeded();
       });
       this.selectedFromSDKRemoveBtn.setOnClick(() => {
         moveSDKFromListToComboBox(
@@ -964,6 +965,7 @@
           this.activeToSDKsList,
           this.activeToSDKs
         );
+        this.#refetchAppListIfNeeded();
       });
       this.selectedToSDKRemoveBtn.setOnClick(() => {
         moveSDKFromListToComboBox(
@@ -1054,6 +1056,22 @@
         v["data"]["normalized"] = normalizedValues;
         v["state"] = DataState.LOADED;
       });
+    }
+    #refetchAppListIfNeeded() {
+      const compmatrixData = this.compmatrixData.getValue();
+      const selectedCell = compmatrixData["selected-cell"];
+      if (selectedCell) {
+        const fromSDK = selectedCell["from-sdk"];
+        const toSDK = selectedCell["to-sdk"];
+        if (fromSDK["id"] === null || toSDK["id"] === null) {
+          fetchAppListData(
+            this.appListData,
+            this.compmatrixData,
+            this.activeFromSDKs,
+            this.activeToSDKs
+          );
+        }
+      }
     }
   };
   function onDocumentLoad() {
