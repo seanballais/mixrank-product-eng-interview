@@ -506,12 +506,10 @@
           cell.addEventListener("click", () => {
             appListState.resetToInitialState();
             if (key == this.selectedCellID) {
-              this.selectedCellID = null;
               this.states["data"].setValue((v) => {
                 v["selected-cell"] = null;
               });
             } else {
-              this.selectedCellID = key;
               this.states["data"].setValue((v) => {
                 v["selected-cell"] = {
                   "from-sdk": sdks["from-sdk"],
@@ -527,20 +525,18 @@
             }
           });
         }
+        this.#highlightSelectedCell();
       }
     }
     createNodes() {
       const data = this.states["data"].getValue();
       const dataState = data["state"];
-      let html = "";
-      const fromSDKData = this.states["from-sdks"].getValue();
-      const toSDKData = this.states["to-sdks"].getValue();
-      const fromSDKHeaders = [...fromSDKData];
-      const toSDKHeaders = [...toSDKData];
-      fromSDKHeaders.push({ "id": null, "name": "(none)" });
-      toSDKHeaders.push({ "id": null, "name": "(none)" });
+      const sdkHeaders = this.#getSDKHeaders();
+      const fromSDKHeaders = sdkHeaders["from-sdks"];
+      const toSDKHeaders = sdkHeaders["to-sdks"];
       const numFromSDKsHeaders = fromSDKHeaders.length;
       const numToSDKsHeaders = toSDKHeaders.length;
+      let html = "";
       html += "<tr>";
       html += "<th></th>";
       html += `<th colspan="${numToSDKsHeaders + 1}">To SDK</th>`;
@@ -570,17 +566,12 @@
               cellData = `${(cellData * 100).toFixed(0)}%`;
             }
             const opacity = percentageData[i][j];
-            const id = `cmc-${i}${j}`;
+            const id = this.#createCellID(i, j);
             const colour = `hsla(0, 80%, 55%, ${opacity * 100}%)`;
             const style = `background-color: ${colour}`;
-            if (this.selectedCellID == id) {
-              html += `<td id="${id}" `;
-              html += `style="${style}"`;
-              html += 'class="selected-cell">';
-            } else {
-              html += `<td id="${id}" style="${style}">`;
-            }
-            html += `${cellData}</td>`;
+            html += `
+                        <td id="${id}" style="${style}">${cellData}</td>
+                    `;
             this.cellToSDKs[id] = {
               "from-sdk": fromSDKHeaders[i],
               "to-sdk": toSDKHeaders[j]
@@ -596,6 +587,50 @@
         html += "</tr>";
       }
       return htmlToNodes(html);
+    }
+    #highlightSelectedCell() {
+      const data = this.states["data"].getValue();
+      const sdkHeaders = this.#getSDKHeaders();
+      const selectedCell = data["selected-cell"];
+      if (selectedCell) {
+        const selectedFromSDK = selectedCell["from-sdk"];
+        const selectedToSDK = selectedCell["to-sdk"];
+        let rowIndex = 0;
+        const fromSDKHeaders = sdkHeaders["from-sdks"];
+        for (let i = 0; i < fromSDKHeaders.length; i++) {
+          if (fromSDKHeaders[i]["id"] == selectedFromSDK["id"]) {
+            rowIndex = i;
+          }
+        }
+        let colIndex = 0;
+        const toSDKHeaders = sdkHeaders["to-sdks"];
+        for (let i = 0; i < toSDKHeaders.length; i++) {
+          if (toSDKHeaders[i]["id"] == selectedToSDK["id"]) {
+            colIndex = i;
+          }
+        }
+        const selectedCellID = this.#createCellID(rowIndex, colIndex);
+        const selectedCellElem = document.getElementById(selectedCellID);
+        selectedCellElem.classList.add("selected-cell");
+        this.selectedCellID = selectedCellID;
+      } else {
+        this.selectedCellID = null;
+      }
+    }
+    #getSDKHeaders() {
+      const fromSDKData = this.states["from-sdks"].getValue();
+      const toSDKData = this.states["to-sdks"].getValue();
+      const fromSDKHeaders = [...fromSDKData];
+      const toSDKHeaders = [...toSDKData];
+      fromSDKHeaders.push({ "id": null, "name": "(none)" });
+      toSDKHeaders.push({ "id": null, "name": "(none)" });
+      return {
+        "from-sdks": fromSDKHeaders,
+        "to-sdks": toSDKHeaders
+      };
+    }
+    #createCellID(rowIndex, colIndex) {
+      return `cmc-${rowIndex}${colIndex}`;
     }
   };
   var AppList = class extends Widget {
