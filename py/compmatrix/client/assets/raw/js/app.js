@@ -101,14 +101,17 @@ class App {
         ]);
 
         this.fromSDKAddBtn.setOnClick(() => {
-            interactivity.moveSDKFromComboBoxToList(
-                this.fromSDKComboBox,
-                this.selectableFromSDKs,
-                this.activeFromSDKsList,
-                this.activeFromSDKs
-            );
-
-            this.#refetchAppListIfNeeded();
+            const selectableSDKs = this.selectableFromSDKs.getValue();
+            if (selectableSDKs.length > 0) {
+                interactivity.moveSDKFromComboBoxToList(
+                    this.fromSDKComboBox,
+                    this.selectableFromSDKs,
+                    this.activeFromSDKsList,
+                    this.activeFromSDKs
+                );
+    
+                this.#refetchAppListIfNeeded();
+            }
         });
         this.selectedFromSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(
@@ -126,14 +129,17 @@ class App {
         });
         
         this.toSDKAddBtn.setOnClick(() => {
-            interactivity.moveSDKFromComboBoxToList(
-                this.toSDKComboBox,
-                this.selectableToSDKs,
-                this.activeToSDKsList,
-                this.activeToSDKs
-            )
-
-            this.#refetchAppListIfNeeded();
+            const selectableSDKs = this.selectableToSDKs.getValue();
+            if (selectableSDKs.length > 0) {
+                interactivity.moveSDKFromComboBoxToList(
+                    this.toSDKComboBox,
+                    this.selectableToSDKs,
+                    this.activeToSDKsList,
+                    this.activeToSDKs
+                )
+    
+                this.#refetchAppListIfNeeded();
+            }
         });
         this.selectedToSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(

@@ -936,13 +936,16 @@
         { "refName": "compmatrix-data", "state": this.compmatrixData }
       ]);
       this.fromSDKAddBtn.setOnClick(() => {
-        moveSDKFromComboBoxToList(
-          this.fromSDKComboBox,
-          this.selectableFromSDKs,
-          this.activeFromSDKsList,
-          this.activeFromSDKs
-        );
-        this.#refetchAppListIfNeeded();
+        const selectableSDKs = this.selectableFromSDKs.getValue();
+        if (selectableSDKs.length > 0) {
+          moveSDKFromComboBoxToList(
+            this.fromSDKComboBox,
+            this.selectableFromSDKs,
+            this.activeFromSDKsList,
+            this.activeFromSDKs
+          );
+          this.#refetchAppListIfNeeded();
+        }
       });
       this.selectedFromSDKRemoveBtn.setOnClick(() => {
         moveSDKFromListToComboBox(
@@ -959,13 +962,16 @@
         this.activeFromSDKsList.moveSelectedOptionDown();
       });
       this.toSDKAddBtn.setOnClick(() => {
-        moveSDKFromComboBoxToList(
-          this.toSDKComboBox,
-          this.selectableToSDKs,
-          this.activeToSDKsList,
-          this.activeToSDKs
-        );
-        this.#refetchAppListIfNeeded();
+        const selectableSDKs = this.selectableToSDKs.getValue();
+        if (selectableSDKs.length > 0) {
+          moveSDKFromComboBoxToList(
+            this.toSDKComboBox,
+            this.selectableToSDKs,
+            this.activeToSDKsList,
+            this.activeToSDKs
+          );
+          this.#refetchAppListIfNeeded();
+        }
       });
       this.selectedToSDKRemoveBtn.setOnClick(() => {
         moveSDKFromListToComboBox(
