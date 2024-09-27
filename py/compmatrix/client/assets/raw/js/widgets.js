@@ -292,9 +292,13 @@ export class CompMatrix extends Widget {
     #manageSelectedCell() {
         const selectedCellID = this.#getSelectedCellID();
         if (selectedCellID) {
-            const selectedCellElem = document.getElementById(selectedCellID);
-            selectedCellElem.classList.add('selected-cell');
-
+            const cellElem = document.getElementById(selectedCellID);
+            // Guard check to make sure that the element already exists before
+            // we add a new class to the element.
+            if (cellElem) {
+                cellElem.classList.add('selected-cell');
+            }
+            
             this.selectedCellID = selectedCellID;
         } else {
             this.selectedCellID = null;
