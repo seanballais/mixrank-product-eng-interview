@@ -265,6 +265,7 @@
       this.value = structuredClone(initialValue);
       this.initialValue = structuredClone(initialValue);
       this.subscriptions = [];
+      this.isPropagationLocked = false;
     }
     getValue() {
       return this.value;
@@ -275,8 +276,8 @@
       } else {
         this.value = v;
       }
-      for (const f of this.subscriptions) {
-        f(this.value);
+      if (!this.isPropagationLocked) {
+        this.#propagateChanges();
       }
     }
     resetToInitialState() {
@@ -290,6 +291,20 @@
       }
       if (runOnAdd) {
         f(this.value);
+      }
+    }
+    lockPropagation() {
+      this.isPropagationLocked = true;
+    }
+    unlockPropagation(propagateChanges = true) {
+      this.isPropagationLocked = false;
+      if (propagateChanges) {
+        this.#propagateChanges();
+      }
+    }
+    #propagateChanges() {
+      for (const f of this.subscriptions) {
+        f();
       }
     }
   };
@@ -492,26 +507,28 @@
     constructor(rootNode) {
       super(rootNode);
       this.cellToSDKs = {};
-      this._selectedCellID = null;
+      this.selectedCellID = null;
     }
-    get selectedCellID() {
-      return this._selectedCellID;
+    clearSelectedCell() {
+      this.selectedCellID = null;
+      this.states["data"].setValue((v) => {
+        v["selected-cell"] = null;
+      });
     }
     update() {
       this.cellToSDKs = {};
       super.update();
       const data = this.states["data"].getValue();
       const dataState = data["state"];
-      const appListState = this.states["app-list"];
       if (dataState == DataState.LOADED) {
         for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
           const cell = document.getElementById(key);
           cell.addEventListener("click", () => {
-            appListState.resetToInitialState();
             if (key == this.selectedCellID) {
               this.states["data"].setValue((v) => {
                 v["selected-cell"] = null;
               });
+              this.selectedCellID = null;
             } else {
               this.states["data"].setValue((v) => {
                 v["selected-cell"] = {
@@ -519,6 +536,7 @@
                   "to-sdk": sdks["to-sdk"]
                 };
               });
+              this.selectedCellID = this.#getSelectedCellID();
               fetchAppListData(
                 this.states["app-list"],
                 this.states["data"],
@@ -529,6 +547,14 @@
           });
         }
         this.#manageSelectedCell();
+        if (!this.selectedCellID) {
+          const dataState2 = this.states["data"];
+          dataState2.lockPropagation();
+          this.states["data"].setValue((v) => {
+            v["selected-cell"] = null;
+          });
+          dataState2.unlockPropagation(false);
+        }
       }
     }
     createNodes() {
@@ -591,8 +617,17 @@
       }
       return htmlToNodes(html);
     }
-    // Select the 
     #manageSelectedCell() {
+      const selectedCellID = this.#getSelectedCellID();
+      if (selectedCellID) {
+        const selectedCellElem = document.getElementById(selectedCellID);
+        selectedCellElem.classList.add("selected-cell");
+        this.selectedCellID = selectedCellID;
+      } else {
+        this.selectedCellID = null;
+      }
+    }
+    #getSelectedCellID() {
       const data = this.states["data"].getValue();
       const sdkHeaders = this.#getSDKHeaders();
       const selectedCell = data["selected-cell"];
@@ -614,16 +649,10 @@
           }
         }
         if (rowIndex !== null && colIndex !== null) {
-          const cellID = this.#createCellID(rowIndex, colIndex);
-          const selectedCellElem = document.getElementById(cellID);
-          selectedCellElem.classList.add("selected-cell");
-          this._selectedCellID = cellID;
-        } else {
-          this._selectedCellID = null;
+          return this.#createCellID(rowIndex, colIndex);
         }
-      } else {
-        this._selectedCellID = null;
       }
+      return null;
     }
     #getSDKHeaders() {
       const fromSDKData = this.states["from-sdks"].getValue();
@@ -649,19 +678,26 @@
       this.isBatchLoading = false;
     }
     update() {
+      const compmatrixData = this.states["compmatrix-data"].getValue();
+      const appListState = this.states["app-list"];
+      let appListData = appListState.getValue();
+      appListState.lockPropagation();
+      if (compmatrixData["selected-cell"] === null && appListData["displayed-apps"].length > 0) {
+        appListState.resetToInitialState();
+      }
+      appListData = appListState.getValue();
       super.update();
-      const appList = this.states["app-list"].getValue();
-      if (appList["state"] === DataState.LOADED) {
+      if (appListData["state"] === DataState.LOADED) {
         const observerOptions = {
           root: this.rootNode
         };
-        if (appList["need-prev-batch-trigger"]) {
+        if (appListData["need-prev-batch-trigger"]) {
           const callback = (entries, observer) => {
             for (let i = 0; i < entries.length; i++) {
               const e = entries[i];
               if (e && e.isIntersecting && !this.isBatchLoading) {
                 this.#runBatchTriggerEvent(
-                  appList["start-cursor"],
+                  appListData["start-cursor"],
                   FetchDirection.PREVIOUS
                 );
               }
@@ -675,13 +711,13 @@
           const trigger = document.getElementById(triggerID);
           this.prevBatchTriggerObserver.observe(trigger);
         }
-        if (appList["need-next-batch-trigger"]) {
+        if (appListData["need-next-batch-trigger"]) {
           const callback = (entries, observer) => {
             for (let i = 0; i < entries.length; i++) {
               const e = entries[i];
               if (e && e.isIntersecting && !this.isBatchLoading) {
                 this.#runBatchTriggerEvent(
-                  appList["end-cursor"],
+                  appListData["end-cursor"],
                   FetchDirection.NEXT
                 );
               }
@@ -696,6 +732,7 @@
           this.nextBatchTriggerObserver.observe(trigger);
         }
       }
+      appListState.unlockPropagation(false);
     }
     createNodes() {
       const appList = this.states["app-list"].getValue();
@@ -913,11 +950,6 @@
           this.activeFromSDKsList,
           this.activeFromSDKs
         );
-        if (this.matrixTable.selectedCellID === null) {
-          this.compmatrixData.setValue((v) => {
-            v["selected-cell"] = null;
-          });
-        }
       });
       this.selectedFromSDKUpBtn.setOnClick(() => {
         this.activeFromSDKsList.moveSelectedOptionUp();

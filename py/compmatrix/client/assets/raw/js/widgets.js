@@ -149,11 +149,14 @@ export class CompMatrix extends Widget {
         super(rootNode);
 
         this.cellToSDKs = {};
-        this._selectedCellID = null;
+        this.selectedCellID = null;
     }
 
-    get selectedCellID() {
-        return this._selectedCellID;
+    clearSelectedCell() {
+        this.selectedCellID = null;
+        this.states['data'].setValue((v) => {
+            v['selected-cell'] = null;
+        });
     }
 
     update() {
@@ -165,38 +168,29 @@ export class CompMatrix extends Widget {
         const data = this.states['data'].getValue();
         const dataState = data['state'];
 
-        const appListState = this.states['app-list'];
-
         if (dataState == DataState.LOADED) {
             for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
                 const cell = document.getElementById(key);
                 cell.addEventListener('click', () => {
-                    // Clears out the app list. We need to change the selected
-                    // cell in the app list too.
-                    appListState.resetToInitialState();
-
                     if (key == this.selectedCellID) {
-                        // Deselect this cell. We need to set the selected
-                        // cell ID as null before setting the value of the
-                        // state so that the deselection is correctly rendered.
+                        // Deselect this cell.
                         this.states['data'].setValue((v) => {
                             v['selected-cell'] = null;
-                        });  
+                        });
+
+                        this.selectedCellID = null;
                     } else {
-                        // The selected cell must be set before we set the
-                        // value of the state so that the new selected cell can
-                        // be rendered correctly. Note that a re-rendering will
-                        // happen after the setValue() below. If we set the
-                        // selected cell ID after the setValue(), we will only
-                        // be rendering the selected renderer for the previous
-                        // selected cell, and not the currently clicked
-                        // selected cell.
+                        // Select this cell.
                         this.states['data'].setValue((v) => {
                             v['selected-cell'] = {
                                 'from-sdk': sdks['from-sdk'],
                                 'to-sdk': sdks['to-sdk']
                             };
                         });
+
+                        // We're setting this here to make sure that
+                        // compmatrix data has been set already.
+                        this.selectedCellID = this.#getSelectedCellID();
 
                         fetchAppListData(
                             this.states['app-list'],
@@ -209,6 +203,18 @@ export class CompMatrix extends Widget {
             }
 
             this.#manageSelectedCell();
+            if (!this.selectedCellID) {
+                const dataState = this.states['data'];
+
+                // Prevents an infinite loop caused by propagating the changes
+                // to observers.
+                dataState.lockPropagation();
+
+                this.states['data'].setValue((v) => {
+                    v['selected-cell'] = null;
+                });
+                dataState.unlockPropagation(false);
+            }
         }
     }
 
@@ -283,8 +289,19 @@ export class CompMatrix extends Widget {
         return htmlToNodes(html);
     }
 
-    // Select the 
     #manageSelectedCell() {
+        const selectedCellID = this.#getSelectedCellID();
+        if (selectedCellID) {
+            const selectedCellElem = document.getElementById(selectedCellID);
+            selectedCellElem.classList.add('selected-cell');
+
+            this.selectedCellID = selectedCellID;
+        } else {
+            this.selectedCellID = null;
+        }
+    }
+
+    #getSelectedCellID() {
         const data = this.states['data'].getValue();
         const sdkHeaders = this.#getSDKHeaders();
 
@@ -310,20 +327,11 @@ export class CompMatrix extends Widget {
             }
 
             if (rowIndex !== null && colIndex !== null) {
-                const cellID = this.#createCellID(rowIndex, colIndex);
-                const selectedCellElem = document.getElementById(cellID);
-                selectedCellElem.classList.add('selected-cell');
-
-                this._selectedCellID = cellID;
-            } else {
-                // One of the SDKs the previously selected cell was attached to
-                // was removed. So, we should just clear out the selected
-                // cell.
-                this._selectedCellID = null;
+                return this.#createCellID(rowIndex, colIndex);
             }
-        } else {
-            this._selectedCellID = null;
         }
+
+        return null;
     }
 
     #getSDKHeaders() {
@@ -358,16 +366,32 @@ export class AppList extends Widget {
     }
 
     update() {
+        const compmatrixData = this.states['compmatrix-data'].getValue();
+        const appListState = this.states['app-list'];
+        let appListData = appListState.getValue();
+
+        appListState.lockPropagation();
+
+        // Clear out the app list if the selected cell is null and we still
+        // have displayed apps up.
+        if (
+            compmatrixData['selected-cell'] === null &&
+            appListData['displayed-apps'].length > 0
+        ) {
+            appListState.resetToInitialState();
+        }
+
+        // Refresh appListData.
+        appListData = appListState.getValue();
+
         super.update();
 
-        const appList = this.states['app-list'].getValue();
-
-        if (appList['state'] === DataState.LOADED) {
+        if (appListData['state'] === DataState.LOADED) {
             const observerOptions = {
                 root: this.rootNode,
             };
     
-            if (appList['need-prev-batch-trigger']) {
+            if (appListData['need-prev-batch-trigger']) {
                 const callback = (entries, observer) => {
                     for (let i = 0; i < entries.length; i++) {
                         const e = entries[i];
@@ -384,7 +408,7 @@ export class AppList extends Widget {
                         // depending on feedback.
                         if (e && e.isIntersecting && !this.isBatchLoading) {
                             this.#runBatchTriggerEvent(
-                                appList['start-cursor'],
+                                appListData['start-cursor'],
                                 FetchDirection.PREVIOUS
                             );
                         }
@@ -399,7 +423,7 @@ export class AppList extends Widget {
                 this.prevBatchTriggerObserver.observe(trigger);
             }
     
-            if (appList['need-next-batch-trigger']) {
+            if (appListData['need-next-batch-trigger']) {
                 const callback = (entries, observer) => {
                     for (let i = 0; i < entries.length; i++) {
                         const e = entries[i];
@@ -416,7 +440,7 @@ export class AppList extends Widget {
                         // depending on feedback.
                         if (e && e.isIntersecting && !this.isBatchLoading) {
                             this.#runBatchTriggerEvent(
-                                appList['end-cursor'],
+                                appListData['end-cursor'],
                                 FetchDirection.NEXT
                             );
                         }
@@ -431,6 +455,8 @@ export class AppList extends Widget {
                 this.nextBatchTriggerObserver.observe(trigger);
             }
         }
+
+        appListState.unlockPropagation(false);
     }
 
     createNodes() {

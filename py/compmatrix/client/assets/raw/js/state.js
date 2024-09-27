@@ -16,9 +16,13 @@ export class State {
         this.value = structuredClone(initialValue);
         this.initialValue = structuredClone(initialValue);
         this.subscriptions = [];
+
+        this.isPropagationLocked = false;
     }
 
     getValue() {
+        // This may have to be called again to ensure that the user code gets
+        // the latest values.
         return this.value;
     }
 
@@ -29,8 +33,8 @@ export class State {
             this.value = v;
         }
 
-        for (const f of this.subscriptions) {
-            f(this.value);
+        if (!this.isPropagationLocked) {
+            this.#propagateChanges();
         }
     }
 
@@ -49,6 +53,26 @@ export class State {
 
         if (runOnAdd) {
             f(this.value);
+        }
+    }
+
+    lockPropagation() {
+        // Prevents propagation of changes to subscribers. Helps with batch
+        // updating.
+        this.isPropagationLocked = true;
+    }
+
+    unlockPropagation(propagateChanges = true) {
+        this.isPropagationLocked = false;
+
+        if (propagateChanges) {
+            this.#propagateChanges();
+        }
+    }
+
+    #propagateChanges() {
+        for (const f of this.subscriptions) {
+            f();
         }
     }
 }

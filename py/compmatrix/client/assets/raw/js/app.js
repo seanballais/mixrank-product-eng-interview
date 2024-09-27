@@ -115,17 +115,6 @@ class App {
                 this.activeFromSDKsList,
                 this.activeFromSDKs
             );
-
-            // NOTE: The selected cell will be updated by the function call
-            //       above.
-            //
-            // This covers the case where a selected cell no longer exists
-            // in the table due to removal of an SDK.
-            if (this.matrixTable.selectedCellID === null) {
-                this.compmatrixData.setValue((v) => {
-                    v['selected-cell'] = null;
-                });
-            }
         });
         this.selectedFromSDKUpBtn.setOnClick(() => {
             this.activeFromSDKsList.moveSelectedOptionUp();
