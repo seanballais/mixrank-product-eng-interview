@@ -3,8 +3,6 @@
 @import '_inputs.scss';
 @import '_text.scss';
 
-$matrix-cell-size: 75px;
-
 .app-rating-icon {
     color: $primary-colour;
 }
@@ -63,10 +61,11 @@ body {
                         margin-bottom: 1rem;
 
                         div#compmatrix-container {
-                            width: 600px;
-                            height: 600px;
-                            max-width: 600px;
-                            max-height: 600px;
+                            $compmatrix-container-size: 600px;
+                            width: $compmatrix-container-size;
+                            height: $compmatrix-container-size;
+                            max-width: $compmatrix-container-size;
+                            max-height: $compmatrix-container-size;
 
                             overflow: auto;
 
@@ -122,7 +121,11 @@ body {
 
                                     &:nth-child(n + 3) {    
                                         th {
+                                            $matrix-cell-size: 85px;
                                             min-width: $matrix-cell-size;
+                                            max-width: $matrix-cell-size;
+                                            min-height: $matrix-cell-size;
+                                            max-height: $matrix-cell-size;
                                             height: $matrix-cell-size;
                                         }
 
