@@ -107,10 +107,6 @@ class App {
                 this.activeFromSDKsList,
                 this.activeFromSDKs
             );
-            
-            // We have to clear out the app list if there are changes to the
-            // active SDKs to make sure we don't display the wrong data.
-            this.appListData.resetToInitialState();
         });
         this.selectedFromSDKRemoveBtn.setOnClick(() => {
             interactivity.moveSDKFromListToComboBox(
@@ -120,9 +116,16 @@ class App {
                 this.activeFromSDKs
             );
 
-            // We have to clear out the app list if there are changes to the
-            // active SDKs to make sure we don't display the wrong data.
-            this.appListData.resetToInitialState();
+            // NOTE: The selected cell will be updated by the function call
+            //       above.
+            //
+            // This covers the case where a selected cell no longer exists
+            // in the table due to removal of an SDK.
+            if (this.matrixTable.selectedCellID === null) {
+                this.compmatrixData.setValue((v) => {
+                    v['selected-cell'] = null;
+                });
+            }
         });
         this.selectedFromSDKUpBtn.setOnClick(() => {
             this.activeFromSDKsList.moveSelectedOptionUp();

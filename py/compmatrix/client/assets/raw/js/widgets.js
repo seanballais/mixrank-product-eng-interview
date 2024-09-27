@@ -149,7 +149,11 @@ export class CompMatrix extends Widget {
         super(rootNode);
 
         this.cellToSDKs = {};
-        this.selectedCellID = null;
+        this._selectedCellID = null;
+    }
+
+    get selectedCellID() {
+        return this._selectedCellID;
     }
 
     update() {
@@ -204,11 +208,7 @@ export class CompMatrix extends Widget {
                 });
             }
 
-            // TODO: Get the element of the selected cell, and apply the
-            //       selected-cell class to it. We have to do it here so that we
-            //       highlight the corrent cell when the matrix changes (e.g. when
-            //       SDKs were added or removed).
-            this.#highlightSelectedCell();
+            this.#manageSelectedCell();
         }
     }
 
@@ -283,7 +283,8 @@ export class CompMatrix extends Widget {
         return htmlToNodes(html);
     }
 
-    #highlightSelectedCell() {
+    // Select the 
+    #manageSelectedCell() {
         const data = this.states['data'].getValue();
         const sdkHeaders = this.#getSDKHeaders();
 
@@ -292,7 +293,7 @@ export class CompMatrix extends Widget {
             const selectedFromSDK = selectedCell['from-sdk'];
             const selectedToSDK = selectedCell['to-sdk'];
 
-            let rowIndex = 0;
+            let rowIndex = null;
             const fromSDKHeaders = sdkHeaders['from-sdks'];
             for (let i = 0; i < fromSDKHeaders.length; i++) {
                 if (fromSDKHeaders[i]['id'] == selectedFromSDK['id']) {
@@ -300,7 +301,7 @@ export class CompMatrix extends Widget {
                 }
             }
 
-            let colIndex = 0;
+            let colIndex = null;
             const toSDKHeaders = sdkHeaders['to-sdks'];
             for (let i = 0; i < toSDKHeaders.length; i++) {
                 if (toSDKHeaders[i]['id'] == selectedToSDK['id']) {
@@ -308,13 +309,20 @@ export class CompMatrix extends Widget {
                 }
             }
 
-            const selectedCellID = this.#createCellID(rowIndex, colIndex);
-            const selectedCellElem = document.getElementById(selectedCellID);
-            selectedCellElem.classList.add('selected-cell');
+            if (rowIndex !== null && colIndex !== null) {
+                const cellID = this.#createCellID(rowIndex, colIndex);
+                const selectedCellElem = document.getElementById(cellID);
+                selectedCellElem.classList.add('selected-cell');
 
-            this.selectedCellID = selectedCellID;
+                this._selectedCellID = cellID;
+            } else {
+                // One of the SDKs the previously selected cell was attached to
+                // was removed. So, we should just clear out the selected
+                // cell.
+                this._selectedCellID = null;
+            }
         } else {
-            this.selectedCellID = null;
+            this._selectedCellID = null;
         }
     }
 

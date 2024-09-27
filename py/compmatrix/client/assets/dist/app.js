@@ -492,7 +492,10 @@
     constructor(rootNode) {
       super(rootNode);
       this.cellToSDKs = {};
-      this.selectedCellID = null;
+      this._selectedCellID = null;
+    }
+    get selectedCellID() {
+      return this._selectedCellID;
     }
     update() {
       this.cellToSDKs = {};
@@ -525,7 +528,7 @@
             }
           });
         }
-        this.#highlightSelectedCell();
+        this.#manageSelectedCell();
       }
     }
     createNodes() {
@@ -588,33 +591,38 @@
       }
       return htmlToNodes(html);
     }
-    #highlightSelectedCell() {
+    // Select the 
+    #manageSelectedCell() {
       const data = this.states["data"].getValue();
       const sdkHeaders = this.#getSDKHeaders();
       const selectedCell = data["selected-cell"];
       if (selectedCell) {
         const selectedFromSDK = selectedCell["from-sdk"];
         const selectedToSDK = selectedCell["to-sdk"];
-        let rowIndex = 0;
+        let rowIndex = null;
         const fromSDKHeaders = sdkHeaders["from-sdks"];
         for (let i = 0; i < fromSDKHeaders.length; i++) {
           if (fromSDKHeaders[i]["id"] == selectedFromSDK["id"]) {
             rowIndex = i;
           }
         }
-        let colIndex = 0;
+        let colIndex = null;
         const toSDKHeaders = sdkHeaders["to-sdks"];
         for (let i = 0; i < toSDKHeaders.length; i++) {
           if (toSDKHeaders[i]["id"] == selectedToSDK["id"]) {
             colIndex = i;
           }
         }
-        const selectedCellID = this.#createCellID(rowIndex, colIndex);
-        const selectedCellElem = document.getElementById(selectedCellID);
-        selectedCellElem.classList.add("selected-cell");
-        this.selectedCellID = selectedCellID;
+        if (rowIndex !== null && colIndex !== null) {
+          const cellID = this.#createCellID(rowIndex, colIndex);
+          const selectedCellElem = document.getElementById(cellID);
+          selectedCellElem.classList.add("selected-cell");
+          this._selectedCellID = cellID;
+        } else {
+          this._selectedCellID = null;
+        }
       } else {
-        this.selectedCellID = null;
+        this._selectedCellID = null;
       }
     }
     #getSDKHeaders() {
@@ -897,7 +905,6 @@
           this.activeFromSDKsList,
           this.activeFromSDKs
         );
-        this.appListData.resetToInitialState();
       });
       this.selectedFromSDKRemoveBtn.setOnClick(() => {
         moveSDKFromListToComboBox(
@@ -906,7 +913,11 @@
           this.activeFromSDKsList,
           this.activeFromSDKs
         );
-        this.appListData.resetToInitialState();
+        if (this.matrixTable.selectedCellID === null) {
+          this.compmatrixData.setValue((v) => {
+            v["selected-cell"] = null;
+          });
+        }
       });
       this.selectedFromSDKUpBtn.setOnClick(() => {
         this.activeFromSDKsList.moveSelectedOptionUp();
