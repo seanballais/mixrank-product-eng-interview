@@ -78,6 +78,9 @@
     try {
       appListDataState.setValue((v) => {
         v["state"] = DataState.LOADING;
+        if (cursor !== null) {
+          v["is-loading-new-batch"] = true;
+        }
       });
       const response = await fetch(`${url}?${paramString}`);
       appsJSON = await response.json();
@@ -86,6 +89,7 @@
     }
     appListDataState.setValue((v) => {
       v["state"] = DataState.LOADED;
+      v["is-loading-new-batch"] = false;
       const numApps = appsJSON["data"]["apps"].length;
       const totalCount = appsJSON["data"]["total_count"];
       v["total-app-count"] = totalCount;
@@ -739,7 +743,7 @@
     createNodes() {
       const appList = this.states["app-list"].getValue();
       let html = "";
-      if (appList["displayed-apps"].length > 0) {
+      if (appList["state"] === DataState.LOADED || appList["state"] === DataState.LOADING && appList["is-loading-new-batch"]) {
         html += '<ol id="apps-list-items">';
         if (appList["need-prev-batch-trigger"]) {
           html += `
@@ -885,6 +889,7 @@
         "recent-batch-size": 0,
         "state": DataState.EMPTY,
         "pruned": false,
+        "is-loading-new-batch": false,
         "start-cursor": null,
         "end-cursor": null,
         "need-prev-batch-trigger": false,

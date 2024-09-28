@@ -467,7 +467,13 @@ export class AppList extends Widget {
 
         let html = '';
 
-        if (appList['displayed-apps'].length > 0) {
+        if (
+            appList['state'] === DataState.LOADED ||
+            (
+                appList['state'] === DataState.LOADING &&
+                appList['is-loading-new-batch']
+            )
+        ) {
             html += '<ol id="apps-list-items">';
 
             if (appList['need-prev-batch-trigger']) {

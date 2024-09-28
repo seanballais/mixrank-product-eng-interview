@@ -37,6 +37,7 @@ class App {
             'recent-batch-size': 0,
             'state': DataState.EMPTY,
             'pruned': false,
+            'is-loading-new-batch': false,
             'start-cursor': null,
             'end-cursor': null,
             'need-prev-batch-trigger': false,

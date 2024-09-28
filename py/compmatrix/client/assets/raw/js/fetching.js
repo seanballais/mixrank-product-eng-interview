@@ -82,6 +82,12 @@ export async function fetchAppListData(
     try {
         appListDataState.setValue((v) => {
             v['state'] = DataState.LOADING;
+
+            if (cursor !== null) {
+                // Direction is already expected to be defined whenever cursor
+                // is defined.
+                v['is-loading-new-batch'] = true;
+            }
         });
 
         const response = await fetch(`${url}?${paramString}`);
@@ -92,6 +98,7 @@ export async function fetchAppListData(
 
     appListDataState.setValue((v) => {
         v['state'] = DataState.LOADED;
+        v['is-loading-new-batch'] = false; // Reset back to default value.
 
         const numApps = appsJSON['data']['apps'].length;
         const totalCount = appsJSON['data']['total_count'];
