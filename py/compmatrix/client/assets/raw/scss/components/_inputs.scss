@@ -1,6 +1,10 @@
-@import '_colours.scss';
-@import '_controls.scss';
-@import '_text.scss';
+@use '../abstracts/colours';
+@use '../abstracts/mixins';
+@use '../abstracts/text-sizes';
+
+@use '../base/typography';
+
+@use '../components/controls';
 
 // Based on:
 //   https://alvaromontoro.com/blog/68017/creating-a-css-only-toggle-switch
@@ -17,8 +21,8 @@ input:where([type='checkbox'][role='switch']).toggle-switch {
 
     cursor: pointer;
 
-    background-color: $secondary-colour;
-    color: $primary-text-colour;
+    background-color: colours.$secondary-colour;
+    color: colours.$primary-text-colour;
 
     font-size: inherit;
     border-radius: 1em;
@@ -26,14 +30,14 @@ input:where([type='checkbox'][role='switch']).toggle-switch {
     vertical-align: text-bottom;
 
     &:hover {
-        background-color: $secondary-colour-lighter;
+        background-color: colours.$secondary-colour-lighter;
     }
 
     &:checked {
-        background-color: $primary-colour;
+        background-color: colours.$primary-colour;
 
         &:hover {
-            background-color: $primary-colour-darker;
+            background-color: colours.$primary-colour-darker;
         }
 
         &::before {
@@ -55,7 +59,7 @@ input:where([type='checkbox'][role='switch']).toggle-switch {
 
         transform: translate(0, -50%);
 
-        background-color: $white;
+        background-color: colours.$white;
 
         border-radius: 50%;
 
@@ -72,15 +76,15 @@ input:where([type='checkbox'][role='switch']).toggle-switch {
 select {
     box-sizing: border-box;
 
-    background-color: $bg-colour;
-    color: $primary-text-colour;
+    background-color: colours.$bg-colour;
+    color: colours.$primary-text-colour;
 
-    border: solid 2px $primary-colour;
+    border: solid 2px colours.$primary-colour;
     border-radius: 5px;
 
     overflow: auto;
 
-    @include scrollbar-styling;
+    @include mixins.scrollbar-styling;
 
     option {
         padding: 0.5rem;
@@ -88,33 +92,33 @@ select {
         cursor: pointer;
 
         &:hover, &:checked {
-            background-color: $primary-colour-darker;
-            color: $primary-text-colour;
+            background-color: colours.$primary-colour-darker;
+            color: colours.$primary-text-colour;
 
             // Seems like grey (at least in Edge) is the default background
             // colour for options inside a select input that is focus-visible.
-            box-shadow: 0 0 1px 100px $primary-colour-darker inset;
+            box-shadow: 0 0 1px 100px colours.$primary-colour-darker inset;
         }
     }
 
     &:focus-visible {
-        border-color: $primary-colour-darker;
+        border-color: colours.$primary-colour-darker;
         outline: none;
     }
 }
 
 button {
-    background-color: $primary-colour;
-    color: $primary-text-colour;
+    background-color: colours.$primary-colour;
+    color: colours.$primary-text-colour;
     border: none;
     border-radius: 5px;
 
     font-family: 'Fivo Sans', Arial, Helvetica, sans-serif;
-    font-size: $button-text-size;
+    font-size: text-sizes.$button-text-size;
 
     cursor: pointer;
 
     &:hover {
-        background-color: $primary-colour-darker;
+        background-color: colours.$primary-colour-darker;
     }
 }

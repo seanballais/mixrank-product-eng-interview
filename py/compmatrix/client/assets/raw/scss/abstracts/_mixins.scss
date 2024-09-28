@@ -1,0 +1,5 @@
+@use 'colours';
+
+@mixin scrollbar-styling {
+    scrollbar-color: colours.$primary-colour colours.$bg-colour;
+}

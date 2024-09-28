@@ -1,6 +1,7 @@
-@import '../_colours.scss';
+@use '../../abstracts/colours';
+@use '../../abstracts/mixins';
 
-&#apps {
+div#apps {
     max-height: 999px;
 
     display: flex;
@@ -21,7 +22,7 @@
 
     div {
         &#app-list-desc {
-            color: $secondary-text-colour;
+            color: colours.$secondary-text-colour;
         }
     }
 
@@ -30,7 +31,7 @@
 
         overflow: auto;
 
-        @include scrollbar-styling;
+        @include mixins.scrollbar-styling;
 
         div#app-list-loader-icon {
             padding-top: 0;
@@ -113,15 +114,15 @@
                                 margin-top: 0.5rem;
                                 margin-bottom: 0.5rem;
 
-                                color: $secondary-text-colour;
+                                color: colours.$secondary-text-colour;
 
                                 &.app-card-info-company {
                                     a {
-                                        color: $secondary-text-colour;
+                                        color: colours.$secondary-text-colour;
                                         text-decoration: none;
 
                                         &:hover {
-                                            color: $secondary-text-colour-lighter;
+                                            color: colours.$secondary-text-colour-lighter;
                                         }
                                     }
                                 }

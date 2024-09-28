@@ -24,7 +24,7 @@ in pkgs.mkShell rec {
                 watchdog
             ];
         })
+        dart-sass
         esbuild
-        sass
     ]);
 }

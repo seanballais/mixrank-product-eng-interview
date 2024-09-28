@@ -1,0 +1,9 @@
+@use '../abstracts/colours';
+
+.app-rating-icon {
+    color: colours.$primary-colour;
+}
+
+h1 {
+    font-size: 1rem;
+}

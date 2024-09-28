@@ -1,6 +1,7 @@
-@import '../_colours.scss';
+@use '../../abstracts/colours';
+@use '../../abstracts/text-sizes';
 
-&#matrix {
+div#matrix {
     display: flex;
     flex-direction: column;
 
@@ -21,7 +22,7 @@
     
                 overflow: auto;
     
-                scrollbar-color: $primary-colour $bg-colour;
+                scrollbar-color: colours.$primary-colour colours.$bg-colour;
     
                 display: flex;
                 justify-content: safe center;
@@ -46,7 +47,7 @@
     
                         td {
                             &.selected-cell {
-                                border: 0.5rem solid $white;
+                                border: 0.5rem solid colours.$white;
                             }
                         }
     
@@ -68,7 +69,7 @@
                         }
     
                         &:nth-child(-n + 2) {
-                            color: $secondary-text-colour;
+                            color: colours.$secondary-text-colour;
                         }
     
                         &:nth-child(n + 3) {    
@@ -82,7 +83,7 @@
                             }
     
                             td {
-                                color: $primary-text-colour;
+                                color: colours.$primary-text-colour;
     
                                 -webkit-user-select: none;
                                 user-select: none;
@@ -90,8 +91,8 @@
                                 cursor: pointer;
     
                                 &:hover {
-                                    background-color: $primary-colour-darker !important;
-                                    color: $white !important;
+                                    background-color: colours.$primary-colour-darker !important;
+                                    color: colours.$white !important;
                                 }
                             }
                         }
@@ -132,10 +133,10 @@
                         flex-basis: 50%;
     
                         h1 {
-                            font-size: $base-text-size;
+                            font-size: text-sizes.$base-text-size;
                             font-weight: normal;
     
-                            color: $secondary-text-colour;
+                            color: colours.$secondary-text-colour;
                         }
                     }
                 }
