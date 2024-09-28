@@ -140,7 +140,7 @@ def main(minify, watch):
 if __name__ == '__main__':
     parser: ArgumentParser = ArgumentParser(prog='Asset Builder',
                                             description='Builds assets.')
-    env_group = parser.add_mutually_exclusive_group(required=True)
+    env_group = parser.add_mutually_exclusive_group(required=False)
     env_group.add_argument('--dev', action='store_true')
     env_group.add_argument('--prod', action='store_true')
 
@@ -148,7 +148,12 @@ if __name__ == '__main__':
     args: argparse.Namespace = parser.parse_args()
 
     enable_minification: bool = False
-    environment: str = 'development' if args.dev else 'production'
+
+    if args.dev or (not args.dev and not args.prod):
+        environment: str = 'development'
+    else:
+        environment: str = 'production'
+
     if args.watch and args.prod:
         environment = 'development'
         print('⚠️ Watch mode is enabled. Changing environment to development. '
