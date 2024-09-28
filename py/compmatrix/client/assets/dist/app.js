@@ -739,7 +739,7 @@
     createNodes() {
       const appList = this.states["app-list"].getValue();
       let html = "";
-      if (appList["state"] === DataState.LOADED) {
+      if (appList["displayed-apps"].length > 0) {
         html += '<ol id="apps-list-items">';
         if (appList["need-prev-batch-trigger"]) {
           html += `
