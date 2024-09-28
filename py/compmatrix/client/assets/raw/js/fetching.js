@@ -1,4 +1,8 @@
-import { APP_LIST_BATCH_SIZE, BASE_API_ENDPOINT, MAX_APP_LIST_SIZE } from "./constants";
+import {
+    APP_LIST_BATCH_SIZE,
+    BASE_API_ENDPOINT,
+    MAX_APP_LIST_SIZE
+} from "./constants";
 
 export class DataState {
     static #_EMPTY = 0;   // Data was just initialized.
@@ -15,6 +19,86 @@ export class DataState {
 export class FetchDirection {
     static get PREVIOUS() { return 'previous'; }
     static get NEXT() { return 'next'; }
+};
+
+export async function fetchSDKs(fromSDKs, toSDKs) {
+    const url = `${BASE_API_ENDPOINT}/sdks`
+    try {
+        const response = await fetch(url);
+        const sdks_json = await response.json();
+        const sdks_data = sdks_json.data.sdks;
+        let sdks = [];
+        for (let i = 0; i < sdks_data.length; i++) {
+            sdks.push({
+                'id': sdks_data[i].id,
+                'name': sdks_data[i].name
+            })
+        }
+
+        fromSDKs.setValue(structuredClone(sdks));
+        toSDKs.setValue(structuredClone(sdks));
+    } catch (error) {
+        console.error(error.message);
+    }
+}
+
+export async function fetchCompMatrixValues(
+    compmatrixData,
+    activeFromSDKs,
+    activeToSDKs
+) {
+    const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/numbers`;
+    const fromSDKs = activeFromSDKs.getValue().map((s) => s.id);
+    const toSDKs = activeToSDKs.getValue().map((s) => s.id);
+
+    let rawParamPairs = [];
+    if (fromSDKs.length !== 0) {
+        rawParamPairs.push(...fromSDKs.map((s) => ['from_sdks', s]));
+    } else {
+        rawParamPairs.push(['from_sdks', '']);
+    }
+
+    if (toSDKs.length !== 0) {
+        rawParamPairs.push(...toSDKs.map((s) => ['to_sdks', s]));
+    } else {
+        rawParamPairs.push(['to_sdks', '']);
+    }
+
+    const params = new URLSearchParams(rawParamPairs);
+    const paramString = params.toString();
+    let numbersJSON;
+    try {
+        compmatrixData.setValue((v) => {
+            v['state'] = DataState.LOADING;
+        });
+        const response = await fetch(`${url}?${paramString}`);
+        numbersJSON = await response.json();
+    } catch (error) {
+        console.error(error.message);
+        compmatrixData.setValue((v) => {
+            v['state'] = DataState.ERRORED;
+        });
+    }
+
+    const rawValues = numbersJSON.data.numbers;
+    let normalizedValues = [];
+    for (let i = 0; i < numbersJSON.data.numbers.length; i++) {
+        let row = numbersJSON.data.numbers[i];
+        const sum = row.reduce((partialSum, n) => partialSum + n, 0);
+
+        let normalized = []
+        for (let j = 0; j < row.length; j++) {
+            normalized.push(row[j] / sum);
+        }
+
+        normalizedValues.push(normalized);
+    }
+    
+    compmatrixData.setValue((v) => {
+        v['data']['raw'] = rawValues;
+        v['data']['normalized'] = normalizedValues;
+        v['state'] = DataState.LOADED;
+    });
 }
 
 export async function fetchAppListData(
@@ -233,6 +317,31 @@ export async function fetchAppListData(
             v['need-next-batch-trigger'] = true;
         }
     });
+}
+
+export function refetchAppListIfNeeded(
+    appListData,
+    compmatrixData,
+    activeFromSDKs,
+    activeToSDKs
+) {
+    const matrixData = compmatrixData.getValue();
+    const selectedCell = matrixData['selected-cell'];
+    if (selectedCell) {
+        const fromSDK = selectedCell['from-sdk'];
+        const toSDK = selectedCell['to-sdk'];
+        if (fromSDK['id'] === null || toSDK['id'] === null) {
+            // Refetch app list in case the newly-added SDK causes a
+            // change in numbers to the cell. This only happens in
+            // cells with a (none) SDK.
+            fetchAppListData(
+                appListData,
+                compmatrixData,
+                activeFromSDKs,
+                activeToSDKs
+            );
+        }
+    }
 }
 
 function createCursorFromDisplayedApp(app) {

@@ -1,5 +1,9 @@
-import { BASE_API_ENDPOINT } from './constants.js';
-import { DataState, fetchAppListData } from './fetching.js';
+import {
+    DataState,
+    fetchSDKs,
+    fetchCompMatrixValues,
+    refetchAppListIfNeeded
+} from './fetching.js';
 import * as interactivity from './interactivity.js';
 import { State } from './state.js';
 import {
@@ -111,7 +115,12 @@ class App {
                     this.activeFromSDKs
                 );
     
-                this.#refetchAppListIfNeeded();
+                refetchAppListIfNeeded(
+                    this.appListData,
+                    this.compmatrixData,
+                    this.activeFromSDKs,
+                    this.activeToSDKs
+                );
             }
         });
         this.selectedFromSDKRemoveBtn.setOnClick(() => {
@@ -139,7 +148,12 @@ class App {
                     this.activeToSDKs
                 )
     
-                this.#refetchAppListIfNeeded();
+                refetchAppListIfNeeded(
+                    this.appListData,
+                    this.compmatrixData,
+                    this.activeFromSDKs,
+                    this.activeToSDKs
+                );
             }
         });
         this.selectedToSDKRemoveBtn.setOnClick(() => {
@@ -158,112 +172,24 @@ class App {
         });
 
         this.activeFromSDKs.addReactor(() => {
-            this.#fetchCompMatrixValues();
+            fetchCompMatrixValues(
+                this.compmatrixData,
+                this.activeFromSDKs,
+                this.activeToSDKs
+            );
         }, true, true);
 
         this.activeToSDKs.addReactor(() => {
-            this.#fetchCompMatrixValues();
+            fetchCompMatrixValues(
+                this.compmatrixData,
+                this.activeFromSDKs,
+                this.activeToSDKs
+            );
         }, true, true);
     }
 
     async init() {
-        this.#fetchSDKs();
-    }
-
-    async #fetchSDKs() {
-        const url = `${BASE_API_ENDPOINT}/sdks`
-        try {
-            const response = await fetch(url);
-            const sdks_json = await response.json();
-            const sdks_data = sdks_json.data.sdks;
-            let sdks = [];
-            for (let i = 0; i < sdks_data.length; i++) {
-                sdks.push({
-                    'id': sdks_data[i].id,
-                    'name': sdks_data[i].name
-                })
-            }
-
-            this.selectableFromSDKs.setValue(structuredClone(sdks));
-            this.selectableToSDKs.setValue(structuredClone(sdks));
-        } catch (error) {
-            console.error(error.message);
-        }
-    }
-
-    async #fetchCompMatrixValues() {
-        const url = `${BASE_API_ENDPOINT}/sdk-compmatrix/numbers`;
-        const fromSDKs = this.activeFromSDKs.getValue().map((s) => s.id);
-        const toSDKs = this.activeToSDKs.getValue().map((s) => s.id);
-
-        let rawParamPairs = [];
-        if (fromSDKs.length !== 0) {
-            rawParamPairs.push(...fromSDKs.map((s) => ['from_sdks', s]));
-        } else {
-            rawParamPairs.push(['from_sdks', '']);
-        }
-
-        if (toSDKs.length !== 0) {
-            rawParamPairs.push(...toSDKs.map((s) => ['to_sdks', s]));
-        } else {
-            rawParamPairs.push(['to_sdks', '']);
-        }
-
-        const params = new URLSearchParams(rawParamPairs);
-        const paramString = params.toString();
-        let numbersJSON;
-        try {
-            this.compmatrixData.setValue((v) => {
-                v['state'] = DataState.LOADING;
-            });
-            const response = await fetch(`${url}?${paramString}`);
-            numbersJSON = await response.json();
-        } catch (error) {
-            console.error(error.message);
-            this.compmatrixData.setValue((v) => {
-                v['state'] = DataState.ERRORED;
-            });
-        }
-
-        const rawValues = numbersJSON.data.numbers;
-        let normalizedValues = [];
-        for (let i = 0; i < numbersJSON.data.numbers.length; i++) {
-            let row = numbersJSON.data.numbers[i];
-            const sum = row.reduce((partialSum, n) => partialSum + n, 0);
-
-            let normalized = []
-            for (let j = 0; j < row.length; j++) {
-                normalized.push(row[j] / sum);
-            }
-
-            normalizedValues.push(normalized);
-        }
-        
-        this.compmatrixData.setValue((v) => {
-            v['data']['raw'] = rawValues;
-            v['data']['normalized'] = normalizedValues;
-            v['state'] = DataState.LOADED;
-        });
-    }
-
-    #refetchAppListIfNeeded() {
-        const compmatrixData = this.compmatrixData.getValue();
-        const selectedCell = compmatrixData['selected-cell'];
-        if (selectedCell) {
-            const fromSDK = selectedCell['from-sdk'];
-            const toSDK = selectedCell['to-sdk'];
-            if (fromSDK['id'] === null || toSDK['id'] === null) {
-                // Refetch app list in case the newly-added SDK causes a
-                // change in numbers to the cell. This only happens in
-                // cells with a (none) SDK.
-                fetchAppListData(
-                    this.appListData,
-                    this.compmatrixData,
-                    this.activeFromSDKs,
-                    this.activeToSDKs
-                );
-            }
-        }
+        fetchSDKs(this.selectableFromSDKs, this.selectableToSDKs);
     }
 }
 
