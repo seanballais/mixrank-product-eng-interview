@@ -773,6 +773,13 @@
       if (compmatrixData["selected-cell"] === null && appListData["displayed-apps"].length > 0) {
         appListState.resetToInitialState();
       }
+      if (appListData["state"] === DataState.LOADING && !appListData["is-loading-new-batch"]) {
+        this.rootNode.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "instant"
+        });
+      }
       super.update();
       appListData = appListState.getValue();
       if (appListData["state"] === DataState.LOADED) {
@@ -922,7 +929,6 @@
     }
     createNodes() {
       const compmatrixData = this.states["compmatrix-data"].getValue();
-      const appList = this.states["app-list"].getValue();
       let html = "<p>";
       if (compmatrixData["selected-cell"] === null) {
         html += "Select a cell in the competitive matrix to get started.";

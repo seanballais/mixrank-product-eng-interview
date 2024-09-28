@@ -385,6 +385,18 @@ export class AppList extends Widget {
             appListState.resetToInitialState();
         }
 
+        // Reset scroll bar if there is a new selected cell.
+        if (
+            appListData['state'] === DataState.LOADING &&
+            !appListData['is-loading-new-batch']
+        ) {
+            this.rootNode.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: 'instant'
+            });
+        }
+
         super.update();
 
         // Refresh appListData.
@@ -618,6 +630,11 @@ export class AppList extends Widget {
             // trigger. Using the former is not exactly ideal and is arguably
             // less precise, but it does not result in the aforementioned
             // issues and the effect are still within acceptable thresholds.
+            //
+            // (September 29, 2024 2:30 AM)
+            // TODO: We can change this to scrollTo since I just found out
+            //       about the "instant" behaviour of scrollTo. scrollTo will
+            //       allow us to set the scroll bar more accurately.
             this.rootNode.scrollBy(0, scrollHeight);
         }
 
@@ -632,7 +649,6 @@ export class AppListDesc extends Widget {
 
     createNodes() {
         const compmatrixData = this.states['compmatrix-data'].getValue();
-        const appList = this.states['app-list'].getValue();
 
         let html = '<p>';
         if (compmatrixData['selected-cell'] === null) {
