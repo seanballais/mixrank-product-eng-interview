@@ -1,0 +1,135 @@
+@import '../_colours.scss';
+
+&#apps {
+    max-height: 999px;
+
+    display: flex;
+    flex-direction: column;
+
+    h1 {
+        margin-top: 0;
+        margin-bottom: 0.3rem;
+
+        font-weight: bold;
+
+        text-align: left;
+    }
+
+    p {
+        margin-top: 0.3rem;
+    }
+
+    div {
+        &#app-list-desc {
+            color: $secondary-text-colour;
+        }
+    }
+
+    div#apps-list {
+        $loader-vertical-padding-size: 2rem;
+
+        overflow: auto;
+
+        @include scrollbar-styling;
+
+        div#app-list-loader-icon {
+            padding-top: 0;
+            padding-bottom: $loader-vertical-padding-size;
+
+            display: flex;
+            justify-content: center;
+        }
+
+        &:has(div#app-list-loader-icon) {
+            overflow: initial;
+        }
+
+        ol {
+            margin: 0;
+            padding: 0;
+
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: stretch;
+
+            li {
+                list-style-type: none;
+
+                &.batch-trigger {
+                    flex-grow: 1;
+                    flex-shrink: 1;
+                    flex-basis: 100%;
+
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: center;
+
+                    padding-left: 1rem;
+                    padding-right: 1rem;                                
+                }
+
+                &#app-prev-batch-trigger {
+                    padding-top: $loader-vertical-padding-size;
+
+                    // We have a gap in use so no padding at the bottom needed.
+                    padding-bottom: 0;
+                }
+
+                &#app-next-batch-trigger {
+                    // We have a gap in use so no padding at the bottom needed.
+                    padding-top: 0;
+
+                    padding-bottom: $loader-vertical-padding-size;
+                }
+
+                &.app-card {
+                    flex-grow: 1;
+                    flex-shrink: 1;
+                    flex-basis: 40%;
+
+                    display: flex;
+                    flex-direction: row;
+                    gap: 0.5rem;
+
+                    div {
+                        &.app-card-icon {
+                            img {
+                                width: 55px;
+                                height: 55px;
+
+                                border-radius: 10px;
+                            }
+                        }
+
+                        &.app-card-info {
+                            h1 {
+                                margin-top: 0.25rem;
+                                margin-bottom: 0.5rem;
+                            }
+
+                            p {
+                                margin-top: 0.5rem;
+                                margin-bottom: 0.5rem;
+
+                                color: $secondary-text-colour;
+
+                                &.app-card-info-company {
+                                    a {
+                                        color: $secondary-text-colour;
+                                        text-decoration: none;
+
+                                        &:hover {
+                                            color: $secondary-text-colour-lighter;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

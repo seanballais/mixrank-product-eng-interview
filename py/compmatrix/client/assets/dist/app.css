@@ -1,3 +1,9 @@
+.app-rating-icon {
+  color: #e83030; }
+
+h1 {
+  font-size: 1rem; }
+
 div.sdk-activator-control {
   margin-bottom: 1rem;
   display: flex;
@@ -133,12 +139,6 @@ button {
   font-family: 'Fivo Sans';
   src: url("/assets/fonts/FivoSans-Bold.otf");
   font-weight: bold; }
-.app-rating-icon {
-  color: #e83030; }
-
-h1 {
-  font-size: 1rem; }
-
 body {
   background-color: black;
   color: white;

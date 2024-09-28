@@ -1,0 +1,145 @@
+@import '../_colours.scss';
+
+&#matrix {
+    display: flex;
+    flex-direction: column;
+
+    div {
+        &#matrix-display {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+    
+            margin-bottom: 1rem;
+    
+            div#compmatrix-container {
+                $compmatrix-container-size: 600px;
+                width: $compmatrix-container-size;
+                height: $compmatrix-container-size;
+                max-width: $compmatrix-container-size;
+                max-height: $compmatrix-container-size;
+    
+                overflow: auto;
+    
+                scrollbar-color: $primary-colour $bg-colour;
+    
+                display: flex;
+                justify-content: safe center;
+                align-items: safe center;
+    
+                table {
+                    min-width: 100px;
+                    min-height: 100px;
+    
+                    font-weight: normal;
+    
+                    tr {
+                        text-align: center;
+    
+                        th {
+                            padding: 0.5rem;
+    
+                            // Override default `th` font-weight in
+                            // the user agent stylesheet.
+                            font-weight: normal;
+                        }
+    
+                        td {
+                            &.selected-cell {
+                                border: 0.5rem solid $white;
+                            }
+                        }
+    
+                        &:nth-child(1) {
+                            th {
+                                height: 0;
+                            }
+                        }
+    
+                        &:nth-child(2) {
+                            th {
+                                min-width: 0;
+    
+                                span {
+                                    writing-mode: vertical-lr;
+                                    transform: rotate(180deg);
+                                }
+                            }
+                        }
+    
+                        &:nth-child(-n + 2) {
+                            color: $secondary-text-colour;
+                        }
+    
+                        &:nth-child(n + 3) {    
+                            th {
+                                $matrix-cell-size: 85px;
+                                min-width: $matrix-cell-size;
+                                max-width: $matrix-cell-size;
+                                min-height: $matrix-cell-size;
+                                max-height: $matrix-cell-size;
+                                height: $matrix-cell-size;
+                            }
+    
+                            td {
+                                color: $primary-text-colour;
+    
+                                -webkit-user-select: none;
+                                user-select: none;
+                                
+                                cursor: pointer;
+    
+                                &:hover {
+                                    background-color: $primary-colour-darker !important;
+                                    color: $white !important;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    
+        &#matrix-config {
+            margin-bottom: 1rem;
+    
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+    
+            h1 {
+                font-weight: bold;
+            }
+    
+            div {
+                &#compmatrix-toggles {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: center;
+                    align-items: center;
+                }
+    
+                &#compmatrix-selectables {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: center;
+                    align-items: stretch;
+                    gap: 1.75rem;
+    
+                    div {
+                        flex-grow: 1;
+                        flex-shrink: 1;
+                        flex-basis: 50%;
+    
+                        h1 {
+                            font-size: $base-text-size;
+                            font-weight: normal;
+    
+                            color: $secondary-text-colour;
+                        }
+                    }
+                }
+            }
+        }
+    }    
+}
