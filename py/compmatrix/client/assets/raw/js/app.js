@@ -13,7 +13,7 @@ import {
     CompMatrix,
     CompMatrixDataToggler,
     SDKSelect
-} from './widgets.js';
+} from './widgets/widgets.js';
 
 document.addEventListener('DOMContentLoaded', onDocumentLoad, false);
 

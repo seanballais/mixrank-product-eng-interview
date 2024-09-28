@@ -395,14 +395,7 @@
     }
   };
 
-  // py/compmatrix/client/assets/raw/js/html.js
-  function htmlToNodes(html) {
-    const template = document.createElement("template");
-    template.innerHTML = html;
-    return template.content.childNodes;
-  }
-
-  // py/compmatrix/client/assets/raw/js/udomdiff.js
+  // py/compmatrix/client/assets/raw/js/vendor/udomdiff.js
   var udomdiff_default = (parentNode, a, b, get, before) => {
     const bLength = b.length;
     let aEnd = a.length;
@@ -468,7 +461,7 @@
     return b;
   };
 
-  // py/compmatrix/client/assets/raw/js/widgets.js
+  // py/compmatrix/client/assets/raw/js/widgets/base.js
   var Widget = class {
     constructor(rootNodeID) {
       this.rootNode = document.getElementById(rootNodeID);
@@ -492,11 +485,11 @@
       this.update();
     }
     update() {
-      this.nodes = this.createNodes();
+      this.nodes = this.#htmlToNodes(this.createHTML());
       this.render();
     }
-    createNodes() {
-      return [];
+    createHTML() {
+      return "";
     }
     render() {
       udomdiff_default(
@@ -506,258 +499,46 @@
         (o) => o
       );
     }
+    #htmlToNodes(html) {
+      const template = document.createElement("template");
+      template.innerHTML = html;
+      return template.content.childNodes;
+    }
   };
-  var Button = class extends Widget {
+
+  // py/compmatrix/client/assets/raw/js/widgets/app-list-desc.js
+  var AppListDesc = class extends Widget {
     constructor(rootNode) {
       super(rootNode);
     }
-    setOnClick(f) {
-      this.rootNode.addEventListener("click", f);
-    }
-  };
-  var CompMatrixDataToggler = class extends Widget {
-    constructor(rootNode) {
-      super(rootNode);
-      this.rootNode.addEventListener("change", (e) => {
-        if (e.target.checked) {
-          this.states["data"].setValue((s) => {
-            s["active-data"] = "normalized";
-          });
+    createHTML() {
+      const compmatrixData = this.states["compmatrix-data"].getValue();
+      let html = "<p>";
+      if (compmatrixData["selected-cell"] === null) {
+        html += "Select a cell in the competitive matrix to get started.";
+      } else {
+        const fromSDK = compmatrixData["selected-cell"]["from-sdk"];
+        const toSDK = compmatrixData["selected-cell"]["to-sdk"];
+        let fromSDKName = "";
+        if (fromSDK === null) {
+          fromSDKName = "(none)";
         } else {
-          this.states["data"].setValue((s) => {
-            s["active-data"] = "raw";
-          });
+          fromSDKName = fromSDK["name"];
         }
-      });
+        let toSDKName = "";
+        if (toSDK === null) {
+          toSDKName = "(none)";
+        } else {
+          toSDKName = toSDK["name"];
+        }
+        html += `Migrated from ${fromSDKName} to ${toSDKName}.`;
+      }
+      html += "</p>";
+      return html;
     }
   };
-  var SDKSelect = class extends Widget {
-    constructor(rootNode) {
-      super(rootNode);
-      this.idToIndexMap = /* @__PURE__ */ new Map();
-    }
-    get value() {
-      return Number(this.rootNode.value);
-    }
-    get selectedIndex() {
-      const index = this.idToIndexMap.get(this.value);
-      if (index === void 0) {
-        return null;
-      } else {
-        return index;
-      }
-    }
-    get options() {
-      return this.rootNode.options;
-    }
-    set selectedIndex(newIndex) {
-      this.rootNode.selectedIndex = newIndex;
-    }
-    update() {
-      const sdks = this.states["sdks"].getValue();
-      for (let i = 0; i < sdks.length; i++) {
-        this.idToIndexMap.set(sdks[i].id, i);
-      }
-      super.update();
-    }
-    createNodes() {
-      const sdks = this.states["sdks"].getValue();
-      let html = "";
-      for (let i = 0; i < sdks.length; i++) {
-        const sdk = sdks[i];
-        html += `<option value="${sdk.id}">${sdk.name}</option>`;
-      }
-      return htmlToNodes(html);
-    }
-    moveSelectedOptionUp() {
-      const selectedID = this.selectedIndex;
-      const newIndex = Math.max(selectedID - 1, 0);
-      this.states["sdks"].setValue((v) => {
-        [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
-      });
-      this.selectedIndex = newIndex;
-    }
-    moveSelectedOptionDown() {
-      const selectedID = this.selectedIndex;
-      const newIndex = Math.min(
-        selectedID + 1,
-        this.options.length - 1
-      );
-      this.states["sdks"].setValue((v) => {
-        [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
-      });
-      this.selectedIndex = newIndex;
-    }
-  };
-  var CompMatrix = class extends Widget {
-    constructor(rootNode) {
-      super(rootNode);
-      this.cellToSDKs = {};
-      this.selectedCellID = null;
-    }
-    clearSelectedCell() {
-      this.selectedCellID = null;
-      this.states["data"].setValue((v) => {
-        v["selected-cell"] = null;
-      });
-    }
-    update() {
-      this.cellToSDKs = {};
-      super.update();
-      const data = this.states["data"].getValue();
-      const dataState = data["state"];
-      if (dataState == DataState.LOADED) {
-        for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
-          const cell = document.getElementById(key);
-          cell.addEventListener("click", () => {
-            if (key == this.selectedCellID) {
-              this.states["data"].setValue((v) => {
-                v["selected-cell"] = null;
-              });
-              this.selectedCellID = null;
-            } else {
-              this.states["data"].setValue((v) => {
-                v["selected-cell"] = {
-                  "from-sdk": sdks["from-sdk"],
-                  "to-sdk": sdks["to-sdk"]
-                };
-              });
-              this.selectedCellID = this.#getSelectedCellID();
-              fetchAppListData(
-                this.states["app-list"],
-                this.states["data"],
-                this.states["from-sdks"],
-                this.states["to-sdks"]
-              );
-            }
-          });
-        }
-        this.#manageSelectedCell();
-        if (!this.selectedCellID) {
-          const dataState2 = this.states["data"];
-          dataState2.lockPropagation();
-          this.states["data"].setValue((v) => {
-            v["selected-cell"] = null;
-          });
-          dataState2.unlockPropagation(false);
-        }
-      }
-    }
-    createNodes() {
-      const data = this.states["data"].getValue();
-      const dataState = data["state"];
-      const sdkHeaders = this.#getSDKHeaders();
-      const fromSDKHeaders = sdkHeaders["from-sdks"];
-      const toSDKHeaders = sdkHeaders["to-sdks"];
-      const numFromSDKsHeaders = fromSDKHeaders.length;
-      const numToSDKsHeaders = toSDKHeaders.length;
-      let html = "";
-      html += "<tr>";
-      html += "<th></th>";
-      html += `<th colspan="${numToSDKsHeaders + 1}">To SDK</th>`;
-      html += "</tr>";
-      html += "<tr>";
-      html += `<th rowspan="${numFromSDKsHeaders + 2}">`;
-      html += "<span>From SDK</span>";
-      html += "</th>";
-      html += "</tr>";
-      if (dataState == DataState.LOADED) {
-        html += "<tr>";
-        html += "<th></th>";
-        for (let i = 0; i < numToSDKsHeaders; i++) {
-          html += `<th>${toSDKHeaders[i]["name"]}</th>`;
-        }
-        html += "</tr>";
-        const activeData = data["active-data"];
-        const presentedData = data["data"][activeData];
-        const percentageData = data["data"]["normalized"];
-        for (let i = 0; i < presentedData.length; i++) {
-          const rowData = presentedData[i];
-          html += "<tr>";
-          html += `<th>${fromSDKHeaders[i]["name"]}</th>`;
-          for (let j = 0; j < rowData.length; j++) {
-            let cellData = rowData[j];
-            if (activeData == "normalized") {
-              cellData = `${(cellData * 100).toFixed(0)}%`;
-            }
-            const opacity = percentageData[i][j];
-            const id = this.#createCellID(i, j);
-            const colour = `hsla(0, 80%, 55%, ${opacity * 100}%)`;
-            const style = `background-color: ${colour}`;
-            html += `
-                        <td id="${id}" style="${style}">${cellData}</td>
-                    `;
-            this.cellToSDKs[id] = {
-              "from-sdk": fromSDKHeaders[i],
-              "to-sdk": toSDKHeaders[j]
-            };
-          }
-          html += "</tr>";
-        }
-      } else if (dataState == DataState.LOADING) {
-        html += "<tr>";
-        html += "<td>";
-        html += '<span class="fas fa-circle-notch fa-spin"></span>';
-        html += "</td>";
-        html += "</tr>";
-      }
-      return htmlToNodes(html);
-    }
-    #manageSelectedCell() {
-      const selectedCellID = this.#getSelectedCellID();
-      if (selectedCellID) {
-        const cellElem = document.getElementById(selectedCellID);
-        if (cellElem) {
-          cellElem.classList.add("selected-cell");
-        }
-        this.selectedCellID = selectedCellID;
-      } else {
-        this.selectedCellID = null;
-      }
-    }
-    #getSelectedCellID() {
-      const data = this.states["data"].getValue();
-      const sdkHeaders = this.#getSDKHeaders();
-      const selectedCell = data["selected-cell"];
-      if (selectedCell) {
-        const selectedFromSDK = selectedCell["from-sdk"];
-        const selectedToSDK = selectedCell["to-sdk"];
-        let rowIndex = null;
-        const fromSDKHeaders = sdkHeaders["from-sdks"];
-        for (let i = 0; i < fromSDKHeaders.length; i++) {
-          if (fromSDKHeaders[i]["id"] == selectedFromSDK["id"]) {
-            rowIndex = i;
-          }
-        }
-        let colIndex = null;
-        const toSDKHeaders = sdkHeaders["to-sdks"];
-        for (let i = 0; i < toSDKHeaders.length; i++) {
-          if (toSDKHeaders[i]["id"] == selectedToSDK["id"]) {
-            colIndex = i;
-          }
-        }
-        if (rowIndex !== null && colIndex !== null) {
-          return this.#createCellID(rowIndex, colIndex);
-        }
-      }
-      return null;
-    }
-    #getSDKHeaders() {
-      const fromSDKData = this.states["from-sdks"].getValue();
-      const toSDKData = this.states["to-sdks"].getValue();
-      const fromSDKHeaders = [...fromSDKData];
-      const toSDKHeaders = [...toSDKData];
-      fromSDKHeaders.push({ "id": null, "name": "(none)" });
-      toSDKHeaders.push({ "id": null, "name": "(none)" });
-      return {
-        "from-sdks": fromSDKHeaders,
-        "to-sdks": toSDKHeaders
-      };
-    }
-    #createCellID(rowIndex, colIndex) {
-      return `cmc-${rowIndex}${colIndex}`;
-    }
-  };
+
+  // py/compmatrix/client/assets/raw/js/widgets/app-list.js
   var AppList = class extends Widget {
     constructor(rootNode) {
       super(rootNode);
@@ -829,7 +610,7 @@
       }
       appListState.unlockPropagation(false);
     }
-    createNodes() {
+    createHTML() {
       const appList = this.states["app-list"].getValue();
       let html = "";
       if (appList["state"] === DataState.LOADED || appList["state"] === DataState.LOADING && appList["is-loading-new-batch"]) {
@@ -879,7 +660,7 @@
                 </div>
             `;
       }
-      return htmlToNodes(html);
+      return html;
     }
     async #runBatchTriggerEvent(cursor, fetchDirection) {
       this.isBatchLoading = true;
@@ -923,34 +704,263 @@
       this.isBatchLoading = false;
     }
   };
-  var AppListDesc = class extends Widget {
+
+  // py/compmatrix/client/assets/raw/js/widgets/button.js
+  var Button = class extends Widget {
     constructor(rootNode) {
       super(rootNode);
     }
-    createNodes() {
-      const compmatrixData = this.states["compmatrix-data"].getValue();
-      let html = "<p>";
-      if (compmatrixData["selected-cell"] === null) {
-        html += "Select a cell in the competitive matrix to get started.";
-      } else {
-        const fromSDK = compmatrixData["selected-cell"]["from-sdk"];
-        const toSDK = compmatrixData["selected-cell"]["to-sdk"];
-        let fromSDKName = "";
-        if (fromSDK === null) {
-          fromSDKName = "(none)";
+    setOnClick(f) {
+      this.rootNode.addEventListener("click", f);
+    }
+  };
+
+  // py/compmatrix/client/assets/raw/js/widgets/compmatrix-data-toggler.js
+  var CompMatrixDataToggler = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+      this.rootNode.addEventListener("change", (e) => {
+        if (e.target.checked) {
+          this.states["data"].setValue((s) => {
+            s["active-data"] = "normalized";
+          });
         } else {
-          fromSDKName = fromSDK["name"];
+          this.states["data"].setValue((s) => {
+            s["active-data"] = "raw";
+          });
         }
-        let toSDKName = "";
-        if (toSDK === null) {
-          toSDKName = "(none)";
-        } else {
-          toSDKName = toSDK["name"];
+      });
+    }
+  };
+
+  // py/compmatrix/client/assets/raw/js/widgets/compmatrix.js
+  var CompMatrix = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+      this.cellToSDKs = {};
+      this.selectedCellID = null;
+    }
+    clearSelectedCell() {
+      this.selectedCellID = null;
+      this.states["data"].setValue((v) => {
+        v["selected-cell"] = null;
+      });
+    }
+    update() {
+      this.cellToSDKs = {};
+      super.update();
+      const data = this.states["data"].getValue();
+      const dataState = data["state"];
+      if (dataState == DataState.LOADED) {
+        for (const [key, sdks] of Object.entries(this.cellToSDKs)) {
+          const cell = document.getElementById(key);
+          cell.addEventListener("click", () => {
+            if (key == this.selectedCellID) {
+              this.states["data"].setValue((v) => {
+                v["selected-cell"] = null;
+              });
+              this.selectedCellID = null;
+            } else {
+              this.states["data"].setValue((v) => {
+                v["selected-cell"] = {
+                  "from-sdk": sdks["from-sdk"],
+                  "to-sdk": sdks["to-sdk"]
+                };
+              });
+              this.selectedCellID = this.#getSelectedCellID();
+              fetchAppListData(
+                this.states["app-list"],
+                this.states["data"],
+                this.states["from-sdks"],
+                this.states["to-sdks"]
+              );
+            }
+          });
         }
-        html += `Migrated from ${fromSDKName} to ${toSDKName}.`;
+        this.#manageSelectedCell();
+        if (!this.selectedCellID) {
+          const dataState2 = this.states["data"];
+          dataState2.lockPropagation();
+          this.states["data"].setValue((v) => {
+            v["selected-cell"] = null;
+          });
+          dataState2.unlockPropagation(false);
+        }
       }
-      html += "</p>";
-      return htmlToNodes(html);
+    }
+    createHTML() {
+      const data = this.states["data"].getValue();
+      const dataState = data["state"];
+      const sdkHeaders = this.#getSDKHeaders();
+      const fromSDKHeaders = sdkHeaders["from-sdks"];
+      const toSDKHeaders = sdkHeaders["to-sdks"];
+      const numFromSDKsHeaders = fromSDKHeaders.length;
+      const numToSDKsHeaders = toSDKHeaders.length;
+      let html = "";
+      html += "<tr>";
+      html += "<th></th>";
+      html += `<th colspan="${numToSDKsHeaders + 1}">To SDK</th>`;
+      html += "</tr>";
+      html += "<tr>";
+      html += `<th rowspan="${numFromSDKsHeaders + 2}">`;
+      html += "<span>From SDK</span>";
+      html += "</th>";
+      html += "</tr>";
+      if (dataState == DataState.LOADED) {
+        html += "<tr>";
+        html += "<th></th>";
+        for (let i = 0; i < numToSDKsHeaders; i++) {
+          html += `<th>${toSDKHeaders[i]["name"]}</th>`;
+        }
+        html += "</tr>";
+        const activeData = data["active-data"];
+        const presentedData = data["data"][activeData];
+        const percentageData = data["data"]["normalized"];
+        for (let i = 0; i < presentedData.length; i++) {
+          const rowData = presentedData[i];
+          html += "<tr>";
+          html += `<th>${fromSDKHeaders[i]["name"]}</th>`;
+          for (let j = 0; j < rowData.length; j++) {
+            let cellData = rowData[j];
+            if (activeData == "normalized") {
+              cellData = `${(cellData * 100).toFixed(0)}%`;
+            }
+            const opacity = percentageData[i][j];
+            const id = this.#createCellID(i, j);
+            const colour = `hsla(0, 80%, 55%, ${opacity * 100}%)`;
+            const style = `background-color: ${colour}`;
+            html += `
+                        <td id="${id}" style="${style}">${cellData}</td>
+                    `;
+            this.cellToSDKs[id] = {
+              "from-sdk": fromSDKHeaders[i],
+              "to-sdk": toSDKHeaders[j]
+            };
+          }
+          html += "</tr>";
+        }
+      } else if (dataState == DataState.LOADING) {
+        html += "<tr>";
+        html += "<td>";
+        html += '<span class="fas fa-circle-notch fa-spin"></span>';
+        html += "</td>";
+        html += "</tr>";
+      }
+      return html;
+    }
+    #manageSelectedCell() {
+      const selectedCellID = this.#getSelectedCellID();
+      if (selectedCellID) {
+        const cellElem = document.getElementById(selectedCellID);
+        if (cellElem) {
+          cellElem.classList.add("selected-cell");
+        }
+        this.selectedCellID = selectedCellID;
+      } else {
+        this.selectedCellID = null;
+      }
+    }
+    #getSelectedCellID() {
+      const data = this.states["data"].getValue();
+      const sdkHeaders = this.#getSDKHeaders();
+      const selectedCell = data["selected-cell"];
+      if (selectedCell) {
+        const selectedFromSDK = selectedCell["from-sdk"];
+        const selectedToSDK = selectedCell["to-sdk"];
+        let rowIndex = null;
+        const fromSDKHeaders = sdkHeaders["from-sdks"];
+        for (let i = 0; i < fromSDKHeaders.length; i++) {
+          if (fromSDKHeaders[i]["id"] == selectedFromSDK["id"]) {
+            rowIndex = i;
+          }
+        }
+        let colIndex = null;
+        const toSDKHeaders = sdkHeaders["to-sdks"];
+        for (let i = 0; i < toSDKHeaders.length; i++) {
+          if (toSDKHeaders[i]["id"] == selectedToSDK["id"]) {
+            colIndex = i;
+          }
+        }
+        if (rowIndex !== null && colIndex !== null) {
+          return this.#createCellID(rowIndex, colIndex);
+        }
+      }
+      return null;
+    }
+    #getSDKHeaders() {
+      const fromSDKData = this.states["from-sdks"].getValue();
+      const toSDKData = this.states["to-sdks"].getValue();
+      const fromSDKHeaders = [...fromSDKData];
+      const toSDKHeaders = [...toSDKData];
+      fromSDKHeaders.push({ "id": null, "name": "(none)" });
+      toSDKHeaders.push({ "id": null, "name": "(none)" });
+      return {
+        "from-sdks": fromSDKHeaders,
+        "to-sdks": toSDKHeaders
+      };
+    }
+    #createCellID(rowIndex, colIndex) {
+      return `cmc-${rowIndex}${colIndex}`;
+    }
+  };
+
+  // py/compmatrix/client/assets/raw/js/widgets/sdk-select.js
+  var SDKSelect = class extends Widget {
+    constructor(rootNode) {
+      super(rootNode);
+      this.idToIndexMap = /* @__PURE__ */ new Map();
+    }
+    get value() {
+      return Number(this.rootNode.value);
+    }
+    get selectedIndex() {
+      const index = this.idToIndexMap.get(this.value);
+      if (index === void 0) {
+        return null;
+      } else {
+        return index;
+      }
+    }
+    get options() {
+      return this.rootNode.options;
+    }
+    set selectedIndex(newIndex) {
+      this.rootNode.selectedIndex = newIndex;
+    }
+    update() {
+      const sdks = this.states["sdks"].getValue();
+      for (let i = 0; i < sdks.length; i++) {
+        this.idToIndexMap.set(sdks[i].id, i);
+      }
+      super.update();
+    }
+    createHTML() {
+      const sdks = this.states["sdks"].getValue();
+      let html = "";
+      for (let i = 0; i < sdks.length; i++) {
+        const sdk = sdks[i];
+        html += `<option value="${sdk.id}">${sdk.name}</option>`;
+      }
+      return html;
+    }
+    moveSelectedOptionUp() {
+      const selectedID = this.selectedIndex;
+      const newIndex = Math.max(selectedID - 1, 0);
+      this.states["sdks"].setValue((v) => {
+        [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
+      });
+      this.selectedIndex = newIndex;
+    }
+    moveSelectedOptionDown() {
+      const selectedID = this.selectedIndex;
+      const newIndex = Math.min(
+        selectedID + 1,
+        this.options.length - 1
+      );
+      this.states["sdks"].setValue((v) => {
+        [v[newIndex], v[selectedID]] = [v[selectedID], v[newIndex]];
+      });
+      this.selectedIndex = newIndex;
     }
   };
 
