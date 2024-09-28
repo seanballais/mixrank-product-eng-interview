@@ -116,12 +116,12 @@ fabric.properties
 
 # End of https://www.toptal.com/developers/gitignore/api/pycharm
 
-# Ignore folder for asset build artifacts.
-py/compmatrix/client/assets/build/
-
 # Ignore virtual environment and cache folders.
 __pycache__/
 .mypy_cache/
 .pytest_cache/
 .sass-cache/
 .venv/
+
+# .gitignore files are inside `py/compmatrix/client/assets/build/`. They help
+# us keep the folders (used during asset building), but not the files.

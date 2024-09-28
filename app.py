@@ -1,5 +1,4 @@
 import argparse
-from datetime import datetime
 
 from compmatrix import create_app
 

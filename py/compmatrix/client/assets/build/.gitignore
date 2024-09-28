@@ -1,0 +1,4 @@
+# Ignore all files here, but the .gitignore file. This .gitignore file also
+# helps us keep the folder.
+*
+!.gitignore
