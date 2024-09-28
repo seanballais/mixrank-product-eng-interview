@@ -76,7 +76,7 @@ class JSHandler(FileSystemEventHandler):
         _build_js(self.main_js_file, self.dest_js_file, self.minify)
 
 
-def main(minify, watch):
+def build(minify, watch):
     dest_dir: Path = Path('py/compmatrix/client/assets/dist')
 
     scss_dir: Path = Path('py/compmatrix/client/assets/raw/scss')
@@ -137,7 +137,7 @@ def main(minify, watch):
             js_observer.join()
 
 
-if __name__ == '__main__':
+def main():
     parser: ArgumentParser = ArgumentParser(prog='Asset Builder',
                                             description='Builds assets.')
     env_group = parser.add_mutually_exclusive_group(required=False)
@@ -150,18 +150,22 @@ if __name__ == '__main__':
     enable_minification: bool = False
 
     if args.dev or (not args.dev and not args.prod):
-        environment: str = 'development'
+        mode: str = 'development'
     else:
-        environment: str = 'production'
+        mode: str = 'production'
 
     if args.watch and args.prod:
-        environment = 'development'
+        mode = 'development'
         print('⚠️ Watch mode is enabled. Changing environment to development. '
               'Watch mode is only allowed during development.')
     elif args.prod:
         enable_minification = True
 
-    print(f'⚙️ Environment: {environment.capitalize()}')
+    print(f'⚙️ Build Mode>: {mode.capitalize()}')
     print(f'⚙️ Minification Enabled: {str(enable_minification)}')
 
-    main(enable_minification, args.watch)
+    build(enable_minification, args.watch)
+
+
+if __name__ == '__main__':
+    main()
