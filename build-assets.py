@@ -140,7 +140,7 @@ def main(minify, watch):
 if __name__ == '__main__':
     parser: ArgumentParser = ArgumentParser(prog='Asset Builder',
                                             description='Builds assets.')
-    env_group = parser.add_mutually_exclusive_group(required=False)
+    env_group = parser.add_mutually_exclusive_group(required=True)
     env_group.add_argument('--dev', action='store_true')
     env_group.add_argument('--prod', action='store_true')
 
